@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Map</title>
+    <link rel="stylesheet" type="text/css" href="http://zk.healthscapes.org/map/static/css/screen.css" />
+
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/jquery-ui/js/jquery-ui-1.8.17.custom.min.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/jquery.mousewheel.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/webgl-debug.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/util.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/vect.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/shader-utils.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/clist.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/camera.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/engine.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/panner.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/scrollbar.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/select.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/trapezoid.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/range.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/range_bar.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/layer.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/raster.js"></script>
+    <script type="text/javascript" src="http://zk.healthscapes.org/map/static/js/app.js"></script>
+    <script type="text/javascript">
+    $ (document).ready (function () {
+	$.ajax ({
+	    url: 'http://zk.healthscapes.org/map/static/temp/br_precip.json',
+	    dataType: 'json',
+     	    async: false,			
+	    success: function (data) {
+		br_precip = new Layer (data);
+		engine.scene.push (br_precip);
+		$.each (br_precip.properties (), function (index, data) {
+		    $ ('#sort').append ("<option>" + data + "</option>");
+		});
+
+		var colors = [
+		    new Color (214, 238, 246, 255),
+		    new Color (189, 201, 225, 255),
+		    new Color (116, 169, 207, 255),
+		    new Color (43, 140, 190, 255),
+		    new Color (4, 90, 141, 255),
+		];
+
+		$ ('#sort').change (function (event) {
+		    br_precip.choropleth ($ (this).val (), colors);
+		});
+
+		var bottom = new vect ($ (document).width () - 70 - 5 * 50, $ (document).height () - 70);
+		var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
+		var bar = new RangeBar (engine, colors, bottom, top);
+		engine.scene.push (bar);
+
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+    <div style="padding: 10px; background-color: white;">
+      Select Attribute:
+      <select id="sort">
+      </select>
+      </div>
+    <div id="container"></div>
+  </body>
+</html>
