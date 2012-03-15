@@ -2,7 +2,7 @@ var rangebar_shader = null;
 
 function RangeBar (engine, colors, bottom, top) {
     if (!rangebar_shader)
-	rangebar_shader = makeProgram ('http://zk.healthscapes.org/map/static/shaders/range');
+	rangebar_shader = makeProgram (BASE_DIR + 'shaders/range');
     
     
     var box_width = (top.x - bottom.x) / colors.length;

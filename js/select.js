@@ -1,7 +1,7 @@
 var sel_box_shader = null;
 function SelectionBox (engine) {
     if (!sel_box_shader)
-	sel_box_shader = makeProgram ('http://zk.healthscapes.org/map/static/shaders/selbox');
+	sel_box_shader = makeProgram (BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
     var start = null;

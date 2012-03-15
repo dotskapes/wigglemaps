@@ -176,8 +176,8 @@ function Layer (data) {
     this.id = layer_id;
     layer_id ++;
     if (!point_shader || !poly_shader) {
-	poly_shader = makeProgram ('http://zk.healthscapes.org/map/static/shaders/poly');
-	point_shader = makeProgram ('http://zk.healthscapes.org/map/static/shaders/point');
+	poly_shader = makeProgram (BASE_DIR + '/shaders/poly');
+	point_shader = makeProgram (BASE_DIR + '/shaders/point');
 
 	$ (document).bind ('keydown', 'a', function () {
 	    key_count ++;

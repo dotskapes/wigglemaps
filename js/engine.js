@@ -1,6 +1,8 @@
+var BASE_DIR;
 var set_id_color, bind_event;
 
 function Engine () {
+    BASE_DIR = $ ('script[src*="webgl_maps.min.js"]').attr ('src').replace ('webgl_maps.min.js', '');
     var that = this;
     this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
     $('#container').append (this.canvas);
@@ -40,7 +42,7 @@ function Engine () {
     var base_west = null;
 
     $.ajax ({
-	url: 'http://zk.healthscapes.org/map/static/temp/base_east.kml',
+	url: BASE_DIR + 'tiles/base_east.kml',
 	dataType: 'xml',
 	success: function (data) {
 	    base_east = new KML (data);
@@ -51,7 +53,7 @@ function Engine () {
     });
 
     $.ajax ({
-	url: 'http://zk.healthscapes.org/map/static/temp/base_west.kml',
+	url: BASE_DIR + 'tiles/base_west.kml',
 	dataType: 'xml',
 	success: function (data) {
 	    base_west = new KML (data);
