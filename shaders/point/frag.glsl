@@ -2,7 +2,7 @@
 precision highp float;
 #endif
 
-#define STEP .4
+#define STEP .8
 
 varying vec3 circle;
 varying vec4 color;
@@ -10,16 +10,29 @@ varying vec4 color;
 uniform float zoom;
 uniform bool select;
 
+uniform sampler2D glyph;
+
 void main () {
+  vec2 tex = (circle.xy + 1.0) / 2.0;
   float rad = length (circle.xy);
   //float left = length (circle.xy - vec2 (pxW / 2.0, pxH / 2.0));
   //float right = length (circle.xy + vec2 (pxW / 2.0, pxH / 2.0));
   gl_FragColor = color;
-  if (!select) 
-    gl_FragColor = mix (gl_FragColor, vec4 (gl_FragColor.rgb, 0.0), smoothstep (1.0 - zoom * STEP, 1.0, rad)); 
+  if (!select) {
+    //gl_FragColor.a = texture2D (glyph, tex).a;
+    //if (rad > 1.0)
+    //  gl_FragColor.a = 0.0;
+    //gl_FragColor = mix (gl_FragColor, vec4 (gl_FragColor.rgb, 0.0), smoothstep (STEP, 1.0, rad)); 
+    //gl_FragColor.a = exp (-(pow (rad, 2.0) / .4));
+    gl_FragColor.a *= clamp (1.0 - smoothstep (STEP, 1.0, rad), 0.0, 1.0);
+    //if (rad > STEP)
+    //  gl_FragColor.a = .25;
+  }
 
-  //if (rad > 1.0) 
-  //  gl_FragColor.a = 0.0;
+  else {
+    if (rad > 1.0) 
+      gl_FragColor.a = 0.0;
+  }
 
   /*float x1 = (circle.x + pxW / 2.0);
   float x2 = (circle.x - pxW / 2.0);

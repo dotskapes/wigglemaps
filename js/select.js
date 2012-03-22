@@ -21,6 +21,11 @@ function SelectionBox (engine) {
 	reset_rect ();
     });
 
+    var release_func = function ()  {};
+    this.select = function (func) {
+	release_func = func;
+    };
+
     $ (document).bind ('mouseup', function (event) {
 	if (!enabled)
 	    return;
@@ -36,8 +41,8 @@ function SelectionBox (engine) {
 	    min.y = max.y;
 	    max.y = tmp;
 	}
-	br_precip.search (min, max).color (new Color (0, 1, 0, 1));
 	dragging = false;
+	release_func (new Box (min, max));
     });
 
     $(document).bind ('click', function (event) {

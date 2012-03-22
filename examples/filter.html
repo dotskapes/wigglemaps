@@ -26,23 +26,25 @@
     <script type="text/javascript" src="../js/raster.js"></script>
     <script type="text/javascript" src="../js/app.js"></script>
     <script type="text/javascript">
-    $ (document).ready (function () {
+      $ (document).ready (function () {
 	$.ajax ({
-	    url: 'http://zk.healthscapes.org/map/static/temp/br_pop.json',
+	    url: 'http://zk.healthscapes.org/map/static/temp/br_precip.json',
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
-		br_pop = new Layer (data);
-		engine.scene.push (br_pop);
-
-		br_pop.mouseover (function (feature) {
-		    $ ('#hover').text (feature.get (0).properties.admin_name);
-		    feature.highlight (new Color (204, 85, 0, 128));
+		br_precip = new Layer (data);
+		engine.scene.push (br_precip);
+      
+		$ ('#mar').click (function () {
+		    br_precip.features ().select ('mar > 150').color (new Color (1, 1, 0, 1));
 		});
 
-		br_pop.mouseout (function (feature) {
-		    $ ('#hover').text ('NA');
-		    feature.unhighlight ();
+		$ ('#apr').click (function () {
+		    br_precip.features ().select ('apr < 75').color (new Color (.9, 0, 0, 1));
+		});
+
+		$ ('#may').click (function () {
+		    br_precip.features ().select ('may > 50').select ('may < 100').color (new Color (204, 85, 0, 255));
 		});
 	    }
 	});
@@ -53,7 +55,9 @@
   <body>
     <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
     <div style="padding: 10px; background-color: white;">
-    Currently hovering over: <span id="hover">NA</span>
+      <input style="padding: 5px" id="mar" type="submit" value="Click to filter for all fields with March greater than 150" />
+      <input style="padding: 5px" id="apr" type="submit" value="Click to filter for all fields with April less than 75" />
+      <input style="padding: 5px" id="may" type="submit" value="Click to filter for all fields with May between 50 and 100" />
     </div>
     <div id="container"></div>
   </body>

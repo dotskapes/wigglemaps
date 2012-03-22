@@ -14,6 +14,7 @@
     <script type="text/javascript" src="../js/shader-utils.js"></script>
     <script type="text/javascript" src="../js/clist.js"></script>
     <script type="text/javascript" src="../js/camera.js"></script>
+    <script type="text/javascript" src="../js/events.js"></script>
     <script type="text/javascript" src="../js/engine.js"></script>
     <script type="text/javascript" src="../js/panner.js"></script>
     <script type="text/javascript" src="../js/scrollbar.js"></script>
@@ -48,6 +49,10 @@
 		$ ('#sort').change (function (event) {
 		    br_precip.choropleth ($ (this).val (), colors);
 		});
+
+                /*br_precip.click (function (feature) {
+                    feature.color (new Color (1, 0, 0, 1));
+                });*/
 
 		var bottom = new vect ($ (document).width () - 70 - 5 * 50, $ (document).height () - 70);
 		var top = new vect ($ (document).width () - 20, $ (document).height () - 20);

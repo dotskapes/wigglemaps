@@ -322,7 +322,6 @@ function trapezoid_polygon (poly_in) {
 
 	for (var j = 0; j < sweep.length - 1; j ++) {
 	    if (solvex (poly, sweep[j], poly[v.current].y) > solvex (poly, sweep[j + 1], poly[v.current].y)) {
-		console.log (solvex (poly, sweep[j], poly[vertices[i - 1].current].y), solvex (poly, sweep[j + 1], poly[vertices[i - 1].lower].y));
 		console.log (solvex (poly, sweep[j], poly[v.current].y), solvex (poly, sweep[j + 1], poly[v.current].y));
 		throw "Misplace!";
 	    }

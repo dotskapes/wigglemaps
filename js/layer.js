@@ -2,6 +2,7 @@ var EARTH = 6378.1
 
 var point_shader = null;
 var poly_shader = null;
+var circle_tex;
 
 var layer_id = 1;
 
@@ -86,7 +87,8 @@ function triangulate_polygon (elem) {
 };
 
 var rand_map = (function () {
-    var factor = .000000001;
+    //var factor = .000000001;
+    var factor = 1e-6
     var xmap = {} 
     var ymap = {} 
     return function (x, y) {
@@ -172,12 +174,14 @@ triangulate_polygon = function (elem) {
 
 var key_count = 0;
 function Layer (data) {
-    var start_time =  new Date ().getTime ();
+    var start_time = new Date ().getTime ();
     this.id = layer_id;
     layer_id ++;
     if (!point_shader || !poly_shader) {
 	poly_shader = makeProgram (BASE_DIR + '/shaders/poly');
 	point_shader = makeProgram (BASE_DIR + '/shaders/point');
+
+	circle_tex = getTexture (BASE_DIR + 'images/circle.png');
 
 	$ (document).bind ('keydown', 'a', function () {
 	    key_count ++;
@@ -198,7 +202,7 @@ function Layer (data) {
     var num_polys = 0;
     var poly_count = 0;
 
-    var id_keys = {};
+    //var id_keys = {};
     var features = [];
     var properties = [];
 
@@ -227,7 +231,10 @@ function Layer (data) {
 
 		r_points.push (feature);
 		
-		points.push.apply (points, rect (x, y, .1, .1));
+		//points.push.apply (points, rect (x, y, .1, .1));
+		for (var j = 0; j < 6; j ++) {
+		    points.push.apply (points, [x, y, 1]);
+		}
 	    }
 	    if (feature.geometry.type == 'MultiPolygon') {
 		features.push (feature);
@@ -320,10 +327,11 @@ function Layer (data) {
 	}
 	color_buffer.update (color_array, 0);
     }
-    for (var i = 0; i < features.length; i ++) {
-	var id = set_id_color (this, features[i], id_array);
-	id_keys[id] = features[i];
-    }
+    //for (var i = 0; i < features.length; i ++) {
+	//var id = set_id_color (this, features[i], id_array);
+	//id_keys[id] = features[i];
+    //}
+    engine.manager.register (this, features, id_array);
     id_buffer.update (id_array, 0);
     var end_time =  new Date ().getTime ();
     
@@ -375,6 +383,7 @@ function Layer (data) {
 
     LayerSelector = function (f) {
 	var elements = f;
+	this.length = f.length;
 	this.get = function (i) {
 	    return f[i];
 	};
@@ -471,17 +480,23 @@ function Layer (data) {
 	return properties;
     }
 
-    this.search = function (min, max) {
+    this.search = function (box) {
+	var min = box.min;
+	var max = box.max;
 	var elem = tree.search (min, max);
 	return new LayerSelector (elem);
     };
 
     this.mouseover = function (func) {
-	bind_event ('mouseover', this, func);
+	engine.manager.bind ('mouseover', this, func);
     };
 
     this.mouseout = function (func) {
-	bind_event ('mouseout', this, func);
+	engine.manager.bind ('mouseout', this, func);
+    };
+
+    this.click = function (func) {
+	engine.manager.bind ('click', this, func);
     };
     
     
@@ -498,6 +513,12 @@ function Layer (data) {
 	    else
 		point_shader.data ('color_in', color_buffer);
 	    point_shader.data ('select', select);
+
+	    point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
+	    point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
+	    point_shader.data ('rad', 5);
+
+	    point_shader.data ('glyph', circle_tex);
 	    
 
 	    point_shader.data ('zoom', 1.0 / engine.camera.level);

@@ -2,14 +2,18 @@
  * Licensed under the MIT License
  */
 
-var DEBUG = true;
+var DEBUG = false;
 
 gl = null;
 
 
-function setContext (canvas, debug) {
-    if (!debug) 
-	gl = canvas.get (0).getContext ('experimental-webgl');
+function setContext (canvas) {
+    if (!DEBUG) 
+	gl = canvas.get (0).getContext ('experimental-webgl', {
+	    alpha: false,
+	    antialias: true
+	    //premultipliedAlpha: false
+	});
     else {
 	function throwOnGLError(err, funcName, args) {
 	    throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;

@@ -25,6 +25,8 @@ function RangeBar (engine, colors, bottom, top) {
     var color_buffer = staticBuffer (c, 4);
     
     this.draw = function (engine, dt, select) {
+	if (select)
+	    return;
 	gl.useProgram (rangebar_shader);
 
 	poly_shader.data ('pos', pos_buffer);

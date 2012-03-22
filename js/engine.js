@@ -1,5 +1,10 @@
 var BASE_DIR;
-var set_id_color, bind_event;
+//var set_id_color, bind_event;
+
+var Mouse = {
+    x: 0,
+    y: 0
+};
 
 function Engine () {
     BASE_DIR = $ ('script[src*="webgl_maps.min.js"]').attr ('src').replace ('webgl_maps.min.js', '');
@@ -9,10 +14,13 @@ function Engine () {
     this.canvas.attr ('width', $ (document).width () - this.canvas.position ().left);
     this.canvas.attr ('height', $ (document).height () - this.canvas.position ().top);
     setContext (this.canvas, DEBUG);
-    gl.clearColor(.0, .0, .0, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable (gl.BLEND);
+
+    //gl.depthFunc (gl.GEQUAL);
+    //gl.enable (gl.DEPTH_TEST);
 
     this.scene = [];
 
@@ -34,6 +42,8 @@ function Engine () {
 	    this.sel.disable ();
 	}
     };
+
+    this.manager = new EventManager (this);
 
     var old_time =  new Date ().getTime ();
     var fps_window = [];
@@ -86,6 +96,8 @@ function Engine () {
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+    this.dirty = true;
+
     var draw = function () {
 	var current_time = new Date ().getTime ();
 	var dt = (current_time - old_time) / 1000;
@@ -101,14 +113,18 @@ function Engine () {
 	$ ('#fps').text (Math.floor (1 / fps));
 	old_time = current_time;
 
-	gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
-	gl.clear(gl.COLOR_BUFFER_BIT);
-	gl.clearDepth (0.0);
-	for (var i = 0; i < that.scene.length; i ++) {
-	    that.scene[i].draw (that, dt, true);
-	}
-	gl.bindFramebuffer (gl.FRAMEBUFFER, null);
+	if (that.dirty) {
 
+	    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+	    gl.clear(gl.COLOR_BUFFER_BIT);
+	    gl.clearDepth (0.0);
+	    for (var i = 0; i < that.scene.length; i ++) {
+		that.scene[i].draw (that, dt, true);
+	    }
+	    gl.bindFramebuffer (gl.FRAMEBUFFER, null);
+	    //that.dirty = false;
+	}
+	    
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
 	if (base_east) {
@@ -121,11 +137,12 @@ function Engine () {
 	    that.scene[i].draw (that, dt, false);
 	}
 	that.sel.draw (that, dt);
+	that.manager.update (dt);
 	
 	requestAnimationFrame (draw);
     };
 
-    var trigger_event;
+    /*var trigger_event;
     (function () {
 	var r = 0;
 	var g = 0;
@@ -207,20 +224,26 @@ function Engine () {
 		events[type][layer.id] = [];
 	    events[type][layer.id].push (func);
 	};
-    }) ();
+    }) ();*/
     
-    var readPixel = function (x, y) {
+    this.read_pixel = function (x, y) {
 	gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
 	var pixel = new Uint8Array (4);
 	var perX = (x - that.canvas.position ().left)/ that.canvas.width ();
 	var perY = (that.canvas.position ().top + that.canvas.height () - y) / that.canvas.height ();
 	gl.readPixels (parseInt (perX * framebuffer.width), parseInt (perY * framebuffer.height), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-	return pixel;
 	gl.bindFramebuffer (gl.FRAMEBUFFER, null);
+	return pixel;
     };
 
+    $ (document).mousemove (function (event) {
+	Mouse.x = event.clientX;
+	Mouse.y = event.clientY;
+	//console.log ('move', Mouse.x, Mouse.y);
+    });
+
     this.canvas.click (function (event) {
-	var pixel = readPixel (event.clientX, event.clientY);
+	that.manager.click (Mouse.x, Mouse.y);
     });
     
     this.canvas.dblclick (function (event) {
@@ -236,14 +259,14 @@ function Engine () {
     });
 
     //var popup = $ ('<div class="popup overlay"></div>');
-    this.canvas.mousemove (function (event) {
+    this.canvas.mousemove(function (event) {
 	if (dragging) {
 	    //popup.remove ();
-	    var pos = that.camera.project (new vect (event.clientX, event.clientY));
+	    //var pos = that.camera.project (new vect (event.clientX, event.clientY));
 	}
 	else {
-	    var pixel = readPixel (event.clientX, event.clientY);
-	    trigger_event (pixel);
+	    //var pixel = readPixel (event.clientX, event.clientY);
+	    //trigger_event (pixel);
 	}
     });
 
