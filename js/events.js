@@ -63,7 +63,6 @@ function EventManager (engine) {
 	var key = pixel[0] + ',' + pixel[1] + ',' + pixel[2];
 	var layer = callers[key];
 	var feature = features[key];
-	console.log (pixel);
 	for (var i = 0; i < events[type][layer.id].length; i ++) {
 	    events[type][layer.id][i] (new LayerSelector ([feature]));
 	}

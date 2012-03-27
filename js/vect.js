@@ -31,6 +31,16 @@ function vect (x, y, z) {
 	this.y /= scale;
 	this.z /= scale;
     };
+    this.div = function (v) {
+	this.x /= v.x;
+	this.y /= v.y;
+	this.z /= v.z;
+    };
+    this.floor = function () {
+	this.x = Math.floor (this.x);
+	this.y = Math.floor (this.y);
+	this.z = Math.floor (this.z);
+    };
     this.zero = function () {
 	return ((this.x + this.y + this.z) == 0);
     };

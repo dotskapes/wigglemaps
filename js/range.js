@@ -28,6 +28,18 @@ function Box (v1, v2) {
     this.y_right = function (p) {
 	return (v2.y <= p.y);
     };
+
+    this.area = function () {
+	return (this.max.x - this.min.x) * (this.max.y - this.min.y);
+    }
+
+    this.height = function () {
+	return this.max.y - this.min.y;
+    };
+
+    this.width = function () {
+	return this.max.x - this.min.x;
+    };
 };
 
 function RangeNode (elem, start, end, current) {

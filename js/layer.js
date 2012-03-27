@@ -387,6 +387,14 @@ function Layer (data) {
 	this.get = function (i) {
 	    return f[i];
 	};
+	this.remove = function (index) {
+	    var elem = [];
+	    for (var i = 0; i < elements.length; i ++) {
+		if (index != i) 
+		    elem.push (elements[i]);
+	    }
+	    return new LayerSelector (elem);
+	};
 	var operators = {
 	    '>': function (a, b) { return a > b},
 	    '<': function (a, b) { return a < b},
@@ -394,6 +402,15 @@ function Layer (data) {
 	    '>=': function (a, b) { return a >= b},
 	    '<=': function (a, b) { return a <= b}
 	};
+
+	this.subset = function (elem) {
+	    var subset = [];
+	    for (var i = 0; i < elem.length; i ++) {
+		subset.push (elements[elem[i]]);
+	    }
+	    return new LayerSelector (subset);
+	};
+
 	this.select = function (string) {
 	    if (string.match (/^\s*\*\s*$/))
 		return new LayerSelector (f);
@@ -465,6 +482,10 @@ function Layer (data) {
 	    }
 	    color_buffer.update (color_array, 0);
 	    return this;
+	};
+
+	this.click = function (func) {
+	    
 	};
     };
 
