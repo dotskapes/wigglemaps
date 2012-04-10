@@ -2,7 +2,7 @@
  * Licensed under the MIT License
  */
 
-var DEBUG = false;
+var DEBUG = true;
 
 gl = null;
 
@@ -27,26 +27,26 @@ function setContext (canvas) {
 
 function rect (x, y, w, h) {
     var verts = [
-        x - w, y + h, 1.0,
-        x - w, y - h, 1.0,
-        x + w, y + h, 1.0,
+        x - w, y + h,
+        x - w, y - h,
+        x + w, y + h,
 	
-        x - w, y - h, 1.0,
-        x + w, y - h, 1.0,
-        x + w, y + h, 1.0
+        x - w, y - h,
+        x + w, y - h,
+        x + w, y + h
     ];
     return verts;
 };
 
 function rectv (p1, p2) {
     var verts = [
-        p1.x, p2.y, 1.0,
-        p1.x, p1.y, 1.0,
-        p2.x, p2.y, 1.0,
+        p1.x, p2.y,
+        p1.x, p1.y,
+        p2.x, p2.y,
 	
-        p1.x, p1.y, 1.0,
-        p2.x, p1.y, 1.0,
-        p2.x, p2.y, 1.0
+        p1.x, p1.y,
+        p2.x, p1.y,
+        p2.x, p2.y
     ];
     return verts;
 };

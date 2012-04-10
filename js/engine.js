@@ -50,8 +50,8 @@ function Engine () {
     var old_time =  new Date ().getTime ();
     var fps_window = [];
 
-    var base_east = null;
-    var base_west = null;
+    base_east = null;
+    base_west = null;
 
     $.ajax ({
 	url: BASE_DIR + 'tiles/base_east.kml',

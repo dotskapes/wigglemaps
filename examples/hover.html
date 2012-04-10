@@ -7,6 +7,7 @@
     <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
 
     <script type="text/javascript" src="../webgl_maps.js"></script>
+    <script type="text/javascript" src="../js/polygon.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
@@ -15,10 +16,10 @@
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
-		br_pop = new Layer (data);
+		br_pop = GeoJSON (data);
 		engine.scene.push (br_pop);
 
-		br_pop.mouseover (function (feature) {
+		/*br_pop.mouseover (function (feature) {
 		    $ ('#hover').text (feature.get (0).properties.admin_name);
 		    feature.highlight (new Color (204, 85, 0, 128));
 		});
@@ -26,7 +27,7 @@
 		br_pop.mouseout (function (feature) {
 		    $ ('#hover').text ('NA');
 		    feature.unhighlight ();
-		});
+		});*/
 	    }
 	});
     });

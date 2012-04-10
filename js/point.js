@@ -7,21 +7,17 @@ var default_point_color = new Color (116, 169, 207, 255);
 var default_point_alpha = 1.0;
 
 function PointLayer (initial_points) {
-    this.id = new_feature_id ();
-    layer_id ++;
-
-    if (!point_shader || !poly_shader) {
-	poly_shader = makeProgram (BASE_DIR + 'shaders/poly');
+    if (!point_shader) {
 	point_shader = makeProgram (BASE_DIR + 'shaders/point');
-
 	circle_tex = getTexture (BASE_DIR + 'images/circle.png');
     }
+    this.id = new_feature_id ();
 
     var buffers = new Buffers (initial_points);
-    buffers.create ('points', 3);
-    buffers.create ('units', 3);
-    buffers.create ('colors', 3);
-    buffers.create ('alphas', 1);
+    buffers.create ('vert', 2);
+    buffers.create ('unit', 2);
+    buffers.create ('color', 3);
+    buffers.create ('alpha', 1);
 
     var layer = this;
 
@@ -59,7 +55,7 @@ function PointLayer (initial_points) {
 		color = layer.style ('fill');
 	    if (!color)
 		color = default_point_color;
-	    buffers.repeat ('colors', color.array, start, count);
+	    buffers.repeat ('color', color.array, start, count);
 	};
 
 	var set_alpha = function () {
@@ -70,29 +66,8 @@ function PointLayer (initial_points) {
 	    if (!opacity)
 		opacity = default_point_alpha;
 	    
-	    buffers.repeat ('alphas', [opacity], start, count);
+	    buffers.repeat ('alpha', [opacity], start, count);
 	};
-
-	/*this.bind = function (_layer, _id, _buffers) {
-	    if (layer)
-		throw "Invalid Operation: Point bound twice";
-	    layer = _layer;
-	    this.id = _id;
-	    buffers = _buffers;
-
-	    count = 6;
-	    start = buffers.alloc (count);
-
-	    var geom_array = [this.geom[0], this.geom[1], 1];
-	    //for (var i = 0; i < _count; i ++) {
-	    //    buffers.set ('points', geom_array, start + i, 1);
-	    //}
-	    buffers.repeat ('points', geom_array, start, count);
-	    buffers.write ('units', unit, start, count);
-
-	    set_color ();
-	    set_alpha ();
-	};*/
 
 	this.style = function (key, val) {
 	    if (arguments.length == 1)
@@ -109,92 +84,17 @@ function PointLayer (initial_points) {
 	count = 6;
 	start = buffers.alloc (count);
 	
-	var geom_array = [this.geom[0], this.geom[1], 1];
-	buffers.repeat ('points', geom_array, start, count);
-	buffers.write ('units', unit, start, count);
+	buffers.repeat ('vert', this.geom, start, count);
+	buffers.write ('unit', unit, start, count);
 	
 	set_color ();
 	set_alpha ();
     };
 
-    /*var size;
-    var vert_array;
-    var front_array;
-    var back_array;
-    var id_array;
-
-    var point_buffer; 
-    var unit_buffer; 
-    var color_buffer;
-    var id_buffer;
-
-    var copy_array = function (dst, src) {
-	if (dst.length < src.length)
-	    throw "Destination smaller than source";
-	for (var i = 0; i < src.length; i ++) {
-	    dst[i] = src[i];
-	}
-    };
-
-    var resize = function (_size) {
-	var n_vert_array = new Float32Array (_size * 3);
-	var n_front_array = new Float32Array (_size * 4);
-	var n_back_array = new Float32Array (_size * 3);
-	var n_id_array = new Float32Array (_size * 3);
-
-	if (size) {
-	    copy_array (n_vert_array, vert_array);
-	    copy_array (n_front_array, front_array);
-	    copy_array (n_back_array, back_array);
-	    copy_array (n_id_array, id_array);
-	}
-
-	vert_array = n_vert_array;
-	front_array = n_front_array;
-	back_array = n_back_array;
-	id_array = n_id_array;
-	
-	size = _size;
-
-	point_buffer = dynamicBuffer (size, 3);
-	unit_buffer = repeats (unit, 3, size);
-	color_buffer = dynamicBuffer (size, 4);
-	id_buffer = dynamicBuffer (size, 4);
-    };
-
-    if (!initial_points)
-	initial_points = 256;
-    resize (initial_points * 6);*/
-
     var tree = null;
 
     var num_points = 0;
     var dirty = false;
-    /*var add_point = function (p) {
-	var geom = p.geom;
-	if ((num_points + 1) * 6 >= size) {
-	    resize (size * 2);
-	}
-	var base3 = num_points * 6 * 3;
-	var base4 = num_points * 6 * 4;
-	
-	for (var i = 0; i < 6; i ++) {
-	    var offset3 = i * 3;
-	    var offset4 = i * 4;
-
-	    //vert_array[base3 + offset3] = geom[0];
-	    //vert_array[base3 + offset3 + 1] = geom[1];
-	    //vert_array[base3 + offset3 + 2] = 1.0;
-	}
-	num_points ++;
-	dirty = true;	
-	tree = null;
-    };*/
-
-    //var tree = new RangeTree (r_points);
-
-    //engine.manager.register (this, features, id_array);
-    //id_buffer.update (id_array, 0);
 
     var _properties = {};
     var features = {};
@@ -205,23 +105,11 @@ function PointLayer (initial_points) {
 	    _properties[key] = true;
 	features[p.id] = p;
 
-	//var start = num_points * 6;
-	//var count = 6;
-
 	num_points ++;
 	dirty = true;	
 	tree = null;
 
 	return p;
-
-	/*add_point (p);
-	var c = engine.manager.register (this, p);
-	for (var i = start; i < start + count; i ++) {
-	    id_array[i * 4] = c.r / 255;
-	    id_array[i * 4 + 1] = c.g / 255;
-	    id_array[i * 4 + 2] = c.b / 255;
-	    id_array[i * 4 + 3] = 1.0;
-	}*/
     };
 
     this.features = function () {
@@ -259,32 +147,8 @@ function PointLayer (initial_points) {
     };
 
     this.click = function (func) {
-	engine.manager.bind ('click', this, func);
+	//engine.manager.bind ('click', this, func);
     };
-
-    /*this.color_front = function (color, start, count) {
-	if (!color)
-	    color = default_point_color;
-	for (var i = start; i < start + count; i ++) {
-	    front_array[i * 4] = color.r;
-	    front_array[i * 4 + 1] = color.g;
-	    front_array[i * 4 + 2] = color.b;
-	}
-	dirty = true;
-    };
-
-    this.alpha_front = function (alpha, start, count) {
-	if (!alpha)
-	    alpha = default_point_alpha;
-	for (var i = start; i < start + count; i ++) {
-	    front_array[i * 4 + 3] = alpha;	
-	}
-	dirty = true;
-    };
-
-    this.color_back = function (value, start, stop) {
-
-    };*/
 
     this.style = function (key, value) {
 	if (arguments.length > 1)
@@ -298,9 +162,6 @@ function PointLayer (initial_points) {
 	buffers.update (dt);
 	if (num_points > 0) {
 	    if (dirty) {
-		/*point_buffer.update (vert_array, 0);
-		color_buffer.update (front_array, 0);
-		id_buffer.update (id_array, 0);*/
 		if (!tree) {
 		    var r_points = [];
 		    for (key in features) {
@@ -318,14 +179,14 @@ function PointLayer (initial_points) {
 
 	    point_shader.data ('screen', engine.camera.mat3);
 	    //point_shader.data ('pos', point_buffer);
-	    point_shader.data ('pos', buffers.get ('points'));
-	    point_shader.data ('circle_in', buffers.get ('units'));
+	    point_shader.data ('pos', buffers.get ('vert'));
+	    point_shader.data ('circle_in', buffers.get ('unit'));
 	    if (select) 
 		return;
 		//point_shader.data ('color_in', id_buffer);
 	    else {
-		point_shader.data ('color_in', buffers.get ('colors'));  
-		point_shader.data ('alpha_in', buffers.get ('alphas')); 
+		point_shader.data ('color_in', buffers.get ('color'));  
+		point_shader.data ('alpha_in', buffers.get ('alpha')); 
 		//point_shader.data ('color_in', color_buffer); 
 	    }
 

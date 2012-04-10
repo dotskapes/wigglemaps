@@ -145,7 +145,7 @@ function add_point (trap, a) {
 	throw "eek";
     trap.push (a.x);
     trap.push (a.y);
-    trap.push (1.0);
+    //trap.push (1.0);
 }
 
 function add_trap (trap, bottom, top) {

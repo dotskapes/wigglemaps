@@ -18,7 +18,7 @@ function RangeBar (engine, colors, bottom, top) {
 	}
     }
 
-    var pos_buffer = staticBuffer (pos, 3);
+    var pos_buffer = staticBuffer (pos, 2);
     var color_buffer = staticBuffer (c, 4);
     
     this.draw = function (engine, dt, select) {

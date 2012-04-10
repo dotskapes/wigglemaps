@@ -1,16 +1,6 @@
-var EARTH = 6378.1
-
-var point_shader = null;
-var poly_shader = null;
-var circle_tex;
-
-var layer_id = 1;
-
-var LayerSelector;
-
 function GeoJSON (data) {
-    var num_points = 0;
-    var points = [];
+    var num_points = 0, num_polys = 0;
+    var points = [], polys = [];
     for (var i = 0; i < data.features.length; i ++) {
 	var feature = data.features[i];
 	if (feature.type == 'Feature') {
@@ -21,16 +11,34 @@ function GeoJSON (data) {
 		    attr: feature.properties
 		});
 	    }
+	    if (feature.geometry.type == 'MultiPolygon') {
+		$.each (feature.geometry.coordinates, function (i, v) {
+		    num_polys ++;
+		    polys.push ({
+			geom: v,
+			attr: feature.properties
+		    });
+		});
+	    }
 	}
     }
-    var p_layer = new PointLayer (num_points);
-    $.each (points, function (i, v) {
-	p_layer.append (v);
-    });
-    return p_layer;
+    if (num_points > 0) {
+	var p_layer = new PointLayer (num_points);
+	$.each (points, function (i, v) {
+	    p_layer.append (v);
+	});
+	return p_layer;
+    }
+    else if (num_polys > 0) {
+	var p_layer = new PolygonLayer ();
+	$.each (polys, function (i, v) {
+	    p_layer.append (v);
+	});
+	return p_layer;	
+    }
 };
 
-function triangulate_polygon (elem) {
+/*function triangulate_polygon (elem) {
     //var poly = [];
     var poly = new clist ();
     for (var i = elem.length - 1; i >= 0; i --) {
@@ -67,12 +75,6 @@ function triangulate_polygon (elem) {
 	    count = poly.length;
 	    i -= poly.length;
 	}
-	/*var j = (i + 1);
-	if (j >= poly.length)
-	    j -= poly.length;
-	var k = (i + 2);
-	if (k >= poly.length)
-	    k -= poly.length;*/
 	var prev = poly.current.prev.data;
 	var current = poly.current.data;
 	var next = poly.current.next.data;
@@ -128,12 +130,6 @@ triangulate_polygon = function (elem) {
     for (var k = 0; k < elem.length; k++) {
 	var p = [];
 	for (var i = elem[k].length - 1; i >= 1; i --) {
-	    //for (var i = 0; i < elem.length; i ++) {
-	    /*var lon = elem[i][0];
-	      var lat = elem[i][1];
-	      var x = lon / EARTH;
-	      var y = ((1 + Math.sin (lat)) / Math.cos (lat)) /EARTH;*/
-	    //p.push (new vect (elem[k][i][0] + Math.random () * .0000001, elem[k][i][1] + Math.random () * .0000001));
 	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
 	}
 	p.push (poly[0]);
@@ -181,20 +177,11 @@ triangulate_polygon = function (elem) {
 	    var p4 = bisect (poly[i], poly[j], poly[k]);
 	    add_triangle (poly[i], poly[j], p3);
 	    add_triangle (p4, p3, poly[j]);
-	    /*var j = (i + 1) % poly.length;
-        var seg = vect.sub (poly[j], poly[i]);
-	    seg.normalize ();
-        var norm = vect.rotateZ (seg, Math.PI / 2);
-        norm.scale (.05);
-        var p3 = vect.add (poly[i], norm);
-        var p4 = vect.add (poly[j], norm);
-	    add_triangle (poly[i], poly[j], p3);
-	    add_triangle (p4, p3, poly[j]);*/
 	}
 	return tri;
-};
+};*/
 
-var key_count = 0;
+/*var key_count = 0;
 function Layer (data) {
     var start_time = new Date ().getTime ();
     this.id = layer_id;
@@ -359,31 +346,6 @@ function Layer (data) {
     
     console.log ('Load Time', end_time - start_time);
 
-    /*this.group = function (name, count) {
-	features.sort (function (a, b) {
-	    return a.properties[name] - b.properties[name];
-	});
-	var colors = [];
-	for (var i = 0; i < count; i ++) {
-	    colors.push ({r: 1.0  - (i / (count - 1)),
-			  g: 0.0,
-			  b: (i / (count - 1)),
-			  a: 1.0});
-	}
-	for (var i = 0; i < features.length; i ++) {
-	    var f = features[i];
-	    var index = Math.floor (((i / features.length)) * count);
-	    colors[index].t ++;
-	    for (var j = f.start; j < f.start + f.count; j ++) {
-		color_array[j * 4] = colors[index].r;
-		color_array[j * 4 + 1] = colors[index].g;
-		color_array[j * 4 + 2] = colors[index].b;
-		color_array[j * 4 + 3] = colors[index].a;
-	    }
-	}
-	color_buffer.update (color_array, 0);
-    };*/
-
     this.choropleth = function (name, colors) {
 	features.sort (function (a, b) {
 	    return a.properties[name] - b.properties[name];
@@ -515,10 +477,6 @@ function Layer (data) {
 	return new LayerSelector (features);
     };
 
-    /*this.id = function (key) {
-	return new LayerSelector ([id_keys[key]]);
-    };*/
-
     this.properties = function () {
 	return properties;
     }
@@ -589,4 +547,4 @@ function Layer (data) {
 	    gl.drawArrays (gl.TRIANGLES, 0, poly_buffer.numItems); 
 	}
     };
-};
+};*/

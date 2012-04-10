@@ -1,7 +1,7 @@
 uniform mat3 screen;
 
-attribute vec3 pos;
-attribute vec3 circle_in;
+attribute vec2 pos;
+attribute vec2 circle_in;
 attribute vec3 color_in;
 attribute float alpha_in;
 
@@ -13,9 +13,9 @@ uniform float rad;
 uniform float pix_w;
 
 void main () {
-     circle = circle_in;
+     circle = vec3 (circle_in, 1.0);
      color = vec4 (color_in, alpha_in);
-     vec3 p = screen * pos;
+     vec3 p = screen * vec3 (pos, 1.0);
      p += vec3 (circle_in.x * rad * pix_w, circle_in.y * rad * pix_w * aspect, 0);
-     gl_Position = vec4 (p.xy, 1.0, p.z);
+     gl_Position = vec4 (p, 1.0);
 }

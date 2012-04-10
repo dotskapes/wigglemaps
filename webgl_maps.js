@@ -16,7 +16,7 @@ $ (document).ready (function () {
 	'range',
 	'feature',
 	'point',
-	'polygon',
+	//'polygon',
 	'selector',
 	'raster',
 	'geojson',
@@ -29,7 +29,10 @@ $ (document).ready (function () {
     $.each (webgl_js, function (index, value) {
 	$.ajax ({
 	    url: BASE_DIR + 'js/' + value + '.js',
-	    async: false
+	    async: false,
+	    error: function (xhr, status, reason) {
+		throw reason;
+	    }
 	});
     });
 

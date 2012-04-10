@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Map</title>
+    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
+
+    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+    $ (document).ready (function () {
+	engine.center (-55, -10);
+
+	$.ajax ({
+	    url: 'http://zk.healthscapes.org/map/static/temp/altitude.kml',
+	    success: function (data) {
+		alt = new Altitude (data);
+
+		engine.scene.push (alt);
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+    <div id="container"></div>
+  </body>
+</html>
