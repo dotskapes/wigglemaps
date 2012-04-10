@@ -40,3 +40,16 @@ div.popup {
     background-color: #fafafa;
     border: solid 1px #cccccc;
 }
+
+div.slider-container {
+    background-color: #cccccc;
+    padding: 0px 10px;
+    border: solid 1px #eeeeee;
+    border-radius: 15px;
+}
+
+div.slider-box {
+    background-color: black;
+    border-radius: 15px;
+    opacity: .75;
+}

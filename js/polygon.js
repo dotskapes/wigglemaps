@@ -7,7 +7,8 @@ var triangulate_polygon = function (elem) {
     var poly = [];
     for (var k = 0; k < elem.length; k++) {
 	var p = [];
-	for (var i = elem[k].length - 1; i >= 1; i --) {
+	//for (var i = elem[k].length - 1; i >= 1; i --) {
+	for (var i = 1; i < elem[k].length; i ++) {
 	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
 	}
 	p.push (poly[0]);

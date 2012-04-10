@@ -1,10 +1,12 @@
+var EXTENTS = 180.0;
+
 function Camera (canvas) {
     this.mat3 = new Float32Array (9);
     //this.mat3[0] = 2.0 / canvas.width ();
     //this.mat3[5] = 2.0 / canvas.height ();
     var ratio = canvas.width () / canvas.height ();
-    this.mat3[0] = 2.0 / 50.0;
-    this.mat3[4] = ratio * 2.0 / 50.0;
+    this.mat3[0] = 2.0 / EXTENTS;
+    this.mat3[4] = ratio * 2.0 / EXTENTS;
     this.mat3[8] = 1.0;
     
     this.mat3[6] = 0.0;

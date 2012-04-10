@@ -16,11 +16,12 @@ $ (document).ready (function () {
 	'range',
 	'feature',
 	'point',
-	//'polygon',
+	'polygon',
 	'selector',
 	'raster',
 	'geojson',
-	'range_bar'
+	'range_bar',
+	'slider'
     ];
 
     BASE_DIR = $ ('script[src*="webgl_maps.js"]').attr ('src').replace ('webgl_maps.js', '');

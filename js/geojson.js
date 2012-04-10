@@ -12,10 +12,18 @@ function GeoJSON (data) {
 		});
 	    }
 	    if (feature.geometry.type == 'MultiPolygon') {
-		$.each (feature.geometry.coordinates, function (i, v) {
+		$.each (feature.geometry.coordinates, function (i, poly) {
+		    var oriented = [];
+		    for (var k = 0; k <= poly.length - 1; k ++) {
+			var o_ring = [];
+			for (var j = poly[k].length - 1; j >= 0; j --) {
+			    o_ring.push (poly[k][j]);
+			}
+			oriented.push (o_ring);
+		    }
 		    num_polys ++;
 		    polys.push ({
-			geom: v,
+			geom: oriented,
 			attr: feature.properties
 		    });
 		});
