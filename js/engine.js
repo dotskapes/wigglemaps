@@ -1,4 +1,3 @@
-var BASE_DIR;
 //var set_id_color, bind_event;
 
 var Mouse = {
@@ -7,7 +6,6 @@ var Mouse = {
 };
 
 function Engine () {
-    BASE_DIR = $ ('script[src*="webgl_maps.min.js"]').attr ('src').replace ('webgl_maps.min.js', '');
     var that = this;
     this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
     $('#container').append (this.canvas);
@@ -41,6 +39,10 @@ function Engine () {
 	    this.scroller.enable ();
 	    this.sel.disable ();
 	}
+    };
+
+    this.center = function (x, y) {
+	this.camera.position (new vect (x, y));
     };
 
     this.manager = new EventManager (this);
@@ -137,7 +139,8 @@ function Engine () {
 	    that.scene[i].draw (that, dt, false);
 	}
 	that.sel.draw (that, dt);
-	that.manager.update (dt);
+	if (!dragging)
+	    that.manager.update (dt);
 	
 	requestAnimationFrame (draw);
     };

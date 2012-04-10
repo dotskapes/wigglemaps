@@ -3,8 +3,8 @@ $ (document).ready (function () {
 
     var layers = {}
 
-    var p = new vect (-55, -10);
-    engine.camera.position (p);
+    //var p = new vect (-55, -10);
+    //engine.camera.position (p);
 
     /*$.ajax ({
 	url: 'static/temp/bio.kml',

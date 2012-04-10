@@ -10,7 +10,7 @@ function EventManager (engine) {
     var r = 0;
     var g = 0;
     var b = 0;
-    var set_id_color = function (layer, feature, array) {
+    var set_id_color = function () {
 	b ++;
 	if (b > 255) {
 	    b = 0;
@@ -22,27 +22,34 @@ function EventManager (engine) {
 	}
 	if (r > 255)
 	    throw "Too many elements to assign unique id";
-	for (var i = feature.start; i < feature.start + feature.count; i ++) {
+	return {
+	    r: r, 
+	    g: g,
+	    b: b
+	};
+	/*for (var i = feature.start; i < feature.start + feature.count; i ++) {
 	    array[i * 4] = r / 255;
 	    array[i * 4 + 1] = g / 255;
 	    array[i * 4 + 2] = b / 255;
 	    array[i * 4 + 3] = 1.0;
 	}
 	var key = r + ',' + g + ',' + b;
-	return key;
+	return key;*/
     };
 
-    this.register = function (layer, elements, id_array) {
-	for (var i = 0; i < elements.length; i ++) {
-	    var f = elements[i];
-	    var key = set_id_color (layer, f, id_array);
-	    callers[key] = layer;
-	    features[key] = f;
-	}
-	for (key in events) {
-	    events[key][layer.id] = [];
-	}
+    this.register = function (layer, f) {
+	var c = set_id_color ();
+	var key = c.r + ',' + c.g + ',' + c.b;
 	
+	callers[key] = layer;
+	features[key] = f;
+
+	if (!(layer.id in events['click'])) {
+	    for (key in events) {
+		events[key][layer.id] = [];
+	    }
+	}
+	return c;
     };
     
     this.bind = function (type, caller, func) {

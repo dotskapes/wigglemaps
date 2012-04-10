@@ -18,7 +18,10 @@ function setContext (canvas) {
 	function throwOnGLError(err, funcName, args) {
 	    throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;
 	};
-	gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl'), throwOnGLError);
+	gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
+	    alpha: false,
+	    antialias: true
+	}), throwOnGLError);
     }
 };
 

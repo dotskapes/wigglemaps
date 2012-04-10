@@ -93,7 +93,6 @@ function RangeNode (elem, start, end, current) {
     
     this.search = function (result, box) {
 	if (xrange (box)) {
-	    console.log ('sub');
 	    this.subquery (result, box, 0, this.subtree.length - 1, parseInt ((this.subtree.length - 1) / 2));
 	    return;
 	}

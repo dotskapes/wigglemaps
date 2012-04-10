@@ -2,49 +2,32 @@
 <html lang="en">
   <head>
     <title>Map</title>
-    <script type="text/javascript" src="../webgl_maps.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
-
     <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
     <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
     <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-    <script type="text/javascript" src="../js/webgl-debug.js"></script>
-    <script type="text/javascript" src="../js/util.js"></script>
-    <script type="text/javascript" src="../js/vect.js"></script>
-    <script type="text/javascript" src="../js/shader-utils.js"></script>
-    <script type="text/javascript" src="../js/clist.js"></script>
-    <script type="text/javascript" src="../js/camera.js"></script>
-    <script type="text/javascript" src="../js/events.js"></script>
-    <script type="text/javascript" src="../js/engine.js"></script>
-    <script type="text/javascript" src="../js/panner.js"></script>
-    <script type="text/javascript" src="../js/scrollbar.js"></script>
-    <script type="text/javascript" src="../js/select.js"></script>
-    <script type="text/javascript" src="../js/trapezoid.js"></script>
-    <script type="text/javascript" src="../js/range.js"></script>
-    <script type="text/javascript" src="../js/range_bar.js"></script>
-    <script type="text/javascript" src="../js/layer.js"></script>
-    <script type="text/javascript" src="../js/raster.js"></script>
-    <script type="text/javascript" src="../js/app.js"></script>
+
+    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
       $ (document).ready (function () {
+	engine.center (-55, -10);
 	$.ajax ({
 	    url: 'http://zk.healthscapes.org/map/static/temp/br_precip.json',
 	    dataType: 'json',
-     	    async: false,			
 	    success: function (data) {
-		br_precip = new Layer (data);
+		br_precip = new GeoJSON (data);
 		engine.scene.push (br_precip);
       
 		$ ('#mar').click (function () {
-		    br_precip.features ().select ('mar > 150').color (new Color (1, 1, 0, 1));
+		    br_precip.features ().select ('mar > 150').style ('fill', new Color (1, 1, 0, 1));
 		});
 
 		$ ('#apr').click (function () {
-		    br_precip.features ().select ('apr < 75').color (new Color (.9, 0, 0, 1));
+		    br_precip.features ().select ('apr < 75').style ('fill', new Color (.9, 0, 0, 1));
 		});
 
 		$ ('#may').click (function () {
-		    br_precip.features ().select ('may > 50').select ('may < 100').color (new Color (204, 85, 0, 255));
+		    br_precip.features ().select ('may > 50').select ('may < 100').style ('fill', new Color (204, 85, 0, 255));
 		});
 	    }
 	});

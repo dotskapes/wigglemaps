@@ -10,7 +10,7 @@ function KML (data) {
 
 function Raster (url, min, max) {
     if (!raster_shader)
-	raster_shader = makeProgram (BASE_DIR + '/shaders/raster');
+	raster_shader = makeProgram (BASE_DIR + 'shaders/raster');
 
     console.log (url);
     var image = getTexture (url);
