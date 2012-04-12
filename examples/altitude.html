@@ -13,7 +13,7 @@
 	engine.center (-60, -10);
 
 	$.ajax ({
-	    url: 'http://zk.healthscapes.org/map/static/temp/w100n10.kml',
+	    url: 'http://zk.healthscapes.org/map/static/temp/w100n40.kml',
 	    success: function (data) {
 		alt = new Altitude (data);
 
@@ -29,11 +29,30 @@
 		engine.scene.push (alt);
 	    }
 	});
+
+	$.ajax ({
+	    url: 'http://zk.healthscapes.org/map/static/temp/w060n40.kml',
+	    success: function (data) {
+		alt = new Altitude (data);
+
+		engine.scene.push (alt);
+	    }
+	});
+
+	$.ajax ({
+	    url: 'http://zk.healthscapes.org/map/static/temp/w060s10.kml',
+	    success: function (data) {
+		alt = new Altitude (data);
+
+		engine.scene.push (alt);
+	    }
+	});
     });
 </script>
 
   </head>
   <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
     <div id="container"></div>
   </body>
 </html>

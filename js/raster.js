@@ -35,7 +35,7 @@ function Raster (url, min, max) {
 var altitude_shader = null;
 function Altitude (data) {
     if (!altitude_shader)
-	altitude_shader = makeProgram (BASE_DIR + 'shaders/altitude');
+	altitude_shader = makeProgram (BASE_DIR + 'shaders/hillshade');
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
