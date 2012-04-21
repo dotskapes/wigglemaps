@@ -21,7 +21,8 @@ $ (document).ready (function () {
 	'raster',
 	'geojson',
 	'range_bar',
-	'slider'
+	'slider',
+	'map'
     ];
 
     BASE_DIR = $ ('script[src*="webgl_maps.js"]').attr ('src').replace ('webgl_maps.js', '');
@@ -37,8 +38,8 @@ $ (document).ready (function () {
 	});
     });
 
-    engine = new Engine ();
+    //engine = new Engine ();
 
-    var p = new vect (-55, -10);
-    engine.camera.position (p);
+    //var p = new vect (-55, -10);
+    //engine.camera.position (p);
 });

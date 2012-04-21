@@ -259,7 +259,7 @@ function indexBuffer (items, itemSize) {
 };
 
 var tex_count = 0;
-function getTexture (path) {
+function getTexture (path, callback) {
     var tex = gl.createTexture ();
     tex.id = tex_count;
     tex_count ++;
@@ -273,6 +273,8 @@ function getTexture (path) {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 	gl.generateMipmap(gl.TEXTURE_2D);  
 	gl.bindTexture(gl.TEXTURE_2D, null);
+	if (callback)
+	    callback ();
     };
     img.src = path;
     return tex;

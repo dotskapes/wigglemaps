@@ -11,7 +11,8 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	engine.center (-55, -10);
+	var map = new Map ();
+	map.center (-55, -10);
 
 	$.ajax ({
 	    url: 'http://zk.healthscapes.org/map/static/temp/br_precip.json',
@@ -19,7 +20,7 @@
 	    success: function (data) {
 		br_precip = GeoJSON (data);
 
-		engine.scene.push (br_precip);
+		map.append (br_precip);
 
 		var attr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
@@ -52,7 +53,7 @@
 		var bottom = new vect ($ (document).width () - 70 - colors.length * 50, $ (document).height () - 70);
 		var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
 		var bar = new RangeBar (engine, colors, bottom, top);
-		engine.scene.push (bar);
+		map.append (bar);
 
 	    }
 	});
@@ -62,6 +63,5 @@
   </head>
   <body>
     <div id="slider" style="position: absolute;"></div>
-    <div id="container"></div>
   </body>
 </html>

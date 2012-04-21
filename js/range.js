@@ -40,6 +40,46 @@ function Box (v1, v2) {
     this.width = function () {
 	return this.max.x - this.min.x;
     };
+    
+    this.vertex = function (index) {
+	switch (index) {
+	case 0:
+	    return this.min.clone ();
+	    break;
+	case 1:
+	    return new vect (this.max.x, this.min.y);
+	    break;
+	case 2:
+	    return this.max.clone ();
+	    break;
+	case 3:
+	    return new vect (this.min.x, this.max.y);
+	    break;
+	default:
+	    throw "Index out of bounds: " + index ;
+	}
+    };
+
+    this.intersects = function (box) {
+	for (var i = 0; i < 4; i ++) {
+	    for (var j = 0; j < 4; j ++) {
+		if (vect.intersects (this.vertex (i), this.vertex ((i + 1) % 4),
+				     box.vertex (j), box.vertex ((j + 1) % 4)))
+		    return true;
+	    }
+	}
+	if (this.contains (box.min) &&
+	    this.contains (box.max) &&
+	    this.contains (new vect (box.min.x, box.max.y)) &&
+	    this.contains (new vect (box.max.x, box.min.y)))
+	    return true;
+	if (box.contains (this.min) &&
+	    box.contains (this.max) &&
+	    box.contains (new vect (this.min.x, this.max.y)) &&
+	    box.contains (new vect (this.max.x, this.min.y)))
+	    return true;
+	return false
+    };
 };
 
 function RangeNode (elem, start, end, current) {

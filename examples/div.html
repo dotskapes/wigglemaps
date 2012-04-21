@@ -10,21 +10,13 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	var map = new Map ();
-	map.center (-55, -10);
-
-	$.ajax ({
-	    url: 'http://zk.healthscapes.org/map/static/temp/w100n40.kml',
-	    success: function (data) {
-                elev = new Elevation (data);
-
-                map.append (elev);
-	    }
-	});
+        map = new Map ('#container');
     });
 </script>
 
   </head>
   <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+    <div id="container" style="position: absolute; width: 500px; height: 500px; top: 100px; left: 100px;"></div>
   </body>
 </html>

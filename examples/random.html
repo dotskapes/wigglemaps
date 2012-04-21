@@ -10,9 +10,10 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
         $ (document).ready (function () {
-	//engine.camera.zoom (.25);
+	    var map = new Map ();
+	    map.center (-55, -10);
 	    layer = new PointLayer ();
-	    engine.scene.push (layer);
+	    map.append (layer);
 	    for (var i = 0; i < 50000; i ++) {
 		var x = Math.random () * 360 - 180;
 		var y = Math.random () * 180 - 90;
@@ -33,6 +34,5 @@
     <div style="padding: 10px; background-color: white;">
       50,000 Dynamically Drawn Points, Randomly Positioned
     </div>
-    <div id="container"></div>
   </body>
 </html>

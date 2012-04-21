@@ -13,7 +13,8 @@
 	var x0 = 10;
 	var y0 = 10;
 
-	engine.center (x0, y0);
+	var map = new Map ();
+	map.center (x0, y0);
 	
 	var poly = new PolygonLayer ();
 
@@ -43,12 +44,11 @@
 	    ]
 	});
 	
-	engine.scene.push (poly);
+	map.append (poly);
     });
 </Script>
 
   </head>
   <body>
-    <div id="container"></div>
   </body>
 </html>

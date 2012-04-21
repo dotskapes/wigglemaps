@@ -10,7 +10,8 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	engine.center (-55, -10);
+	var map = new Map ();
+	map.center (-55, -10);
 
 	$.ajax ({
 	    url: 'http://zk.healthscapes.org/map/static/temp/br_precip.json',
@@ -18,7 +19,7 @@
 	    success: function (data) {
 		br_precip = GeoJSON (data);
 
-		engine.scene.push (br_precip);
+		map.append (br_precip);
 
 		$.each (br_precip.attr (), function (index, data) {
 		    $ ('#sort').append ("<option>" + data + "</option>");
@@ -63,6 +64,5 @@
       <select id="sort">
       </select>
     </div>
-    <div id="container"></div>
   </body>
 </html>

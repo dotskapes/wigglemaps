@@ -5,13 +5,33 @@ var Mouse = {
     y: 0
 };
 
-function Engine () {
+function Engine (selector) {
     var that = this;
     this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
-    $('#container').append (this.canvas);
-    this.canvas.attr ('width', $ (document).width () - this.canvas.position ().left);
-    this.canvas.attr ('height', $ (document).height () - this.canvas.position ().top);
+    if (selector) {
+	$ (selector).append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+    }
+    else {
+	selector = window;
+	$ ('body').append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());	
+	$ (window).resize (function () {
+	    that.resize ();
+	});
+    }
+
+    this.resize = function () {
+	that.canvas.attr ('width', $ (selector).width ());
+	that.canvas.attr ('height', $ (selector).height ());	
+	gl.viewport (0, 0, that.canvas.width (), that.canvas.height ());
+	that.camera.reconfigure ();
+    };
+
     setContext (this.canvas, DEBUG);
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -39,10 +59,6 @@ function Engine () {
 	    this.scroller.enable ();
 	    this.sel.disable ();
 	}
-    };
-
-    this.center = function (x, y) {
-	this.camera.position (new vect (x, y));
     };
 
     this.manager = new EventManager (this);

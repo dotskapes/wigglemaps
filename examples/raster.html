@@ -10,14 +10,15 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	engine.center (-55, -10);
+	var map = new Map ();
+	map.center (-55, -10);
 
 	$.ajax ({
 	    url: 'http://zk.healthscapes.org/map/static/temp/wetlands.kml',
 	    dataType: 'xml',
 	    success: function (data) {
 		br_wetlands = KML (data);
-		engine.scene.push (br_wetlands);
+		map.append (br_wetlands);
 	    }
 	});
     });
@@ -25,6 +26,5 @@
 
   </head>
   <body>
-    <div id="container"></div>
   </body>
 </html>

@@ -108,11 +108,11 @@ vect.left = function (a, b, c, tol) {
     return (vect.cross (v1, v2) >= -tol);
 };
 
-vect.intersect2d = function (a, b, c, d, tol) {
+vect.intersects = function (a, b, c, d, tol) {
     if (!tol)
 	tol = 0;
-    return (vect.left2d (a, b, c, tol) != vect.left2d (a, b, d, tol) &&
-	    vect.left2d (c, d, b, tol) != vect.left2d (c, d, a, tol));
+    return (vect.left (a, b, c, tol) != vect.left (a, b, d, tol) &&
+	    vect.left (c, d, b, tol) != vect.left (c, d, a, tol));
 };
 
 vect.intersect2dt = function (a, b, c, d) {
