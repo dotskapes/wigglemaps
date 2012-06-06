@@ -1,4 +1,7 @@
 var LayerSelector = function (elem) {
+
+    var lookup = null;
+
     this.length = elem.length;
 
     this.get = function (i) {
@@ -11,6 +14,28 @@ var LayerSelector = function (elem) {
 	    result.push (elem[keys[i]]);
 	}
 	return new LayerSelector (result);
+    };
+
+    this.id = function (key) {
+	if (!lookup) {
+	    lookup = {};
+	    for (var i = 0; i < elem.length; i ++) {
+		lookup[elem[i].id] = elem[i];
+	    }
+	}
+	if (key in lookup) {
+	    return new LayerSelector ([lookup[key]]);
+	}
+	else {
+	    return null;
+	}
+    };
+
+    this.each = function (func) {
+	for (var i = 0; i < elem.length; i ++) {
+	    func (i, elem[i]);
+	}
+	return this;
     };
 
     var operators = {
@@ -29,7 +54,7 @@ var LayerSelector = function (elem) {
 	var field1 = matches[1];
 	var op = matches[2];
 	var val = null;
-	var field2 = null;;
+	var field2 = null;
 	if (isNaN (matches[3])) {
 	    field2 = matches[3];
 	}

@@ -51,13 +51,14 @@ function vect (x, y, z) {
 	throw 'Need to reimplement';
 	//return (this.x * v.y) - (this.y * v.x);
     };
-    this.rotateZ = function (omega) {
+    this.rotate = function (omega) {
 	var cos = Math.cos (omega);
 	var sin = Math.sin (omega);
 	xp = cos * this.x - sin * this.y;
 	yp = sin * this.x + cos * this.y;
 	this.x = xp;
 	this.y = yp;
+	return this;
     };
     this.clone = function () {
         return new vect (this.x, this.y, this.z); 
@@ -161,7 +162,7 @@ vect.intersect2dpos = function (a, b, c, d) {
     return vect.add (a, next);
 };
 
-vect.rotateZ = function (v, omega) {
+vect.rotate = function (v, omega) {
     var cos = Math.cos (omega);
     var sin = Math.sin (omega);
     xp = cos * v.x - sin * v.y;

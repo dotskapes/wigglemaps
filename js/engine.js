@@ -5,7 +5,16 @@ var Mouse = {
     y: 0
 };
 
-function Engine (selector) {
+function Engine (selector, options) {
+    if (!options) {
+	options = {};
+    }
+    if (!('base' in options)) {
+	options.base = 'default';
+    }
+    if (!('background' in options)) {
+	options.background = new Color (0, 0, 0, 1);
+    }
     var that = this;
     this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
     if (selector) {
@@ -32,7 +41,7 @@ function Engine (selector) {
 
     setContext (this.canvas, DEBUG);
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    //gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 
     gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable (gl.BLEND);
@@ -69,27 +78,29 @@ function Engine (selector) {
     base_east = null;
     base_west = null;
 
-    $.ajax ({
-	url: BASE_DIR + 'tiles/base_east.kml',
-	dataType: 'xml',
-	success: function (data) {
-	    base_east = new KML (data);
-	},
-	error: function (jqXHR, textStatus, errorThrown) {
-	    console.log (jqXHR, textStatus, errorThrown);
-	}
-    });
-
-    $.ajax ({
-	url: BASE_DIR + 'tiles/base_west.kml',
-	dataType: 'xml',
-	success: function (data) {
-	    base_west = new KML (data);
-	},
-	error: function (jqXHR, textStatus, errorThrown) {
-	    console.log (jqXHR, textStatus, errorThrown);
-	}
-    });
+    if (options.base == 'default') {
+	$.ajax ({
+	    url: BASE_DIR + 'tiles/base_east.kml',
+	    dataType: 'xml',
+	    success: function (data) {
+		base_east = new KML (data);
+	    },
+	    error: function (jqXHR, textStatus, errorThrown) {
+		console.log (jqXHR, textStatus, errorThrown);
+	    }
+	});
+	
+	$.ajax ({
+	    url: BASE_DIR + 'tiles/base_west.kml',
+	    dataType: 'xml',
+	    success: function (data) {
+		base_west = new KML (data);
+	    },
+	    error: function (jqXHR, textStatus, errorThrown) {
+		console.log (jqXHR, textStatus, errorThrown);
+	    }
+	});
+    }
 
     var framebuffer = gl.createFramebuffer ();
     gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
@@ -134,6 +145,7 @@ function Engine (selector) {
 	if (that.dirty) {
 
 	    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+	    gl.clearColor(0, 0, 0, 1);
 	    gl.clear(gl.COLOR_BUFFER_BIT);
 	    gl.clearDepth (0.0);
 	    for (var i = 0; i < that.scene.length; i ++) {
@@ -143,6 +155,7 @@ function Engine (selector) {
 	    //that.dirty = false;
 	}
 	    
+	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
 	if (base_east) {

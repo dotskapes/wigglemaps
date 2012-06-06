@@ -11,7 +11,7 @@ function SelectionBox (engine) {
     var reset_rect = function () {
 	sel_buffer.update (rectv (start, end), 0);
     };
-    $ (engine.canvas).bind ('mousedown', function (event) {
+    engine.canvas.bind ('mousedown', function (event) {
 	if (!enabled)
 	    return;
 	dragging = true;
@@ -28,6 +28,8 @@ function SelectionBox (engine) {
 
     $ (document).bind ('mouseup', function (event) {
 	if (!enabled)
+	    return;
+	if (!dragging)
 	    return;
 	var min = engine.camera.project (engine.camera.pixel (start));
 	var max = engine.camera.project (engine.camera.pixel (end));

@@ -18,16 +18,28 @@ var triangulate_polygon = function (elem) {
 };
 
 function PolygonLayer () {
-    var default_poly_color = new Color (0, 0, 1, 1);
+    var default_poly_color = new Color (.02, .44, .69, 1);
+    var default_poly_stroke = new Color (.02, .44, .69, 1);
     
     if (!poly_shader) {
 	poly_shader = makeProgram (BASE_DIR + 'shaders/poly');
     }
+    if (!line_shader) {
+	line_shader = makeProgram (BASE_DIR + 'shaders/line');
+    }
     this.id = new_feature_id ();
+
     var fill_buffers = new Buffers (1024);
     fill_buffers.create ('vert', 2);
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
+
+    var stroke_buffers = new Buffers (1024);
+    stroke_buffers.create ('vert', 2);
+    stroke_buffers.create ('norm', 2);
+    stroke_buffers.create ('color', 3);
+    //stroke_buffers.create ('unit', 3);
+    stroke_buffers.create ('alpha', 1);
 
     var layer = this;
 
@@ -55,6 +67,13 @@ function PolygonLayer () {
 	    if (!color)
 		color = default_poly_color;
 	    fill_buffers.repeat ('color', color.array, fill_start, fill_count);
+
+	    color = _style['stroke'];
+	    if (!color)
+		color = layer.style ('stroke');
+	    if (!color)
+		color = default_poly_stroke;
+	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
 	};
 
 	var set_alpha = function () {
@@ -73,7 +92,29 @@ function PolygonLayer () {
 	fill_start = fill_buffers.alloc (fill_count);
 	fill_buffers.write ('vert', p, fill_start, fill_count);
 
+	stroke_count = this.geom[0].length * 6;
+	stroke_start = draw_lines (stroke_buffers, this.geom[0]);
+	for (var i = 1; i < this.geom.length; i ++) {
+	    stroke_count += this.geom[i].length * 6;    
+	    draw_lines (stroke_buffers, this.geom[i]);
+	}
+
 	var _style = {};
+
+	this.style = function (key, val) {
+	    if (arguments.length == 1)
+		return _style[key];
+	    _style[key] = val;
+	    if (key == 'fill') {
+		set_color ();
+	    }
+	    if (key == 'stroke') {
+		set_color ();
+	    }	    
+	    if (key == 'opacity') {
+		set_alpha ();
+	    }
+	};
 
 	set_color ();
 	set_alpha ();
@@ -81,6 +122,14 @@ function PolygonLayer () {
 
     var features = {};
     var num_polys = 0;
+    
+    this.features = function () {
+	var elem = [];
+	for (key in features) {
+	    elem.push (features[key]);
+	}
+	return new LayerSelector (elem);
+    };
 
     this.append = function (data) {
 	var p = new Polygon (data);
@@ -98,6 +147,7 @@ function PolygonLayer () {
 	if (select)
 	    return;
 	fill_buffers.update (dt);	
+	stroke_buffers.update (dt);	
 
 	gl.useProgram (poly_shader);
 
@@ -107,5 +157,19 @@ function PolygonLayer () {
 	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
 	
 	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
+
+
+	gl.useProgram (line_shader);
+	
+	line_shader.data ('screen', engine.camera.mat3);
+	line_shader.data ('pos', stroke_buffers.get ('vert'));
+	line_shader.data ('norm', stroke_buffers.get ('norm'));
+	line_shader.data ('color_in', stroke_buffers.get ('color'));
+	//line_shader.data ('circle_in', stroke_buffers.get ('unit'));
+	
+	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
+	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
+	
+	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
     };
 };

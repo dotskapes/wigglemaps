@@ -1,6 +1,6 @@
 function GeoJSON (data) {
-    var num_points = 0, num_polys = 0;
-    var points = [], polys = [];
+    var num_points = 0, num_polys = 0, num_lines = 0;
+    var points = [], polys = [], lines = [];
     for (var i = 0; i < data.features.length; i ++) {
 	var feature = data.features[i];
 	if (feature.type == 'Feature') {
@@ -8,6 +8,22 @@ function GeoJSON (data) {
 		num_points ++;
 		points.push ({
 		    geom: feature.geometry.coordinates,
+		    attr: feature.properties
+		});
+	    }
+	    if (feature.geometry.type == 'Polygon') {
+		var poly = feature.geometry.coordinates;
+		var oriented = [];
+		for (var k = 0; k <= poly.length - 1; k ++) {
+		    var o_ring = [];
+		    for (var j = poly[k].length - 1; j >= 0; j --) {
+			o_ring.push (poly[k][j]);
+		    }
+		    oriented.push (o_ring);
+		}
+		num_polys ++;
+		polys.push ({
+		    geom: oriented,
 		    attr: feature.properties
 		});
 	    }
@@ -28,6 +44,15 @@ function GeoJSON (data) {
 		    });
 		});
 	    }
+	    if (feature.geometry.type == 'MultiLineString') {
+		$.each (feature.geometry.coordinates, function (i, line) {
+		    num_lines ++;
+		    lines.push ({
+			geom: line,
+			attr: feature.properties
+		    });
+		});
+	    }
 	}
     }
     if (num_points > 0) {
@@ -40,9 +65,20 @@ function GeoJSON (data) {
     else if (num_polys > 0) {
 	var p_layer = new PolygonLayer ();
 	$.each (polys, function (i, v) {
-	    p_layer.append (v);
+	    try {
+		p_layer.append (v);
+	    } catch (e) {
+		console.log ('rednering polygon failed')
+	    }
 	});
 	return p_layer;	
+    }
+    else if (num_lines > 0) {
+	var line_layer = new LineLayer ();
+	$.each (lines, function (i, v) {
+	    line_layer.append (v);
+	});
+	return line_layer;
     }
 };
 

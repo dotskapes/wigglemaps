@@ -40,20 +40,27 @@ function Slider (pos, size, units) {
     };
 
     var change_event = function (index) {};
-
     this.change = function (func) {
 	change_event = func;
+    };
+
+    var release_event = function (index) {};
+    this.release = function (func) {
+	release_event = func;
     };
 
     this.dom.append (bar);
     
     $ (document).bind ('mouseup', function () {
+	if (!dragging)
+	    return;
 	dragging = false;
+	var index = slider_index (event.clientX);
+	release_event (index);
     });
 
     $ (document).bind ('mousemove', function (event) {    
 	if (dragging) {
-	    console.log ('dragging');
 	    var index = slider_index (event.clientX);
 	    if (index != current)
 		change_event (index);

@@ -58,6 +58,7 @@ function Buffers (initial_size) {
     };
 
     this.get = function (name) {
+	//console.log (name, data[name].array);
 	return data[name].buffer;
     };
 

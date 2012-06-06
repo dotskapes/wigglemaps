@@ -17,6 +17,7 @@ $ (document).ready (function () {
 	'feature',
 	'point',
 	'polygon',
+	'line',
 	'selector',
 	'raster',
 	'geojson',

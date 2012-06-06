@@ -1,3 +1,5 @@
+var PI = 3.14159265;
+
 if (! ('requestAnimationFrame' in window)) {
   if ('mozRequestAnimationFrame' in window)
     requestAnimationFrame = mozRequestAnimationFrame;
@@ -30,7 +32,7 @@ function as_rgb (array) {
 }
 
 function Color (r, g, b, a) {
-    if (r <= 1) {
+    if (r <= 1 && g <= 1 && b <= 1 && a <= 1) {
 	this.r = r;
 	this.g = g;
 	this.b = b;
@@ -60,7 +62,7 @@ function hex_to_color (hex) {
 function is_list (elem) {
     if (elem == null)
 	return false;
-    if (!('length' in elem))
+    if (elem.length == undefined)
 	return false;
     for (var i = 0; i < elem.length; i ++) {
 	if (!(i in elem))

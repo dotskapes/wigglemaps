@@ -1,5 +1,5 @@
-var Map = function (selector) {
-    engine = new Engine (selector);
+var Map = function (selector, options) {
+    engine = new Engine (selector, options);
 
     this.center = function (x, y) {
 	engine.camera.position (new vect (x, y));
