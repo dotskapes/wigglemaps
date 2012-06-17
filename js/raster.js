@@ -5,7 +5,7 @@ function KML (data) {
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
     var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
     var url = $ (data).find ('GroundOverlay Icon href').text ();
-    return new Raster (url, min, max);
+    return new Raster (BASE_DIR + url, min, max);
 };
 
 function Raster (url, min, max) {
@@ -33,7 +33,7 @@ function Raster (url, min, max) {
 };
 
 var altitude_shader = null;
-function Altitude (data) {
+function Hillshade (data) {
     if (!altitude_shader)
 	altitude_shader = makeProgram (BASE_DIR + 'shaders/hillshade');
 
@@ -56,7 +56,7 @@ function Altitude (data) {
 	altitude_shader.data ('tex_in', tex_buffer);
 
 	altitude_shader.data ('elevation', image);
-	altitude_shader.data ('background', base_west.image);
+	//altitude_shader.data ('background', base_west.image);
 
 	var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
 	

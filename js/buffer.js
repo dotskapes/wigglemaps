@@ -39,6 +39,8 @@ function Buffers (initial_size) {
     };
 
     this.create = function (name, len) {
+	if (!len)
+	    throw "Length of buffer must be a positive integer";
 	var array = new Float32Array (size * len);
 	var buffer = dynamicBuffer (size, len);
 	data[name] = {

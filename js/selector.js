@@ -24,7 +24,7 @@ var LayerSelector = function (elem) {
 	    }
 	}
 	if (key in lookup) {
-	    return new LayerSelector ([lookup[key]]);
+	    return lookup[key];
 	}
 	else {
 	    return null;
@@ -48,7 +48,7 @@ var LayerSelector = function (elem) {
     this.select = function (string) {
 	if (string.match (/^\s*\*\s*$/))
 	    return new LayerSelector (elem);
-	var matches = string.match (/^\s*(\w+)\s*([=<>]+)\s*((\.|\w)+)\s*$/);
+	var matches = string.match (/^\s*([^\s]+)\s*([=<>]+)\s*(([^\s])+)\s*$/);
 	if (!matches)
 	    throw "Bad Selector";
 	var field1 = matches[1];

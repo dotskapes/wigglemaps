@@ -24,7 +24,7 @@
 	map.append (line_layer);*/
 
 	$.ajax ({
-	    url: 'http://zk.healthscapes.org/map/static/temp/railroads.json',
+	    url: 'data/railroads.json',
 	    dataType: 'json',
 	    success: function (data) {
 		roads = GeoJSON (data);

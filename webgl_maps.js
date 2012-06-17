@@ -20,6 +20,7 @@ $ (document).ready (function () {
 	'line',
 	'selector',
 	'raster',
+	'tile',
 	'geojson',
 	'range_bar',
 	'slider',

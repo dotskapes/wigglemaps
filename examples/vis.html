@@ -62,7 +62,7 @@
 	var cell_height = 25;
 
 	leg = $ ('<div></div>').addClass ('legend');
-	leg.append ('<h2>Threats to Water Security</h2>');
+	leg.append ('<h2>Threats to Bio Diversity</h2>');
 	range = $ ('<div></div>').addClass ('range');
 	leg.append (range);
 	range.append ('<div class="box"></div>');
@@ -116,7 +116,7 @@
 	//engine.scene.push (bar);
 	
 	$.ajax ({
-	    url: 'data/countries.json',
+	    url: 'http://zk.healthscapes.org/map/static/temp/countries.json',
 	    dataType: 'json',
      	    //async: false,			
 	    success: function (data) {
@@ -124,8 +124,7 @@
 		map.append(br_pop);
 
 		$.ajax ({
-		    url: 'data/bio_threat.csv',
-//		    url: 'data/invest_benefits.csv',
+		    url: 'http://zk.healthscapes.org/map/static/temp/aws_threats.csv',
 		    dataType: 'text',
 		    success: function (data) {
 			var rows = data.split ('\n');
@@ -135,26 +134,8 @@
 			    var val = vals[1].slice (1, vals[1].length - 1);
 			    lookup[val] = parseFloat (vals[2]);
 			}
-			br_pop.features ().each (function (i, f) {
-			    f.attr['range'] = lookup[f.attr['SOVEREIGNT']];
-			});
-			for (var i = 1; i <= 6; i ++) {
-			    var sel = br_pop.features ().quantile ('range', i, 6);
-			    sel.each (function (j, f) {
-				f.style ('stroke', new Color (10, 10, 10, 255));
-				f.style ('fill-opacity', .7);
-				f.style ('stroke-opacity', 1);
-				if (!isNaN (f.attr['range'])) {
-				    f.style ('fill', red_blue[i - 1]);
-				}
-				else {
-				    var c = new Color (10, 10, 10, 255);
-				    f.style ('fill', c);
-				}
-			    });
-			}
 			//br_pop.features ().style ('fill', function (f) {
-			/*br_pop.features ().each (function (i, f) {
+			br_pop.features ().each (function (i, f) {
 			    var key = f.attr['SOVEREIGNT'];
 			    var val = lookup[key];
 			    if (!isNaN (val)) {
@@ -162,15 +143,14 @@
 				var c = red_blue[index];
 				f.style ('fill', c);
 				f.style ('stroke', new Color (10, 10, 10, 255));
-				f.style ('fill-opacity', .7);
-				f.style ('stroke-opacity', 1);
+				f.style ('opacity', .7);
 			    }
 			    else {
 				var c = new Color (10, 10, 10, 255);
 				f.style ('fill', c);
 				f.style ('stroke', new Color (10, 10, 10, 255));
 			    }
-			});˜*/
+			});
 		    }
 		});
 

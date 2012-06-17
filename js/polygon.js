@@ -1,6 +1,7 @@
 var poly_shader = null;
 
-var default_poly_alpha = .5;
+var default_poly_fill_alpha = .5;
+var default_poly_stroke_alpha = 1.0;
 //var default_poly_color = new Color (0, 0, 1, 1);
 
 var triangulate_polygon = function (elem) {
@@ -58,7 +59,7 @@ function PolygonLayer () {
 	this.id = new_feature_id ();
 	
 	var fill_start, fill_count;
-	var stroke_start, stroke_count;
+	var stroke_start, stroke_count = 0;
 
 	var set_color = function () {
 	    var color = _style['fill'];
@@ -78,28 +79,56 @@ function PolygonLayer () {
 
 	var set_alpha = function () {
 	    //layer.alpha_front (_style['opacity'], start, count);
-	    var opacity = _style['opacity'];
-	    if (!opacity)
-		opacity = layer.style ('opacity');
-	    if (!opacity)
-		opacity = default_poly_alpha;
+	    var opacity;
+	    if (('fill-opacity' in _style))
+		opacity = _style['fill-opacity'];
+	    else
+		opacity = layer.style ('fill-opacity');
 	    
 	    fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
+
+	    if ('stroke-opacity' in _style)
+		opacity = _style['stroke-opacity'];
+	    else
+		opacity = layer.style ('stroke-opacity');
+	    stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
 	};
-
-	var p = triangulate_polygon (this.geom);
-	fill_count = p.length / 2;
+	
+	var simple = [];
+	var fill_count = 0;
+	$.each (this.geom, function (i, poly) {
+	    var p = triangulate_polygon (poly);
+	    fill_count += p.length / 2;
+	    simple.push (p);
+	});
 	fill_start = fill_buffers.alloc (fill_count);
-	fill_buffers.write ('vert', p, fill_start, fill_count);
+	var current = fill_start;
+	$.each (simple, function (i, p) {	
+	    var count = p.length / 2;;
+	    fill_buffers.write ('vert', p, current, count);
+	    current += count;
+	});
 
-	stroke_count = this.geom[0].length * 6;
+	stroke_start = stroke_buffers.count ();
+	$.each (this.geom, function (i, poly) {
+	    for (var i = 0; i < poly.length; i ++) {
+		stroke_count += poly[i].length * 6;    
+		draw_lines (stroke_buffers, poly[i]);
+	    }
+	});
+
+	/*stroke_count = this.geom[0].length * 6;
 	stroke_start = draw_lines (stroke_buffers, this.geom[0]);
 	for (var i = 1; i < this.geom.length; i ++) {
 	    stroke_count += this.geom[i].length * 6;    
 	    draw_lines (stroke_buffers, this.geom[i]);
-	}
+	}*/
 
 	var _style = {};
+	copy_value (_style, prop.style, 'fill', hex_to_color);
+	copy_value (_style, prop.style, 'stroke', hex_to_color);
+	copy_value (_style, prop.style, 'fill-opacity', parseFloat);
+	copy_value (_style, prop.style, 'stroke-opacity', parseFloat);
 
 	this.style = function (key, val) {
 	    if (arguments.length == 1)
@@ -111,7 +140,10 @@ function PolygonLayer () {
 	    if (key == 'stroke') {
 		set_color ();
 	    }	    
-	    if (key == 'opacity') {
+	    if (key == 'fill-opacity') {
+		set_alpha ();
+	    }
+	    if (key == 'stroke-opacity') {
 		set_alpha ();
 	    }
 	};
@@ -122,6 +154,7 @@ function PolygonLayer () {
 
     var features = {};
     var num_polys = 0;
+    var tree = null;
     
     this.features = function () {
 	var elem = [];
@@ -131,10 +164,27 @@ function PolygonLayer () {
 	return new LayerSelector (elem);
     };
 
+    this.search = function (box) {
+	var min = box.min;
+	var max = box.max;
+	var elem = tree.search (min, max);
+	var keys = {};
+	$.each (elem, function (i, p) {
+	    keys[p.key] = true;
+	});
+	var results = [];
+	for (var k in keys) {
+	    results.push (features[k]);
+	}
+	return new LayerSelector (results);
+    };
+
     this.append = function (data) {
 	var p = new Polygon (data);
 	features[p.id] = p;
 	num_polys ++;
+	dirty = true;
+	tree = null;
     };
     
     this.style = function (key, value) {
@@ -148,6 +198,24 @@ function PolygonLayer () {
 	    return;
 	fill_buffers.update (dt);	
 	stroke_buffers.update (dt);	
+	if (dirty) {
+	    var r_points = [];
+	    for (var key in features) {
+		$.each (features[key].geom, function (i, poly) {
+		    $.each (poly, function (j, ring) {
+			$.each (ring, function (k, pair) {
+			    r_points.push ({
+				key: key,
+				x: pair[0],
+				y: pair[1]
+			    });			
+			});
+		    });
+		});
+	    }
+	    tree = new RangeTree (r_points);
+	    dirty = false;
+	}
 
 	gl.useProgram (poly_shader);
 
@@ -165,6 +233,7 @@ function PolygonLayer () {
 	line_shader.data ('pos', stroke_buffers.get ('vert'));
 	line_shader.data ('norm', stroke_buffers.get ('norm'));
 	line_shader.data ('color_in', stroke_buffers.get ('color'));
+	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
 	//line_shader.data ('circle_in', stroke_buffers.get ('unit'));
 	
 	line_shader.data ('px_w', 2.0 / engine.canvas.width ());

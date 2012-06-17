@@ -4,10 +4,10 @@ precision highp float;
 
 #define PI 3.14159265
 #define SHADE_RES 1.0 / 512.0
-#define ALPHA .75
+#define ALPHA 1.0
 
 uniform sampler2D elevation;
-uniform sampler2D background;
+//uniform sampler2D background;
 
 varying vec2 tex;
 varying vec2 tex2;
@@ -82,10 +82,11 @@ void main () {
      //gl_FragColor = vec4 (color.rgb * hillshade, 1.0);
 
      vec3 h_color = vec3 (0.1, 0.0, 0.0);
-          vec4 color = texture2D (background, tex2);	   
-     gl_FragColor = vec4 (h_color * ALPHA * hillshade + (color * (1.0 - ALPHA * hillshade)).rgb, 1.0);
+     //vec4 color = texture2D (background, tex2);	   
+     //gl_FragColor = vec4 (h_color * ALPHA * hillshade + (color * (1.0 - ALPHA * hillshade)).rgb, 1.0);
 
      //gl_FragColor = vec4 (h_color, hillshade/ .9);
+     gl_FragColor = vec4 (h_color, hillshade * ALPHA);
 
      //gl_FragColor = vec4 (0.05, 0.0, 0.0, hillshade);
      //gl_FragColor = vec4 (0.0, (dx + 1.0) / 2.0, (dy + 1.0) / 2.0, 1.0);

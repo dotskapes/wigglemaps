@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Map</title>
+    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
+
+    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <script type="text/javascript" src="../js/tile.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+    $ (document).ready (function () {
+	var map = new Map ();
+	map.center (-55, -10);
+        // layer = new TiledLayer ('examples/data/base', new vect (-180, -90), 2, 4, 90);
+	/*layer = new MultiTileLayer ([
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/512',
+		min: new vect (-180, -90),
+		cols: 2,
+		rows: 1,
+		cellsize: 180,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/1024',
+		min: new vect (-180, -90),
+		cols: 4,
+		rows: 2,
+		cellsize: 90,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/2048',
+		min: new vect (-180, -90),
+		cols: 8,
+		rows: 4,
+		cellsize: 45,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/4096',
+		min: new vect (-180, -90),
+		cols: 16,
+		rows: 8,
+		cellsize: 22.5,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/8192',
+		min: new vect (-180, -90),
+		cols: 32,
+		rows: 16,
+		cellsize: 11.25,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/16384',
+		min: new vect (-180, -90),
+		cols: 64,
+		rows: 32,
+		cellsize: 5.625,
+		size: 256
+	    }
+	]);*/
+	layer = new MultiTileLayer ([
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/512',
+		min: new vect (-180, -90),
+		cols: 2,
+		rows: 1,
+		cellsize: 180,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/1024',
+		min: new vect (-180, -90),
+		cols: 4,
+		rows: 2,
+		cellsize: 90,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/2048',
+		min: new vect (-180, -90),
+		cols: 8,
+		rows: 4,
+		cellsize: 45,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/4096',
+		min: new vect (-180, -90),
+		cols: 16,
+		rows: 8,
+		cellsize: 22.5,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/8192',
+		min: new vect (-180, -90),
+		cols: 32,
+		rows: 16,
+		cellsize: 11.25,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/16384',
+		min: new vect (-180, -90),
+		cols: 64,
+		rows: 32,
+		cellsize: 5.625,
+		size: 256
+	    }
+	]);
+	map.append (layer);
+    });
+</script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+  </body>
+</html>

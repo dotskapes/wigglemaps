@@ -164,7 +164,7 @@ function PointLayer (initial_points) {
 	    if (dirty) {
 		if (!tree) {
 		    var r_points = [];
-		    for (key in features) {
+		    for (var key in features) {
 			r_points.push ({
 			    key: key,
 			    x: features[key].geom[0],

@@ -75,11 +75,114 @@ function Engine (selector, options) {
     var old_time =  new Date ().getTime ();
     var fps_window = [];
 
-    base_east = null;
-    base_west = null;
+    //base_east = null;
+    //base_west = null;
+    base = null;
 
-    if (options.base == 'default') {
-	$.ajax ({
+    if (options.base == 'default' || options.base == 'nasa') {
+	base = new MultiTileLayer ([
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/512',
+		min: new vect (-180, -90),
+		cols: 2,
+		rows: 1,
+		cellsize: 180,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/1024',
+		min: new vect (-180, -90),
+		cols: 4,
+		rows: 2,
+		cellsize: 90,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/2048',
+		min: new vect (-180, -90),
+		cols: 8,
+		rows: 4,
+		cellsize: 45,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/4096',
+		min: new vect (-180, -90),
+		cols: 16,
+		rows: 8,
+		cellsize: 22.5,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/8192',
+		min: new vect (-180, -90),
+		cols: 32,
+		rows: 16,
+		cellsize: 11.25,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/nasa_topo_bathy/16384',
+		min: new vect (-180, -90),
+		cols: 64,
+		rows: 32,
+		cellsize: 5.625,
+		size: 256
+	    }
+	]);
+    }
+    else if (options.base == 'ne') {
+	base = new MultiTileLayer ([
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/512',
+		min: new vect (-180, -90),
+		cols: 2,
+		rows: 1,
+		cellsize: 180,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/1024',
+		min: new vect (-180, -90),
+		cols: 4,
+		rows: 2,
+		cellsize: 90,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/2048',
+		min: new vect (-180, -90),
+		cols: 8,
+		rows: 4,
+		cellsize: 45,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/4096',
+		min: new vect (-180, -90),
+		cols: 16,
+		rows: 8,
+		cellsize: 22.5,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/8192',
+		min: new vect (-180, -90),
+		cols: 32,
+		rows: 16,
+		cellsize: 11.25,
+		size: 256
+	    },
+	    {
+		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/16384',
+		min: new vect (-180, -90),
+		cols: 64,
+		rows: 32,
+		cellsize: 5.625,
+		size: 256
+	    }
+	]);
+	/*$.ajax ({
 	    url: BASE_DIR + 'tiles/base_east.kml',
 	    dataType: 'xml',
 	    success: function (data) {
@@ -99,7 +202,7 @@ function Engine (selector, options) {
 	    error: function (jqXHR, textStatus, errorThrown) {
 		console.log (jqXHR, textStatus, errorThrown);
 	    }
-	});
+	});*/
     }
 
     var framebuffer = gl.createFramebuffer ();
@@ -158,11 +261,8 @@ function Engine (selector, options) {
 	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
-	if (base_east) {
-	    base_east.draw (that, dt, false);
-	}
-	if (base_west) {
-	    base_west.draw (that, dt, false);
+	if (base) {
+	    base.draw (that, dt, false);
 	}
 	for (var i = 0; i < that.scene.length; i ++) {
 	    that.scene[i].draw (that, dt, false);

@@ -23,11 +23,12 @@ function GeoJSON (data) {
 		}
 		num_polys ++;
 		polys.push ({
-		    geom: oriented,
+		    geom: [oriented],
 		    attr: feature.properties
 		});
 	    }
 	    if (feature.geometry.type == 'MultiPolygon') {
+		var rings = [];
 		$.each (feature.geometry.coordinates, function (i, poly) {
 		    var oriented = [];
 		    for (var k = 0; k <= poly.length - 1; k ++) {
@@ -37,11 +38,12 @@ function GeoJSON (data) {
 			}
 			oriented.push (o_ring);
 		    }
-		    num_polys ++;
-		    polys.push ({
-			geom: oriented,
-			attr: feature.properties
-		    });
+		    rings.push (oriented);
+		});
+		num_polys ++;
+		polys.push ({
+		    geom: rings,
+		    attr: feature.properties
 		});
 	    }
 	    if (feature.geometry.type == 'MultiLineString') {
@@ -68,7 +70,7 @@ function GeoJSON (data) {
 	    try {
 		p_layer.append (v);
 	    } catch (e) {
-		console.log ('rednering polygon failed')
+		console.log ('rendering polygon failed')
 	    }
 	});
 	return p_layer;	
