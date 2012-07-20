@@ -16,7 +16,7 @@ function Raster (url, min, max) {
     
     var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
     var pos_buffer = staticBuffer (rectv (min, max), 2);
-    
+
     this.draw = function (engine, dt, select) {
 	if (select)
 	    return;
@@ -32,6 +32,8 @@ function Raster (url, min, max) {
     };
 };
 
+var OMEGA = 90.0;
+
 var altitude_shader = null;
 function Hillshade (data) {
     if (!altitude_shader)
@@ -41,15 +43,25 @@ function Hillshade (data) {
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
     var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
     var url = $ (data).find ('GroundOverlay Icon href').text ();
+    //var min = data.min;
+    //var max = data.max;
+    //var url = data.url;
     var image = getTexture (url);
 
     var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
     var pos_buffer = staticBuffer (rectv (min, max), 2);
 
+    var azimuth = 315.0;
+
     this.draw = function (engine, dt, select) {
 	if (select)
 	    return;
 	gl.useProgram (altitude_shader);
+
+	//azimuth += OMEGA * dt;
+	if (azimuth >= 360)
+	    azimuth -= 360;
+	altitude_shader.data ('azimuth', azimuth);
 
 	altitude_shader.data ('screen', engine.camera.mat3);
 	altitude_shader.data ('pos', pos_buffer);

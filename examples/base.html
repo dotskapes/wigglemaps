@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Map</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Base Layer</title>
     <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
     <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
     <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
@@ -11,14 +12,21 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	var root = new Tile ('../../temp/', new vect (-180, -90), 180, 0, 2);
-	engine.scene.push (root);
+	var map = new Map ();
+	map.center (-55, -10);
+    
+	$ ('#base').change (function () {
+	    map.attr ('base', $(this).val ());
+	});
     });
 </script>
 
   </head>
   <body>
-    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
-    <div id="container"></div>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">Base Layer:
+      <select id="base">
+	<option value="nasa">NASA Visible Earth</option>
+	<option value="ne">Natural Earth</option>
+    </p>
   </body>
 </html>

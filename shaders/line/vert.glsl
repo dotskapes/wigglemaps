@@ -19,6 +19,6 @@ void main () {
      alpha = alpha_in;
      vec3 p = screen * vec3 (pos, 1.0);
      float one_px = sqrt (px_w * abs (norm.x) * px_w * abs (norm.x) + px_h * abs (norm.y) * px_h * abs (norm.y));
-     p += one_px * vec3 (norm, 0.0);
+     p += .5 * one_px * vec3 (norm, 0.0);
      gl_Position = vec4 (p.xy, 0.0, 1.0);
 }

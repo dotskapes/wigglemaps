@@ -14,43 +14,85 @@
 	map.center (-55, -10);
 
 	$.ajax ({
-	    url: 'data/br_precip.json',
+	    url: 'data/br_pop.json',
 	    dataType: 'json',
-	    success: function (data) {
-		br_precip = GeoJSON (data);
+	    success: function (data2) {
+		
+		br_pop = GeoJSON (data2);
 
-		map.append (br_precip);
+		$.ajax ({
+		    url: 'data/br_precip.json',
+		    dataType: 'json',
+		    success: function (data) {
+			br_precip = GeoJSON (data);
 
-		$.each (br_precip.attr (), function (index, data) {
-		    $ ('#sort').append ("<option>" + data + "</option>");
-		});
+			var order = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+			br_pop.aggregate (br_precip, function (poly, point) {
+			    if (!poly.attr['count']) {
+				poly.attr['count'] = 0;
+				$.each (order, function (i, key) {
+				    poly.attr[key] = 0;
+				});
+			    }
+			    poly.attr['count'] ++;
+			    $.each (order, function (i, key) {
+				poly.attr[key] += point.attr[key];
+			    });
+			});
 
-		var colors = [
-		    new Color (214, 238, 246, 255),
-		    new Color (189, 201, 225, 255),
-		    new Color (116, 169, 207, 255),
-		    new Color (43, 140, 190, 255),
-		    new Color (4, 90, 141, 255),
-		];
+			map.append (br_pop);
+			
+			$.each (order, function (index, data) {
+			    $ ('#sort').append ("<option>" + data + "</option>");
+			});
+			
+			var colors = [
+			    new Color (214, 238, 246, 255),
+			    new Color (189, 201, 225, 255),
+			    new Color (116, 169, 207, 255),
+			    new Color (43, 140, 190, 255),
+			    new Color (4, 90, 141, 255),
+			];
 
-		$ ('#sort').change (function (event) {
-		    console.log (br_precip.features ().length);
-		    for (var i = 1; i <= colors.length; i ++) {
-			var field = $ (this).val ();
-			br_precip.features ().quantile (field, i, colors.length).style ('fill', colors[i - 1]);
+			var grey = new Color (.2, .2, .2, 1.0);
+
+			br_pop.features ().style ('fill-opacity', .6);
+			br_pop.features ().style ('fill', colors[3]);
+
+			br_pop.features ().each (function (i, f) {
+			    if (f.attr['count'] > 0) {
+				$.each (order, function (j, key) {
+				    f.attr[key] /= f.attr['count'];
+				});
+			    }
+			});
+			
+			$ ('#sort').change (function (event) {
+			    var field = $ (this).val ();
+			    if (field == 'none') {
+				br_pop.features ().style ('fill', colors[3]);
+			    }
+			    else {
+				br_pop.features ().style ('fill', grey);
+				var states = br_pop.features ().filter (function (f) {
+				    return f.attr['count'];
+				});
+				for (var i = 1; i <= colors.length; i ++) {
+				    states.quantile (field, i, colors.length).style ('fill', colors[i - 1]);
+				}
+			    }
+			});
+			
+			/*br_precip.click (function (feature) {
+			  feature.color (new Color (1, 0, 0, 1));
+			  });*/
+			
+			var bottom = new vect ($ (document).width () - 70 - 5 * 50, $ (document).height () - 70);
+			var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
+			var bar = new RangeBar (engine, colors, bottom, top);
+			engine.scene.push (bar);
 		    }
-		    //br_precip.choropleth ($ (this).val (), colors);
 		});
-
-                /*br_precip.click (function (feature) {
-                    feature.color (new Color (1, 0, 0, 1));
-                });*/
-
-		var bottom = new vect ($ (document).width () - 70 - 5 * 50, $ (document).height () - 70);
-		var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
-		var bar = new RangeBar (engine, colors, bottom, top);
-		engine.scene.push (bar);
-
 	    }
 	});
     });
@@ -59,9 +101,10 @@
   </head>
   <body>
     <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
-    <div style="padding: 10px; background-color: white; position: absolute; z-index: 2;">
+    <div style="padding: 10px; color: white; position: absolute; z-index: 2;">
       Select Attribute:
       <select id="sort">
+        <option>none</option>
       </select>
     </div>
   </body>

@@ -2,6 +2,7 @@ var BASE_DIR;
 
 $ (document).ready (function () {
     var webgl_js = [
+	'less-1.3.0.min',
 	'webgl-debug',
 	'util',
 	'vect',
@@ -14,6 +15,7 @@ $ (document).ready (function () {
 	'select',
 	'trapezoid',
 	'range',
+	'style',
 	'feature',
 	'point',
 	'polygon',
@@ -28,7 +30,6 @@ $ (document).ready (function () {
     ];
 
     BASE_DIR = $ ('script[src*="webgl_maps.js"]').attr ('src').replace ('webgl_maps.js', '');
-    console.log (BASE_DIR);
     
     $.each (webgl_js, function (index, value) {
 	$.ajax ({

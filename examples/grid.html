@@ -47,9 +47,10 @@
 	var map = new Map (null, {
 	    base: null,
 	    //background: new Color (150, 150, 150, 255)
-	    background: new Color (10, 10, 10, 255)
+	    background: new Color (10, 10, 10, 255),
+	    center: new vect (45, 20),
+	    extents: 270,
 	});
-	map.center (-55, -10);
 
 	/*var red_blue = [
 	    new Color (33, 102, 172, 128),
@@ -126,7 +127,7 @@
 	//engine.scene.push (bar);
 	
 	$.ajax ({
-	    url: 'http://zk.healthscapes.org/map/static/temp/countries.json',
+	    url: 'data/countries.json',
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
@@ -141,7 +142,7 @@
 	});
 	
 	$.ajax ({
-	    url: 'http://zk.healthscapes.org/map/static/temp/glds10ag15.asc',
+	    url: 'data/glds10ag15.asc',
 	    dataType: 'text',
 	    success: function (data) {
 		world_pop = new AsciiGrid (data, red_white);

@@ -79,6 +79,15 @@ var LayerSelector = function (elem) {
 	return new LayerSelector (new_elem);
     };
 
+    this.filter = function (test) {
+	var results = [];
+	for (var i = 0; i < elem.length; i ++) {
+	    if (test (elem[i]))
+		results.push (elem[i]);
+	}
+	return new LayerSelector (results);
+    }
+
     this.quantile = function (field, q, total) {
 	elem.sort (function (a, b) {
 	    return a.attr[field] - b.attr[field];

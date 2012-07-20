@@ -6,7 +6,7 @@ function Scroller (engine) {
     var speed = 0;
     
     engine.canvas.mousedown (function (event) {
-	console.log (event);
+	//console.log (event);
 	start = new vect (event.clientX, event.clientY);
 	drag = true;
 	//console.log ('pos', engine.camera.project (new vect (event.clientX, event.clientY)));
@@ -16,9 +16,9 @@ function Scroller (engine) {
        drag = false;
    });
     
-    engine.canvas.mousemove (function (event) {
+    /*engine.canvas.mousemove (function (event) {
        pos = new vect (event.clientX, event.clientY);
-   });
+   });*/
     
     $ (document).bind ('keypress', '+', function (event) {
        engine.camera.zoom (1.1);
@@ -55,6 +55,7 @@ function Scroller (engine) {
     };
 
     this.update = function (dt) {
+	pos = new vect (Mouse.x, Mouse.y);
 	if (drag && enabled) {
 	    var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
 	    engine.camera.move (m);

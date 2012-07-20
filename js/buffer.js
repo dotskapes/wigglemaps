@@ -80,6 +80,10 @@ function Buffers (initial_size) {
 	return current;
     };
 
+    this.data = function (name) {
+	return data[name].array;
+    };
+
     this.update = function (dt) {
 	for (name in data) {
 	    if (data[name].dirty) {

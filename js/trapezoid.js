@@ -253,11 +253,11 @@ function trapezoid_polygon (poly_in) {
 
 	if (Math.abs (l_pos - u_pos) > 1) {
 	    for (var j = 0; j < sweep.length; j ++) {
-		console.log (solvex (poly, sweep[j], poly[v.current].y));
+		//console.log (solvex (poly, sweep[j], poly[v.current].y));
 	    }
-	    console.log ('prev', solvex (poly, v.lower, poly[v.current].y));
-	    console.log ('current', solvex (poly, v.current, poly[v.current].y));
-	    throw "eee";
+	    //console.log ('prev', solvex (poly, v.lower, poly[v.current].y));
+	    //console.log ('current', solvex (poly, v.current, poly[v.current].y));
+	    throw "Bad";
 	}
 
 	//var above_in = poly[v.upper].x >= poly[v.current].x;
@@ -322,7 +322,8 @@ function trapezoid_polygon (poly_in) {
 
 	for (var j = 0; j < sweep.length - 1; j ++) {
 	    if (solvex (poly, sweep[j], poly[v.current].y) > solvex (poly, sweep[j + 1], poly[v.current].y)) {
-		console.log (solvex (poly, sweep[j], poly[v.current].y), solvex (poly, sweep[j + 1], poly[v.current].y));
+		//console.log (solvex (poly, sweep[j], poly[v.current].y), solvex (poly, sweep[j + 1], poly[v.current].y));
+		console.log ('Misplaced Sweep');
 		throw "Misplace!";
 	    }
 	}

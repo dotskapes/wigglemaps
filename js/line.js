@@ -128,6 +128,10 @@ function LineLayer () {
 	return l;
     }
 
+    this.update = function (engine, p) {
+
+    };
+
     this.draw = function (engine, dt, select) {
 	stroke_buffers.update (dt);
 	if (num_lines > 0) {

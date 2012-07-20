@@ -27,13 +27,13 @@ div.scroll-ob {
     opacity: .75;
 }
 
-div.popup {
+/*div.popup {
     position: absolute;
     left: 0px;
     top: 0px;
     font-weight: bold;
     padding: 10px 20px;
-}
+}*/
 
 .overlay {
     box-shadow: 5px 5px 10px #888;
@@ -52,4 +52,12 @@ div.slider-box {
     background-color: black;
     border-radius: 15px;
     opacity: .75;
+}
+
+polygon#test {
+    fill-color: rgb(150,150,150);
+}
+
+polygon {
+    fill: rgb(255,255,255);
 }

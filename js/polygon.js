@@ -19,8 +19,8 @@ var triangulate_polygon = function (elem) {
 };
 
 function PolygonLayer () {
-    var default_poly_color = new Color (.02, .44, .69, 1);
-    var default_poly_stroke = new Color (.02, .44, .69, 1);
+    default_poly_fill = new Color (.02, .44, .69, 1);
+    default_poly_stroke = new Color (.02, .44, .69, 1);
     
     if (!poly_shader) {
 	poly_shader = makeProgram (BASE_DIR + 'shaders/poly');
@@ -62,18 +62,17 @@ function PolygonLayer () {
 	var stroke_start, stroke_count = 0;
 
 	var set_color = function () {
-	    var color = _style['fill'];
-	    if (!color)
+	    var color;
+	    if (('fill' in _style))
+		color = _style['fill'];
+	    else
 		color = layer.style ('fill');
-	    if (!color)
-		color = default_poly_color;
 	    fill_buffers.repeat ('color', color.array, fill_start, fill_count);
 
-	    color = _style['stroke'];
-	    if (!color)
+	    if (('stroke' in _style))
+		color = _style['stroke'];
+	    else
 		color = layer.style ('stroke');
-	    if (!color)
-		color = default_poly_stroke;
 	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
 	};
 
@@ -101,6 +100,21 @@ function PolygonLayer () {
 	    fill_count += p.length / 2;
 	    simple.push (p);
 	});
+	var min = new vect (Infinity, Infinity);
+	var max = new vect (-Infinity, -Infinity);
+	$.each (this.geom, function (i, poly) {
+	    $.each (poly[0], function (j, pair) {
+		if (pair[0] < min.x)
+		    min.x = pair[0];
+		if (pair[0] > max.x)
+		    max.x = pair[0];
+		if (pair[1] < min.y)
+		    min.y = pair[1];
+		if (pair[1] > max.y)
+		    max.y = pair[1];
+	    });
+	});
+	this.bounds = new Box (min, max);
 	fill_start = fill_buffers.alloc (fill_count);
 	var current = fill_start;
 	$.each (simple, function (i, p) {	
@@ -179,6 +193,50 @@ function PolygonLayer () {
 	return new LayerSelector (results);
     };
 
+    this.contains = function (p) {
+	var s = 0;
+	for (var i in features) {
+	    var feature = features[i];
+	    if (feature.bounds.contains (p)) {
+		s ++;
+		for (var j = 0; j < feature.geom.length; j ++) {
+		    var poly = feature.geom[j];
+		    var count = 0;
+		    $.each (poly, function (k, ring) {
+			for (var l = 0; l < ring.length; l ++) {
+			    var m = (l + 1) % ring.length;
+			    if ((p.y - ring[l][1]) / (p.y - ring[m][1]) < 0) {
+				var inf = new vect (720, p.y);
+				var v1 = new vect (ring[l][0], ring[l][1]);
+				var v2 = new vect (ring[m][0], ring[m][1]);
+				if (vect.intersects (p, inf, v1, v2))
+				    count ++
+			    }
+			}
+		    });
+		    if ((count % 2) == 1) {
+			return feature;
+		    }
+		}
+	    }
+	}
+	return null;
+    };
+
+    this.aggregate = function (points, callback) {
+	points.features ().each (function (i, f) {
+	    $.each (f.geom, function (j, point) {
+		var poly = layer.contains (new vect (point[0], point[1]));
+		if (poly) {
+		    callback (poly, f);
+		}
+
+	    });
+	});
+    };
+
+    var dirty = false;
+
     this.append = function (data) {
 	var p = new Polygon (data);
 	features[p.id] = p;
@@ -190,7 +248,43 @@ function PolygonLayer () {
     this.style = function (key, value) {
 	if (arguments.length > 1)
 	    throw "Not Implemented";
+	if (key == 'fill')
+	    return default_poly_fill;
+	if (key == 'stroke')
+	    return default_poly_stroke;
+	if (key == 'fill-opacity')
+	    return default_poly_fill_alpha;
+	if (key == 'stroke-opacity')
+	    return default_poly_stroke_alpha;
 	return null;
+    };
+
+    var over_func = null, out_func = null;
+    this.mouseover = function (func) {
+	over_func = func;
+    }
+
+    this.mouseout = function (func) {
+	out_func = func;
+    }
+
+    var current_over = null;
+    this.update_move = function (engine, p) {
+	if (over_func || out_func) {
+	    var c = this.contains (p);
+	    if (c != current_over) {
+		if (out_func && current_over)
+		    out_func (current_over);
+		if (over_func && c)
+		    over_func (c);
+		current_over = c;
+	    }
+	}
+    };
+    this.force_out = function (engine) {
+	if (out_func && current_over) 
+	    out_func (current_over);
+	current_over = null;
     };
 
     this.draw = function (engine, dt, select) {

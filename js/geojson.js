@@ -7,6 +7,13 @@ function GeoJSON (data) {
 	    if (feature.geometry.type == 'Point') {
 		num_points ++;
 		points.push ({
+		    geom: [feature.geometry.coordinates],
+		    attr: feature.properties
+		});
+	    }
+	    if (feature.geometry.type == 'MultiPoint') {
+		num_points += feature.geometry.cooordinates.length;
+		points.push ({
 		    geom: feature.geometry.coordinates,
 		    attr: feature.properties
 		});
@@ -67,11 +74,17 @@ function GeoJSON (data) {
     else if (num_polys > 0) {
 	var p_layer = new PolygonLayer ();
 	$.each (polys, function (i, v) {
-	    try {
-		p_layer.append (v);
-	    } catch (e) {
-		console.log ('rendering polygon failed')
+	    var count = 0;
+	    while (count < 100) {
+		try {
+		    p_layer.append (v);
+		    count = 101;
+		} catch (e) {
+		    count ++;
+		}
 	    }
+	    if (count == 100)
+		console.log ('rendering polygon failed')
 	});
 	return p_layer;	
     }

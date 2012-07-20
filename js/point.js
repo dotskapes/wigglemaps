@@ -36,6 +36,8 @@ function PointLayer (initial_points) {
 
 	this.id = new_feature_id ();
 	var start, count;
+	
+	var total_points = 0;
 
 	/*this.geom = function (new_geom) {
 	  if (this.layer) {
@@ -80,12 +82,19 @@ function PointLayer (initial_points) {
 		set_alpha ();
 	    }
 	};
-
-	count = 6;
+	total_points = this.geom.length;
+	count = 6 * total_points;
 	start = buffers.alloc (count);
+
+	$.each (this.geom, function (index, point) {
+	    buffers.repeat ('vert', point, start + index * 6, 6);
+	    buffers.write ('unit', unit, start + index * 6, 6);
+	});
+	//count = 6;
+	//start = buffers.alloc (count);
 	
-	buffers.repeat ('vert', this.geom, start, count);
-	buffers.write ('unit', unit, start, count);
+	//buffers.repeat ('vert', this.geom, start, count);
+	//buffers.write ('unit', unit, start, count);
 	
 	set_color ();
 	set_alpha ();
@@ -155,7 +164,10 @@ function PointLayer (initial_points) {
 	    throw "Not Implemented";
 	return null;
     };
-    
+  
+    this.update_move = function (engine, p) {
+
+    };
     
     var count = 0;
     this.draw = function (engine, dt, select) {
@@ -165,10 +177,12 @@ function PointLayer (initial_points) {
 		if (!tree) {
 		    var r_points = [];
 		    for (var key in features) {
-			r_points.push ({
-			    key: key,
-			    x: features[key].geom[0],
-			    y: features[key].geom[1]
+			$.each (features[key].geom, function (i, point) {
+			    r_points.push ({
+				key: key,
+				x: point[0],
+				y: point[1]
+			    });
 			});
 		    }
 		    tree = new RangeTree (r_points);

@@ -37,6 +37,10 @@ function RangeBar (engine, colors, bottom, top, vert) {
 
     var pos_buffer = staticBuffer (pos, 2);
     var color_buffer = staticBuffer (c, 4);
+
+    this.update = function (engine, p) {
+
+    };
     
     this.draw = function (engine, dt, select) {
 	if (select)

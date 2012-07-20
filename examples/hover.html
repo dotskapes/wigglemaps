@@ -9,19 +9,55 @@
     <script type="text/javascript" src="../webgl_maps.js"></script>
     <script type="text/javascript" src="../js/geojson.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="popup.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
 	var map = new Map ();
 	map.center (-55, -10);
 	$.ajax ({
-	    url: 'data/br_pop.json',
+	    url: 'data/subunits.json',
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
 		br_pop = GeoJSON (data);
 		map.append(br_pop);
+    
+		var f = null;
+		/*$ (engine.canvas).mousemove (function (event) {
+		    if (f) {
+			f.style ('fill', new Color (.02, .44, .69, 1));
+			f = null;
+		    }
+		    var p = engine.camera.project (new vect (event.pageX, event.pageY));
+		    f = br_pop.contains (p);
+		    if (f) {
+			f.style ('fill', new Color (.32, .74, .99, 1));
+			$ ('#hover').text (f.attr.admin_name);
+		    }
+		    else
+			$ ('#hover').text ('NA');
+		});*/
+		br_pop.mouseover (function (f) {
+		    f.style ('fill', new Color (.32, .74, .99, 1));
+		    $ ('.popup .value').text (f.attr.SUBUNIT);
+		    $ ('.popup').css ('display', 'block');
+		});
 
-		/*br_pop.mouseover (function (feature) {
+		br_pop.mouseout (function (f) {
+		    f.style ('fill', new Color (.02, .44, .69, 1));
+		    //$ ('#hover').text ('NA');
+		    $ ('.popup').css ('display', 'none');
+		    
+		});
+
+		$(window).mousemove (function (event) {
+		    $('.popup').css ({
+			top: event.pageY - $ ('.popup').innerHeight () - 15,
+			left: event.pageX + 15
+		    });
+		});
+
+                /*br_pop.mouseover (function (feature) {
 		    $ ('#hover').text (feature.get (0).properties.admin_name);
 		    feature.highlight (new Color (204, 85, 0, 128));
 		});
@@ -32,14 +68,27 @@
 		});*/
 	    }
 	});
+	/*$.ajax ({
+	    url: 'data/tiny_countries.json',
+	    dataType: 'json',
+     	    async: false,			
+	    success: function (data) {
+		br_pop = GeoJSON (data);
+		map.append(br_pop);
+	    }
+	});*/
     });
 </script>
 
   </head>
   <body>
     <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
-    <div style="padding: 10px; background-color: white; position: absolute">
+    <!--<div style="padding: 10px; color: white; position: absolute">
     Currently hovering over: <span id="hover">NA</span>
+    </div>-->
+    <div class="popup" style="position: absolute; z-index: 2; display: none">
+      <div class="head">Admin Name</div>
+      <div class="value">NA</div>
     </div>
   </body>
 </html>

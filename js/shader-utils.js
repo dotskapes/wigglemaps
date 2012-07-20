@@ -2,7 +2,7 @@
  * Licensed under the MIT License
  */
 
-var DEBUG = true;
+var DEBUG = false;
 
 gl = null;
 
@@ -68,7 +68,6 @@ function makeProgram (path) {
 };
 
 function getShader (type, path) {
-    console.log (path);
     var shader = gl.createShader (type);
 
     $.ajax ({
@@ -100,7 +99,6 @@ function addVars (shader, vert, frag) {
     if (u) {
 	for (var i = 0; i < u.length; i ++) {
 	    var v = u[i].split (' ');
-	    console.log (v);
 	    uniforms[v[2]] = {
 		u: v[0],
 		type: v[1],
@@ -117,10 +115,8 @@ function addVars (shader, vert, frag) {
 		uniforms[v[2]].tex = tex_count;
 		tex_count ++;
 	    }
-	    console.log (uniforms);
 	}
 	shader.get = function (name) {
-	    console.log (uniforms);
 	    return uniforms[name].loc;
 	}
 	shader.data = function (name, data) {
@@ -260,7 +256,6 @@ function indexBuffer (items, itemSize) {
 
 var tex_count = 0;
 function getTexture (path, callback) {
-    console.log ("Loading", path);
     var tex = gl.createTexture ();
     tex.id = tex_count;
     tex_count ++;
@@ -272,7 +267,7 @@ function getTexture (path, callback) {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	gl.generateMipmap(gl.TEXTURE_2D);  
+	//gl.generateMipmap(gl.TEXTURE_2D);  
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	if (callback)
 	    callback ();
@@ -280,3 +275,31 @@ function getTexture (path, callback) {
     img.src = path;
     return tex;
 };
+
+/*function asyncTexture (path, callback) {
+    jxhr = $.ajax ({
+	url: path,
+	success: function (img) {
+	    console.log (img);
+	    var tex = gl.createTexture ();
+	    tex.id = tex_count;
+	    tex_count ++;
+
+	    gl.bindTexture(gl.TEXTURE_2D, tex);  
+	    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
+	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
+	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
+	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	    gl.generateMipmap(gl.TEXTURE_2D);  
+	    gl.bindTexture(gl.TEXTURE_2D, null);
+	    console.log (img);
+
+	    callback (tex);
+	},
+	error: function (xhr, message) {
+	    console.log (message);
+	}
+    });
+    return jxhr;
+}*/

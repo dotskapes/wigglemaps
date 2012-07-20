@@ -1,0 +1,39 @@
+.popup {
+    font-family: arial, sans-serif;
+    text-align: center;
+    font-weight: bold;
+    /*padding: 10px 20px;*/
+    padding: 10px 0px;
+    color: white;
+    background-color: rgba(51,51,51,.6);
+    border: solid 1px rgb(0,0,0);
+}
+
+.popup .head {
+    font-size: 12px;
+    border-bottom: solid 1px rgb(0,0,0);
+    padding: 0px 10px 5px 10px;
+    margin: 0px 20px;
+}
+
+.popup .value {
+    font-size: 12px;
+    /*padding: 5px 10px 0px 10px;*/
+    text-align: left;
+}
+
+.popup .value td {
+    padding: 5px 20px;
+}
+
+.popup .value td.name {
+    text-align: left;
+}
+
+.popup .value td.val {
+    text-align: right;
+}
+
+
+
+
