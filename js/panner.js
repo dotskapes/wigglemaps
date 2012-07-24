@@ -33,18 +33,19 @@ function Scroller (engine) {
    });
     
     engine.canvas.bind ('mousewheel', function (event, delta) {
-       delta *= .5;
-       if (delta < 0) {
-        delta *= -1;
-        delta += 1.0;
-        delta = 1.0 / delta;
-    }
-       else {
-	delta += 1.0;
-    }
-       engine.camera.zoom (delta);
+	delta *= .5;
+	if (delta < 0) {
+            delta *= -1;
+            delta += 1.0;
+            delta = 1.0 / delta;
+	}
+	else {
+	    delta += 1.0;
+	}
+	engine.camera.zoom (delta);
+	event.preventDefault ();
     });
-
+    
     var enabled = true;
     this.disable = function () {
 	enabled = false;
