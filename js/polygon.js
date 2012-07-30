@@ -195,6 +195,7 @@ function PolygonLayer () {
 
     this.contains = function (p) {
 	var s = 0;
+	var results = [];
 	for (var i in features) {
 	    var feature = features[i];
 	    if (feature.bounds.contains (p)) {
@@ -215,12 +216,12 @@ function PolygonLayer () {
 			}
 		    });
 		    if ((count % 2) == 1) {
-			return feature;
+			results.push (feature);
 		    }
 		}
 	    }
 	}
-	return null;
+	return new LayerSelector (results);
     };
 
     this.aggregate = function (points, callback) {
@@ -235,10 +236,16 @@ function PolygonLayer () {
 	});
     };
 
+    this.bounds = null;
+
     var dirty = false;
 
     this.append = function (data) {
 	var p = new Polygon (data);
+	if (this.bounds)
+	    this.bounds.union (p.bounds);
+	else
+	    this.bounds = p.bounds.clone ();
 	features[p.id] = p;
 	num_polys ++;
 	dirty = true;

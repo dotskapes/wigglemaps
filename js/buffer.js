@@ -87,7 +87,8 @@ function Buffers (initial_size) {
     this.update = function (dt) {
 	for (name in data) {
 	    if (data[name].dirty) {
-		data[name].buffer.update (data[name].array, 0);
+		if (data[name].buffer)
+		    data[name].buffer.update (data[name].array, 0);
 		data[name].dirty = false;
 	    }
 	}

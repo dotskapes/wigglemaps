@@ -80,6 +80,22 @@ function Box (v1, v2) {
 	    return true;
 	return false
     };
+
+    this.union = function (b) {
+	this.min.x = Math.min (this.min.x, b.min.x);
+	this.min.y = Math.min (this.min.y, b.min.y);
+
+	this.max.x = Math.max (this.max.x, b.max.x);
+	this.max.y = Math.max (this.max.y, b.max.y);
+    };
+
+    this.centroid = function () {
+	return new vect ((this.max.x + this.min.x) / 2, (this.max.y + this.min.y) / 2);
+    };
+
+    this.clone = function () {
+	return new Box (v1, v2);
+    };
 };
 
 function RangeNode (elem, start, end, current) {

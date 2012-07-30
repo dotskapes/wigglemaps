@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Map</title>
+    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
+    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
+
+    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <script type="text/javascript" src="../js/geojson.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="popup.css" />
+    <script type="text/javascript">
+    $ (document).ready (function () {
+	//var map = new Map ();
+	//map.center (-55, -10);
+	$.ajax ({
+	    url: '../../maps/merge.json',
+	    dataType: 'json',
+     	    async: false,			
+	    success: function (data) {
+		var layer = GeoJSON (data);
+		var grid = new Grid (new vect (-180, -90), new vect (180, 90), 20, 10);
+		for (var i = 0; i < grid.rows (); i ++) {
+		    for (var j = 0; j < grid.cols (); j ++) {
+			var p = grid.centroid (i, j);
+			var count = layer.contains (p).count ();
+			grid.set (i, j, count);
+			console.log (count);
+		    }
+		}
+		console.log ('okay');
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+  </body>
+</html>

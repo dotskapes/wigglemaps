@@ -52,6 +52,8 @@ function rectv (p1, p2) {
 };
 
 function makeProgram (path) {
+    if (!gl)
+	return null;
     var shader = gl.createProgram();
 
     var vert_shader = getShader (gl.VERTEX_SHADER, path + '/vert.glsl');
@@ -217,6 +219,8 @@ function staticBufferJoin (data, itemSize) {
 };
 
 function dynamicBuffer (items, itemSize) {
+    if (!gl)
+	return null;
     var buffer = gl.createBuffer ();
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     var float_data = new Float32Array (items * itemSize);

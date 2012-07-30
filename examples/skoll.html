@@ -203,7 +203,7 @@
 				f.style ('fill', highlights[index]);
 				var field = $ ('#sel').val ();
 				var val = Math.round (f.attr[field] * 100) / 100;
-				$ ('.popup .head').text (f.attr['GEOUNIT']);
+				$ ('.popup .head').text (f.get (0).attr['GEOUNIT']);
 				//$ ('.popup .value').empty ();
 				//$ ('.popup .value').text (val);
 				$ ('.popup').css ('display', 'block');

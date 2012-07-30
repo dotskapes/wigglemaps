@@ -4,6 +4,7 @@ $ (document).ready (function () {
     var webgl_js = [
 	'less-1.3.0.min',
 	'webgl-debug',
+	'rAF',
 	'util',
 	'vect',
 	'shader-utils',
@@ -20,6 +21,7 @@ $ (document).ready (function () {
 	'point',
 	'polygon',
 	'line',
+	'grid',
 	'selector',
 	'raster',
 	'tile',

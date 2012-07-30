@@ -4,6 +4,17 @@ var LayerSelector = function (elem) {
 
     this.length = elem.length;
 
+    this.count = function () {
+	return elem.length;
+    }
+
+    this.attr = function (field) {
+	if (!elem.length)
+	    return null;
+	else
+	    return elem[0].attr[field];
+    };
+
     this.get = function (i) {
 	return elem[i];
     };

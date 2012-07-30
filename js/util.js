@@ -1,6 +1,6 @@
 var PI = 3.14159265;
 
-if (! ('requestAnimationFrame' in window)) {
+/*if (! ('requestAnimationFrame' in window)) {
     if ('mozRequestAnimationFrame' in window)
 	requestAnimationFrame = mozRequestAnimationFrame;
     else if ('webkitRequestAnimationFrame' in window)
@@ -12,7 +12,7 @@ if (! ('requestAnimationFrame' in window)) {
 	    }, 1000 / 60);
 	};
     }
-}
+}*/
 
 var default_copy = function (dst, src, key, def, cast) {
     if (key in src) {

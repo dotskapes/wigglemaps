@@ -5,6 +5,10 @@ var Map = function (selector, options) {
 	engine.camera.position (new vect (x, y));
     };
 
+    this.vcenter = function (v) {
+	this.center (v.x, v.y);
+    };
+
     this.extents = function (width) {
 	engine.camera.extents (width);
     };
@@ -42,5 +46,13 @@ var Map = function (selector, options) {
 	    type: 'POST',
 	    data: data
 	});
+    };
+
+    this.width = function () {
+	return engine.canvas.innerWidth ();
+    };
+
+    this.height = function () {
+	return engine.canvas.innerHeight ();
     };
 };

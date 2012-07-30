@@ -39,7 +39,7 @@
 		});*/
 		br_pop.mouseover (function (f) {
 		    f.style ('fill', new Color (.32, .74, .99, 1));
-		    $ ('.popup .value').text (f.attr.SUBUNIT);
+		    $ ('.popup .value').text (f.get (0).attr.SUBUNIT);
 		    $ ('.popup').css ('display', 'block');
 		});
 
