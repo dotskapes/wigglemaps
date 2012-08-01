@@ -1,4 +1,4 @@
-function GeoJSON (data) {
+function GeoJSON (data, options) {
     var num_points = 0, num_polys = 0, num_lines = 0;
     var points = [], polys = [], lines = [];
     for (var i = 0; i < data.features.length; i ++) {
@@ -72,7 +72,7 @@ function GeoJSON (data) {
 	return p_layer;
     }
     else if (num_polys > 0) {
-	var p_layer = new PolygonLayer ();
+	var p_layer = new PolygonLayer (options);
 	$.each (polys, function (i, v) {
 	    var count = 0;
 	    while (count < 100) {

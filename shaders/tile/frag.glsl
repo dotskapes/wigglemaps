@@ -12,6 +12,11 @@ uniform sampler2D sampler5;
 varying vec2 tex;
 varying float lookup_raw;
 
+uniform float desaturate;
+uniform float darken;
+uniform float hue;
+uniform vec4 hue_color;
+
 void main () {
   //int lookup = int (floor (tex.x * 6.0));
   int lookup = int (floor (lookup_raw * 6.0));
@@ -37,5 +42,10 @@ void main () {
   else
       color = vec4 (0.0, 0.0, 0.0, 1.0);
 
-  gl_FragColor = color;
+  float avg = (color.r * .3 + color.g * .59 + color.b * .11);
+  vec4 avg_color = vec4 (avg, avg, avg, color.a);
+  color = avg_color * desaturate + color * (1.0 - desaturate);
+  vec3 c = color.rgb * darken;
+  c = c * (1.0 - hue) + hue_color.rgb * hue;
+  gl_FragColor = vec4 (c, color.a);
 }

@@ -2,7 +2,6 @@ var BASE_DIR;
 
 $ (document).ready (function () {
     var webgl_js = [
-	'less-1.3.0.min',
 	'webgl-debug',
 	'rAF',
 	'util',
@@ -16,12 +15,13 @@ $ (document).ready (function () {
 	'select',
 	'trapezoid',
 	'range',
-	'style',
+	//'style',
 	'feature',
 	'point',
 	'polygon',
 	'line',
 	'grid',
+	'ascii',
 	'selector',
 	'raster',
 	'tile',
@@ -42,9 +42,4 @@ $ (document).ready (function () {
 	    }
 	});
     });
-
-    //engine = new Engine ();
-
-    //var p = new vect (-55, -10);
-    //engine.camera.position (p);
 });

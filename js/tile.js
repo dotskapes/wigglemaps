@@ -1,10 +1,12 @@
 var TIMEOUT = 10000;
 
-function MultiTileLayer (levels) {
+function MultiTileLayer (levels, options) {
+    if (!options)
+	options = {};
     var layers = [];
     for (var i = 0; i < levels.length; i ++) {
 	var level = levels[i];
-	var layer = new TileLayer (level.url, level.min, level.rows, level.cols, level.cellsize);
+	var layer = new TileLayer (level.url, level.min, level.rows, level.cols, level.cellsize, options);
 	layers.push (layer);
     }
     layers[0].noexpire (true);
@@ -41,7 +43,18 @@ function MultiTileLayer (levels) {
 };
 
 var tile_shader = null;
-function TileLayer (url, min, rows, cols, cellsize) {
+function TileLayer (url, min, rows, cols, cellsize, options) {
+    if (!options)
+	options = {};
+    if (!options.desaturate)
+	options.desaturate = 0.0;
+    if (!options.darken)
+	options.darken = 0.0;
+    if (!options.hue)
+	options.hue = 0.0;
+    if (!options.hue_color)
+	options.hue_color = fcolor (0.0, 0.0, 0.0, 1.0);
+
     if (!tile_shader)
 	tile_shader = makeProgram (BASE_DIR + 'shaders/tile');
 
@@ -118,6 +131,10 @@ function TileLayer (url, min, rows, cols, cellsize) {
 	    tile_shader.data ('pos', buffers.get ('vert'));
 	    tile_shader.data ('tex_in', buffers.get ('tex'));
 	    tile_shader.data ('lookup_in', buffers.get ('lookup'));
+	    tile_shader.data ('desaturate', options.desaturate);
+	    tile_shader.data ('darken', options.darken);
+	    tile_shader.data ('hue', options.hue);
+	    tile_shader.data ('hue_color', options.hue_color.array);
 	   
 	    gl.drawArrays (gl.TRIANGLES, 0, count * 6);
 	};

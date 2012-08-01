@@ -45,11 +45,15 @@
     <script type="text/javascript">
     $ (document).ready (function () {
 	var map = new Map (null, {
-	    base: null,
+	    //base: null,
+	    desaturate: 1.0,
+	    darken: .75,
+	    hue: .05,
+	    hue_color: fcolor (0, 0, 1, 1),
 	    //background: new Color (150, 150, 150, 255)
 	    background: new Color (10, 10, 10, 255),
-	    center: new vect (45, 20),
-	    extents: 270,
+	    center: new vect (0, 0),
+	    extents: 360,
 	});
 
 	/*var red_blue = [
@@ -60,15 +64,6 @@
 	    new Color (239, 138, 98, 128),
 	    new Color (178, 24, 43, 128),
 	];*/
-	var red_white = [
-	    new Color (189, 0, 38, 64),
-	    new Color (240, 59, 32, 128),
-	    new Color (253, 141, 60, 175),
-	    new Color (254, 178, 76, 255),
-	    new Color (254, 217, 118, 255),
-	    new Color (254, 254, 254, 255),
-	    new Color (255, 255, 255, 255),
-	];
 
 	/*var cell_height = 25;
 
@@ -134,18 +129,48 @@
 		br_pop = GeoJSON (data);
 		map.append(br_pop);
 		br_pop.features ().each (function (i, f) {
-		    f.style ('fill', new Color (20, 20, 20, 255));
-		    f.style ('stroke', new Color (30, 30, 30, 255));
-		    f.style ('opacity', 1.0);
+		    //f.style ('fill', new Color (20, 20, 20, 255));
+		    f.style ('stroke', fcolor (.5, .5, .5, 1.0));
+		    f.style ('fill-opacity', 0.0);
+		    //f.style ('opacity', 1.0);
 		});
 	    }
 	});
+
+	var ramp = [
+	    new Color (0, 0, 0, 0),
+	    new Color (0, 0, 0, 0),
+	    new Color (189, 0, 38, 128),
+	    new Color (240, 59, 32, 128),
+	    new Color (253, 141, 60, 200),
+	    new Color (254, 178, 76, 255),
+	    new Color (254, 217, 118, 255),
+	    new Color (255, 255, 178, 255),
+	    new Color (255, 255, 255, 255),
+	    new Color (255, 255, 255, 255)
+	];
 	
 	$.ajax ({
 	    url: 'data/glds10ag15.asc',
 	    dataType: 'text',
 	    success: function (data) {
-		world_pop = new AsciiGrid (data, red_white);
+		world_pop = AsciiGrid (data, {
+		    ramp: ramp,
+		    map: function (min, max, val) {
+			if (isNaN (val))
+			    return 0;
+			var lval = Math.log (val + 1);
+			var lmin = Math.log (min + 1);
+			var lmax = Math.log (max + 1);
+			var tol = (lmax - lmin) * .05;
+			var p = (lval - (lmin - tol)) / (lmax - lmin + 2 * tol);
+			var i = Math.floor (p * (ramp.length - 1)) + 1; 
+			if (i < 0)
+			    return 0;
+			return i;
+		    },
+		    blur: true
+		});
 		map.append (world_pop);
 	    }	
 	});

@@ -12,6 +12,7 @@ function Engine (selector, options) {
     if (!('base' in options)) {
 	options.base = 'default';
     }
+    console.log (options);
     if (!('background' in options)) {
 	options.background = new Color (0, 0, 0, 1);
     }
@@ -51,7 +52,7 @@ function Engine (selector, options) {
 
     this.scene = [];
 
-    this.styler = new StyleManager ();
+    //this.styler = new StyleManager ();
     this.camera = new Camera (this.canvas, options);
     this.scroller = new Scroller (this);
 
@@ -154,7 +155,7 @@ function Engine (selector, options) {
 		    cellsize: 1.40625,
 		    size: 256
 		}
-	    ]);
+	    ], options);
 	}
 	else if (options.base == 'ne') {
 	    base = new MultiTileLayer ([
@@ -206,7 +207,7 @@ function Engine (selector, options) {
 		    cellsize: 5.625,
 		    size: 256
 		}
-	    ]);
+	    ], options);
 	}
 	else {
 	    base = null;
@@ -275,7 +276,7 @@ function Engine (selector, options) {
 	$ ('#fps').text (Math.floor (1 / fps));
 	old_time = current_time;
 
-	if (that.dirty) {
+	/*if (that.dirty) {
 
 	    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
 	    gl.clearColor(0, 0, 0, 1);
@@ -286,7 +287,7 @@ function Engine (selector, options) {
 	    }
 	    gl.bindFramebuffer (gl.FRAMEBUFFER, null);
 	    //that.dirty = false;
-	}
+	}*/
 	    
 	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 	gl.clear(gl.COLOR_BUFFER_BIT);

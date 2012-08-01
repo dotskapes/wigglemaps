@@ -1,7 +1,6 @@
 var poly_shader = null;
 
-var default_poly_fill_alpha = .5;
-var default_poly_stroke_alpha = 1.0;
+
 //var default_poly_color = new Color (0, 0, 1, 1);
 
 var triangulate_polygon = function (elem) {
@@ -18,9 +17,31 @@ var triangulate_polygon = function (elem) {
     return trapezoid_polygon (poly); 
 };
 
-function PolygonLayer () {
-    default_poly_fill = new Color (.02, .44, .69, 1);
-    default_poly_stroke = new Color (.02, .44, .69, 1);
+function PolygonLayer (prop) {
+    if (!prop)
+	prop = {};
+    if (!prop.style)
+	prop.style = {};
+    var default_poly_fill, default_poly_stroke, default_poly_fill_alpha, default_poly_stroke_alpha;
+    if ('fill' in prop.style)
+	default_poly_fill = prop.style['fill'];
+    else
+	default_poly_fill = new Color (.02, .44, .69, 1);
+
+    if ('stroke' in prop.style)
+	default_poly_stroke = prop.style['stroke'];
+    else
+	default_poly_stroke = new Color (.02, .44, .69, 1);
+
+    if ('fill-alpha' in prop.style)   
+	default_poly_fill_alpha = prop.style['fill-alpha'];
+    else
+	default_poly_fill_alpha = .5;
+
+    if ('stroke-alpha' in prop.style)   
+	default_poly_stroke_alpha = prop.style['stroke-alpha'];
+    else
+	default_poly_stroke_alpha = 1.0;
     
     if (!poly_shader) {
 	poly_shader = makeProgram (BASE_DIR + 'shaders/poly');

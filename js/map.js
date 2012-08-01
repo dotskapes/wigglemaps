@@ -55,4 +55,18 @@ var Map = function (selector, options) {
     this.height = function () {
 	return engine.canvas.innerHeight ();
     };
+
+    var click_func = null;
+    this.click = function (func) {
+	click_func = func;
+    };
+
+    engine.canvas.click (function (event) {
+	console.log (click_func);
+	if (click_func) {
+	    var v = new vect (event.pageX, event.pageY);
+	    var p = engine.camera.project (v);
+	    click_func (p);
+	}
+    });
 };
