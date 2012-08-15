@@ -25,6 +25,7 @@ $ (document).ready (function () {
 	'selector',
 	'raster',
 	'tile',
+	'ows',
 	'geojson',
 	'range_bar',
 	'slider',

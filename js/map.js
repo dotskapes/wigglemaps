@@ -17,6 +17,11 @@ var Map = function (selector, options) {
 	engine.scene.push (layer);
     };
 
+    this.shade = function (data) {
+	var shade = new Hillshade (data);
+	engine.shade = shade;
+    };
+
     this.select = function (func)  {
 	if (!func)
 	    engine.select (false);
@@ -62,7 +67,6 @@ var Map = function (selector, options) {
     };
 
     engine.canvas.click (function (event) {
-	console.log (click_func);
 	if (click_func) {
 	    var v = new vect (event.pageX, event.pageY);
 	    var p = engine.camera.project (v);

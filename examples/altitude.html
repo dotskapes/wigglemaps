@@ -16,13 +16,14 @@
 	$.ajax ({
 	    url: 'data/w100n40.kml',
 	    success: function (data) {
-		alt = new Hillshade (data);
+		map.shade (data);
+		//alt = new Hillshade (data);
 
-		map.append (alt);
+		//map.append (alt);
 	    }
 	});
 
-	$.ajax ({
+	/*$.ajax ({
 	    url: 'data/w100s10.kml',
 	    success: function (data) {
 		alt = new Hillshade (data);
@@ -47,7 +48,7 @@
 
 		map.append (alt);
 	    }
-	});
+	});*/
 	/*shade = new Hillshade ({
 	    url: 'data/elevation_2048.png',
 	    min: new vect (-180, -90),
@@ -56,8 +57,8 @@
 
         //map.append (shade);
     });
-</script>
-
+    </script>
+    
   </head>
   <body>
     <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>

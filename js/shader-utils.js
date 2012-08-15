@@ -11,8 +11,8 @@ function setContext (canvas) {
     if (!DEBUG) 
 	gl = canvas.get (0).getContext ('experimental-webgl', {
 	    alpha: false,
-	    antialias: true
-	    //premultipliedAlpha: false
+	    antialias: true,
+	    premultipliedAlpha: false
 	});
     else {
 	function throwOnGLError(err, funcName, args) {
@@ -20,7 +20,8 @@ function setContext (canvas) {
 	};
 	gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
 	    alpha: false,
-	    antialias: true
+	    antialias: true,
+	    premultipliedAlpha: false
 	}), throwOnGLError);
     }
 };
@@ -38,16 +39,30 @@ function rect (x, y, w, h) {
     return verts;
 };
 
-function rectv (p1, p2) {
-    var verts = [
-        p1.x, p2.y,
-        p1.x, p1.y,
-        p2.x, p2.y,
-	
-        p1.x, p1.y,
-        p2.x, p1.y,
-        p2.x, p2.y
-    ];
+function rectv (p1, p2, z) {
+    var verts;
+    if (arguments.length == 2) {
+	verts = [
+            p1.x, p2.y,
+            p1.x, p1.y,
+            p2.x, p2.y,
+	    
+            p1.x, p1.y,
+            p2.x, p1.y,
+            p2.x, p2.y
+	];
+    }
+    else {
+	verts = [
+            p1.x, p2.y, z,
+            p1.x, p1.y, z,
+            p2.x, p2.y, z,
+	    
+            p1.x, p1.y, z,
+            p2.x, p1.y, z, 
+            p2.x, p2.y, z
+	];
+    }
     return verts;
 };
 

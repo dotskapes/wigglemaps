@@ -32,7 +32,7 @@ function Raster (url, min, max) {
     };
 };
 
-var OMEGA = 90.0;
+var OMEGA = Math.PI / 4;
 
 var altitude_shader = null;
 function Hillshade (data) {
@@ -46,21 +46,29 @@ function Hillshade (data) {
     //var min = data.min;
     //var max = data.max;
     //var url = data.url;
-    var image = getTexture (url);
+    var ready = false;
+    var image = getTexture (url, function () {
+	ready = true;
+    });
+
+    this.ready = function () {
+	return ready;
+    };
 
     var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
     var pos_buffer = staticBuffer (rectv (min, max), 2);
 
     var azimuth = 315.0;
 
-    this.draw = function (engine, dt, select) {
-	if (select)
+    this.draw = function (engine, dt) {
+	if (!ready)
 	    return;
 	gl.useProgram (altitude_shader);
 
-	//azimuth += OMEGA * dt;
-	if (azimuth >= 360)
-	    azimuth -= 360;
+	azimuth += OMEGA * dt;
+	if (azimuth >= 2 * Math.PI)
+	    azimuth -= 2 * Math.PI;
+	altitude_shader.data ('azimuth', azimuth);
 	altitude_shader.data ('azimuth', azimuth);
 
 	altitude_shader.data ('screen', engine.camera.mat3);
@@ -78,6 +86,8 @@ function Hillshade (data) {
 	altitude_shader.data ('pix_h', 1.0 / size.y);
 
 	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
+
+	return azimuth;
     };
 };
 

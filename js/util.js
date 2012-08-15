@@ -14,6 +14,47 @@ var PI = 3.14159265;
     }
 }*/
 
+function make_url (base, vars) {
+    var items = [];
+    for (var key in vars) {
+	items.push (key + '=' + vars[key]);
+    }
+    return base + '?' + items.join ('&');
+}
+
+function default_model (options, model) {
+    for (var key in model) {
+	if (!(key in options))
+	    options[key] = model[key];
+    }
+};
+
+function force_model (options, model) {
+    for (var key in model) {
+	options[key] = model[key];
+    }
+};
+
+function copy (src) {
+    var dst = {};
+    for (key in src)
+	dst[key] = src[key];
+    return dst;
+};
+
+function require (src, fields) {
+    for (var i = 0; i < fields.length; i ++) {
+	var key = fields[i];
+	if (!(key in src))
+	    throw "Key " + key + " not found";
+    }
+};
+
+function copy_to (dst, src) {
+    for (key in src)
+	dst[key] = src[key];
+};
+
 var default_copy = function (dst, src, key, def, cast) {
     if (key in src) {
 	if (cast)

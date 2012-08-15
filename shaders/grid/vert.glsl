@@ -1,4 +1,5 @@
 uniform mat3 screen;
+uniform bool use_mat;
 
 attribute vec2 pos;
 attribute vec2 tex_in;

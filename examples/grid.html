@@ -10,44 +10,12 @@
     <script type="text/javascript" src="../js/geojson.js"></script>
     <script type="text/javascript" src="../js/ascii.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
-    <style>
-    .legend {
-	position: absolute;
-	z-index: 2;
-	bottom: 0px;
-	right: 0px;
-	text-align: center;
-	padding: 20px;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	cursor: default;
-    }
-    .legend * {
-	margin: 0px;
-	padding: 0px;
-    }
-    .legend h2 {
-	text-align: center;	
-	margin-bottom: 20px;
-	font-size: 14px;
-    }
-    .range * {
-	text-align: left;
-	font-size: 12px;
-	white-space: nowrap;
-    }
-    .range .box {
-	float: left;
-	margin-left: 20px;
-	background-color: red;
-    }
-    </style>
     <script type="text/javascript">
     $ (document).ready (function () {
 	var map = new Map (null, {
 	    //base: null,
 	    desaturate: 1.0,
-	    darken: .75,
+	    darken: .25,
 	    hue: .1,
 	    hue_color: fcolor (0, 0, 1, 1),
 	    //background: new Color (150, 150, 150, 255)
@@ -55,105 +23,53 @@
 	    center: new vect (0, 0),
 	    extents: 360,
 	});
-
-	/*var red_blue = [
-	    new Color (33, 102, 172, 128),
-	    new Color (103, 169, 207, 128),
-	    new Color (209, 169, 207, 128),
-	    new Color (253, 219, 199, 128),
-	    new Color (239, 138, 98, 128),
-	    new Color (178, 24, 43, 128),
-	];*/
-
-	/*var cell_height = 25;
-
-	leg = $ ('<div></div>').addClass ('legend');
-	leg.append ('<h2>Threats to Bio Diversity</h2>');
-	range = $ ('<div></div>').addClass ('range');
-	leg.append (range);
-	range.append ('<div class="box"></div>');
-	range.append ('<div class="label">0.84 - 1.00</div>');
-	range.append ('<div class="box"></div>');
-	range.append ('<div class="label">0.68 - 0.83</div>');
-	range.append ('<div class="box"></div>');
-	range.append ('<div class="label">0.51 - 0.67</div>');
-	range.append ('<div class="box"></div>');
-	range.append ('<div class="label">0.34 - 0.50</div>');
-	range.append ('<div class="box"></div>');
-	range.append ('<div class="label">0.18 - 0.33</div>');
-	range.append ('<div class="box"></div>');
-	range.append ('<div class="label">0.00 - 0.17</div>');
-	
-	$ ('body').append (leg);
-
-	range.children ().filter ('.box').css ('height', cell_height);
-	range.children ().filter ('.box').css ('width', cell_height);
-
-	var text_height = range.children ().filter ('.label').first ().height ();
-	var top_pad = Math.round ((cell_height - text_height) / 2);
-	range.children ().filter ('.label').css ('padding-top', top_pad);
-	range.children ().filter ('.label').css ('padding-bottom', cell_height - text_height -top_pad);
-	range.children ().filter ('.label').css ('padding-left', cell_height + 40);
-
-	range.children ().filter ('.box').each (function (i) {
-	    var c = red_black[red_blue.length - 1 - i];
-	    $ (this).css ('background-color', 'rgb(' + parseInt (c.r * 255) + ',' + parseInt (c.g * 255) + ',' + parseInt (c.b * 255) + ')');
-	});
-
-	var scrim = $ ('<div></div>');
-	scrim.css ({
-	    'background-color': 'white',
-	    opacity: .6,
-	    padding: 0,
-	    margin: 0,
-	    width: leg.innerWidth (),
-	    height: leg.innerHeight (),
-	    position: 'absolute',
-	    'z-index': 1,
-	    bottom: 0,
-	    right: 0
-	});
-
-	$ ('body').append (scrim);*/
-
-	//var top = new vect (range.position ().left + cell_height + 20, range.position ().top);
-	//var bottom =  new vect (range.position ().left + 20, range.position ().top + range.height ());
-	//var bar = new RangeBar (engine, red_blue, bottom, top, true);
-	//engine.scene.push (bar);
 	
 	$.ajax ({
 	    url: 'data/countries.json',
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
-		br_pop = GeoJSON (data);
-		map.append(br_pop);
-		br_pop.features ().each (function (i, f) {
-		    //f.style ('fill', new Color (20, 20, 20, 255));
-		    f.style ('stroke', fcolor (.5, .5, .5, 1.0));
-		    f.style ('fill-opacity', 0.0);
-		    //f.style ('opacity', 1.0);
+		br_pop = GeoJSON (data, {
+		    style: {
+			stroke: fcolor (.2, .2, .2, 1.0),
+			'fill-opacity': 0.0
+		    }
 		});
+		map.append(br_pop);
 	    }
 	});
 
-	var ramp = [
-	    new Color (0, 0, 0, 0),
+	/*var ramp = [
 	    new Color (0, 0, 0, 0),
 	    new Color (189, 0, 38, 128),
 	    new Color (240, 59, 32, 128),
 	    new Color (253, 141, 60, 200),
-	    new Color (254, 178, 76, 255),
+	    new Color (254, 178, 76, 200),
 	    new Color (254, 217, 118, 255),
 	    new Color (255, 255, 178, 255),
 	    new Color (255, 255, 255, 255),
-	    new Color (255, 255, 255, 255)
+	];*/
+
+	var ramp = [
+	    new Color (0, 0, 0, 0),
+	    new Color (128, 0, 38, 64),
+	    new Color (189, 0, 38, 64),
+	    new Color (227, 26, 28, 128),
+	    new Color (252, 78, 42, 128),
+	    new Color (253, 141, 60, 200),
+	    new Color (254, 178, 76, 200),
+	    new Color (254, 217, 118, 255),
+	    new Color (255, 237, 160, 255),
+	    new Color (255, 255, 204, 255),
+	    new Color (255, 255, 255, 255),
 	];
 	
 	$.ajax ({
 	    url: 'data/glds10ag15.asc',
 	    dataType: 'text',
 	    success: function (data) {
+		var MAX = .65;
+		var MIN = .1;
 		world_pop = AsciiGrid (data, {
 		    ramp: ramp,
 		    map: function (min, max, val) {
@@ -164,9 +80,11 @@
 			var lmax = Math.log (max + 1);
 			var tol = (lmax - lmin) * .05;
 			var p = (lval - (lmin - tol)) / (lmax - lmin + 2 * tol);
-			var i = Math.floor (p * (ramp.length - 1)) + 1; 
-			if (i < 0)
+			if (p > MAX)
+			    return ramp.length - 1;
+			if (p < MIN)
 			    return 0;
+			var i = Math.floor (((p - MIN) / (MAX - MIN)) * (ramp.length - 2)) + 1; 
 			return i;
 		    },
 		    blur: true
@@ -174,61 +92,10 @@
 		map.append (world_pop);
 	    }	
 	});
-
-		/*$.ajax ({
-		    url: 'http://zk.healthscapes.org/map/static/temp/aws_threats.csv',
-		    dataType: 'text',
-		    success: function (data) {
-			var rows = data.split ('\n');
-			var lookup = {};
-			for (var i = 1; i < rows.length - 1; i ++) {
-			    var vals = rows[i].split (',');
-			    var val = vals[1].slice (1, vals[1].length - 1);
-			    lookup[val] = parseFloat (vals[2]);
-			}
-			//br_pop.features ().style ('fill', function (f) {
-			br_pop.features ().each (function (i, f) {
-			    var key = f.attr['SOVEREIGNT'];
-			    var val = lookup[key];
-			    if (!isNaN (val)) {
-				var index = Math.floor (val * red_blue.length)
-				var c = red_blue[index];
-				f.style ('fill', c);
-				f.style ('stroke', new Color (10, 10, 10, 255));
-				f.style ('opacity', .7);
-			    }
-			    else {
-				var c = new Color (10, 10, 10, 255);
-				f.style ('fill', c);
-				f.style ('stroke', new Color (10, 10, 10, 255));
-			    }
-			});
-		    }
-		});*/
-
-		//var bottom = new vect ($ (document).width () - 70 - red_blue.length * cell_height, $ (document).height () - 70);
-		//var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
-		//var bar = new RangeBar (engine, red_blue, bottom, top, true);
-		//engine.scene.push (bar);
-
-		/*br_pop.mouseover (function (feature) {
-		    $ ('#hover').text (feature.get (0).properties.admin_name);
-		    feature.highlight (new Color (204, 85, 0, 128));
-		});
-
-		br_pop.mouseout (function (feature) {
-		    $ ('#hover').text ('NA');
-		    feature.unhighlight ();
-		});*/
-    //}
-//	});
     });
 </script>
 
   </head>
   <body>
-    <!--<div style="padding: 10px; background-color: white;">
-    Currently hovering over: <span id="hover">NA</span>
-    </div>-->
   </body>
 </html>

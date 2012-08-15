@@ -4,6 +4,10 @@ function Grid (options) {
     if (!grid_shader) {
 	grid_shader = makeProgram (BASE_DIR + 'shaders/grid');
     }
+    if (!options)
+	options = {};
+    if (!options.style)
+	options.style = {};
     var lower = options.lower;
     var upper = options.upper;
     var rows = options.rows;
@@ -27,6 +31,7 @@ function Grid (options) {
 
     var buffers = new Buffers (6);
     buffers.create ('vert', 2);
+    buffers.create ('screen', 2);
     buffers.create ('tex', 2);
 
     var min = new vect (lower.x, lower.y);
@@ -38,6 +43,7 @@ function Grid (options) {
     var start = buffers.alloc (6);
 
     buffers.write ('vert', rectv (min, max), start, 6);
+    buffers.write ('screen', rectv (new vect (-1, -1), new vect (1, 1)), start, 6);
     buffers.write ('tex', rectv (tmin, tmax), start, 6);
 
     var tex = gl.createTexture ();
@@ -90,7 +96,12 @@ function Grid (options) {
 	//write_color (k, options.map (val));
     };
 
+    var framebuffer = null;
+
     this.draw = function (engine, dt) {
+	if (!framebuffer)
+	    framebuffer = engine.framebuffer ();
+	buffers.update ();
 	if (dirty) {
 	    for (var i = 0; i < rows * cols; i ++) {
 		write_color (i, options.map (min_val, max_val, data[i]));
@@ -100,25 +111,78 @@ function Grid (options) {
 	    gl.bindTexture (gl.TEXTURE_2D, null);
 	    dirty = false;
 	}
-	buffers.update ();
+	
+	if (options.style.antialias) {
+	    framebuffer.activate ({
+		blend: false
+	    });
+	}
 
 	gl.useProgram (grid_shader);
-
+	    
 	grid_shader.data ('screen', engine.camera.mat3);
 	grid_shader.data ('pos', buffers.get ('vert'));
+	
 	grid_shader.data ('tex_in', buffers.get ('tex'));
-
+	    
 	grid_shader.data ('sampler', tex);
-
+	
 	var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
 	grid_shader.data ('width', size.x);
 	grid_shader.data ('height', -size.y);
-
+	
 	grid_shader.data ('rows', rows);
 	grid_shader.data ('cols', cols);
-
+	
 	grid_shader.data ('blur', options.blur);
-
+	
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
+
+	if (options.style.antialias) {
+	    framebuffer.deactivate ();
+	    engine.draw_blur (framebuffer.tex);
+	}
+
+	//engine.post_draw (options.style);
+
+	/*var do_draw = function (use_mat, image, hor) {
+	    gl.useProgram (grid_shader);
+	    
+	    grid_shader.data ('screen', engine.camera.mat3);
+	    if (use_mat) 
+		grid_shader.data ('pos', buffers.get ('vert'));
+	    else
+		grid_shader.data ('pos', buffers.get ('screen'));
+	    grid_shader.data ('use_mat', use_mat);
+	    grid_shader.data ('tex_in', buffers.get ('tex'));
+	    
+	    grid_shader.data ('sampler', image);
+	    
+	    var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
+	    grid_shader.data ('width', size.x);
+	    grid_shader.data ('height', -size.y);
+	  
+	    grid_shader.data ('rows', rows);
+	    grid_shader.data ('cols', cols);
+	    
+	    grid_shader.data ('blur', options.blur);
+	    grid_shader.data ('hor', hor);
+	    
+	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
+	};
+
+	if (options.blur) {
+	    //gl.bindFramebuffer (gl.FRAMEBUFFER, engine.framebuffer);
+	    //gl.clearColor (0, 0, 0, 0);
+	    //gl.clear(gl.COLOR_BUFFER_BIT);
+	    //gl.clearDepth (0.0);
+	    //do_draw (true, tex, true);
+	    //gl.bindFramebuffer (gl.FRAMEBUFFER, null);
+	    //do_draw (false, engine.tex_canvas, false);
+	    //do_draw (true, tex, true)
+	}
+	else {
+	    //do_draw (tex);
+	}*/
     };
 };
