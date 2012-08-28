@@ -92,7 +92,7 @@ function Engine (selector, options) {
 	if (options.base == 'default' || options.base == 'nasa') {
 	    base = new MultiTileLayer ([
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/512',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/512',
 		    min: new vect (-180, -90),
 		    cols: 2,
 		    rows: 1,
@@ -100,7 +100,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/1024',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/1024',
 		    min: new vect (-180, -90),
 		    cols: 4,
 		    rows: 2,
@@ -108,7 +108,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/2048',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/2048',
 		    min: new vect (-180, -90),
 		    cols: 8,
 		    rows: 4,
@@ -116,7 +116,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/4096',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/4096',
 		    min: new vect (-180, -90),
 		    cols: 16,
 		    rows: 8,
@@ -124,7 +124,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/8192',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/8192',
 		    min: new vect (-180, -90),
 		    cols: 32,
 		    rows: 16,
@@ -132,7 +132,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/16384',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/16384',
 		    min: new vect (-180, -90),
 		    cols: 64,
 		    rows: 32,
@@ -140,7 +140,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/32768',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/32768',
 		    min: new vect (-180, -90),
 		    cols: 128,
 		    rows: 64,
@@ -148,7 +148,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/nasa_topo_bathy/65536',
+		    url: BASE_DIR + 'tiles/nasa_topo_bathy/65536',
 		    min: new vect (-180, -90),
 		    cols: 256,
 		    rows: 128,
@@ -160,7 +160,7 @@ function Engine (selector, options) {
 	else if (options.base == 'ne') {
 	    base = new MultiTileLayer ([
 		{
-		    url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/512',
+		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/512',
 		    min: new vect (-180, -90),
 		    cols: 2,
 		    rows: 1,
@@ -168,7 +168,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/1024',
+		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/1024',
 		    min: new vect (-180, -90),
 		    cols: 4,
 		    rows: 2,
@@ -176,7 +176,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/2048',
+		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/2048',
 		    min: new vect (-180, -90),
 		    cols: 8,
 		    rows: 4,
@@ -184,7 +184,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/4096',
+		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/4096',
 		    min: new vect (-180, -90),
 		    cols: 16,
 		    rows: 8,
@@ -192,7 +192,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/8192',
+		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/8192',
 		    min: new vect (-180, -90),
 		    cols: 32,
 		    rows: 16,
@@ -200,7 +200,7 @@ function Engine (selector, options) {
 		    size: 256
 		},
 		{
-		    url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR/16384',
+		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/16384',
 		    min: new vect (-180, -90),
 		    cols: 64,
 		    rows: 32,
