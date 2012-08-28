@@ -2,12 +2,16 @@
 precision highp float;
 #endif
 
+#define NUM_TILES 8
+
 uniform sampler2D sampler0;
 uniform sampler2D sampler1;
 uniform sampler2D sampler2;
 uniform sampler2D sampler3;
 uniform sampler2D sampler4;
 uniform sampler2D sampler5;
+uniform sampler2D sampler6;
+uniform sampler2D sampler7;
 
 varying vec2 tex;
 varying float lookup_raw;
@@ -19,7 +23,7 @@ uniform vec4 hue_color;
 
 void main () {
   //int lookup = int (floor (tex.x * 6.0));
-  int lookup = int (floor (lookup_raw * 6.0));
+  int lookup = int (floor (lookup_raw * float (NUM_TILES)));
   //float t = tex.x - (float (lookup) / 6.0);
   //float u = t * 6.0;
   //vec2 v = clamp (vec2 (u, 1.0 - tex.y), 0.0, 1.0);
@@ -39,13 +43,17 @@ void main () {
       color = texture2D (sampler4, v);
   else if (lookup == 5)
       color = texture2D (sampler5, v);
+  else if (lookup == 6)
+      color = texture2D (sampler6, v);
+  else if (lookup == 7)
+      color = texture2D (sampler7, v);
   else
       color = vec4 (0.0, 0.0, 0.0, 1.0);
 
   float avg = (color.r * .3 + color.g * .59 + color.b * .11);
   vec4 avg_color = vec4 (avg, avg, avg, color.a);
   color = avg_color * desaturate + color * (1.0 - desaturate);
-  vec3 c = color.rgb * darken;
+  vec3 c = color.rgb * (1.0 - darken);
   c = c * (1.0 - hue) + hue_color.rgb * hue;
   gl_FragColor = vec4 (c, color.a);
 }

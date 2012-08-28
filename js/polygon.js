@@ -33,13 +33,13 @@ function PolygonLayer (prop) {
     else
 	default_poly_stroke = new Color (.02, .44, .69, 1);
 
-    if ('fill-alpha' in prop.style)   
-	default_poly_fill_alpha = prop.style['fill-alpha'];
+    if ('fill-opacity' in prop.style)   
+	default_poly_fill_alpha = prop.style['fill-opacity'];
     else
 	default_poly_fill_alpha = .5;
 
-    if ('stroke-alpha' in prop.style)   
-	default_poly_stroke_alpha = prop.style['stroke-alpha'];
+    if ('stroke-opacity' in prop.style)   
+	default_poly_stroke_alpha = prop.style['stroke-opacity'];
     else
 	default_poly_stroke_alpha = 1.0;
     
@@ -296,23 +296,43 @@ function PolygonLayer (prop) {
 	out_func = func;
     }
 
-    var current_over = null;
+    var current_over = {};
     this.update_move = function (engine, p) {
 	if (over_func || out_func) {
 	    var c = this.contains (p);
-	    if (c != current_over) {
+	    var new_over = {};
+	    if (c) {
+		c.each (function (i, f) {
+		    new_over[f.id] = f;
+		});
+	    }
+	    for (var key in current_over) {
+		if (!(key in new_over) && out_func) 
+		    out_func (current_over[key]);
+	    }
+	    for (var key in new_over) {
+		if (!(key in current_over) && over_func) 
+		    over_func (new_over[key]);
+	    }
+	    current_over = new_over;
+	    /*if (c != null && c.get (0) != current_over.get (0)) {
 		if (out_func && current_over)
 		    out_func (current_over);
 		if (over_func && c)
 		    over_func (c);
 		current_over = c;
-	    }
+	    }*/
 	}
     };
     this.force_out = function (engine) {
-	if (out_func && current_over) 
+	for (var key in current_over) {
+	    if (out_func)
+		out_func (current_over[key]);
+	}
+	current_over = {};
+	/*if (out_func && current_over) 
 	    out_func (current_over);
-	current_over = null;
+	current_over = null;*/
     };
 
     this.draw = function (engine, dt, select) {

@@ -12,9 +12,9 @@ function Scroller (engine) {
 	//console.log ('pos', engine.camera.project (new vect (event.clientX, event.clientY)));
     });
     
-    engine.canvas.mouseup (function () {
-       drag = false;
-   });
+    $ (window).bind ('mouseup', function () {
+	drag = false;
+    });
     
     /*engine.canvas.mousemove (function (event) {
        pos = new vect (event.clientX, event.clientY);
@@ -65,7 +65,7 @@ function Scroller (engine) {
 	    dir = m;
 	    dir.normalize ();
 	}
-	else if (speed > .1) {
+	else if (speed > .01) {
 	    if (dir) {
 		engine.camera.move (vect.scale (dir, speed * dt));
 		speed -= 3.0 * dt * speed;

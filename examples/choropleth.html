@@ -27,16 +27,18 @@
 			br_precip = GeoJSON (data);
 
 			var order = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-			br_pop.aggregate (br_precip, function (poly, point) {
-			    if (!poly.attr['count']) {
-				poly.attr['count'] = 0;
+			br_pop.aggregate (br_precip, function (polys, point) {
+			    polys.each (function (i, poly) {
+				if (!poly.attr['count']) {
+				    poly.attr['count'] = 0;
+				    $.each (order, function (i, key) {
+					poly.attr[key] = 0;
+				    });
+				}
+				poly.attr['count'] ++;
 				$.each (order, function (i, key) {
-				    poly.attr[key] = 0;
+				    poly.attr[key] += point.attr[key];
 				});
-			    }
-			    poly.attr['count'] ++;
-			    $.each (order, function (i, key) {
-				poly.attr[key] += point.attr[key];
 			    });
 			});
 

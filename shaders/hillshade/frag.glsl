@@ -22,7 +22,7 @@ uniform float azimuth;
 //vec3 light = vec3 (0.0, 90.0, 25.0);
 
 void main () {
-     float zenith_rad = (90.0 - altitude) * PI / 180.0;
+  /*float zenith_rad = (90.0 - altitude) * PI / 180.0;
      float azimuth_math = (360.0 - azimuth + 90.0);
      if (azimuth_math >= 360.0)
      	azimuth_math -= 360.0; 
@@ -64,5 +64,32 @@ void main () {
       float hillshade = cos (zenith_rad) * cos (slope_rad) + sin (zenith_rad) * sin (slope_rad) * cos (azimuth_rad - aspect_rad);
 
      vec3 h_color = vec3 (0.1, 0.0, 0.0);
-     gl_FragColor = vec4 (h_color, hillshade * ALPHA);
+     gl_FragColor = vec4 (h_color, hillshade * ALPHA);*/
+
+  float a = texture2D (elevation, tex + vec2 (-SHADE_RES, SHADE_RES)).r;
+  float b = texture2D (elevation, tex + vec2 (0.0, SHADE_RES)).r;
+  float c = texture2D (elevation, tex + vec2 (SHADE_RES, SHADE_RES)).r;
+  float d = texture2D (elevation, tex + vec2 (-SHADE_RES, 0.0)).r;
+  float e = texture2D (elevation, tex + vec2 (0.0, 0.0)).r;
+  float f = texture2D (elevation, tex + vec2 (SHADE_RES, 0.0)).r;
+  float g = texture2D (elevation, tex + vec2 (-SHADE_RES, -SHADE_RES)).r;
+  float h = texture2D (elevation, tex + vec2 (0.0, -SHADE_RES)).r;
+  float i = texture2D (elevation, tex + vec2 (SHADE_RES, -SHADE_RES)).r;
+
+  //float dx = ((c + 2.0 * f + i) - (a + 2.0 * d + g)) / 8.0;
+  //float dy = ((g + 2.0 * h + i) - (a + 2.0 * b + c)) / 8.0;
+
+  vec3 x = vec3 (1.0, 0.0, -d * 5000.0) - vec3 (-1.0, 0.0, -f * 5000.0);
+  vec3 y = vec3 (0.0, 1.0, -b * 5000.0) - vec3 (0.0, -1.0, -h * 5000.0);
+
+  vec3 z = cross (x, y);
+  z = normalize (z);
+  
+  /*vec3 light = normalize (vec3 (cos (azimuth), sin (azimuth), 1.0));
+  float shade = dot (z, light);
+
+  shade = (1.0 - shade);*/
+
+  gl_FragColor = vec4 ((z + 1.0) / 2.0, 1.0);
+  
 }
