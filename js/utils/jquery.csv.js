@@ -24,6 +24,33 @@
 	    return value.match (/^(\+|\-)?\d+$/);
 	}
     };
+
+    function replace_quotes (string) {
+	var i = 0;
+	var repl = {};
+	while (true) {
+	    var m = string.match (/\"[^\"]+\"/);
+	    if (m) {
+		repl['_quote' + i] = m[0]
+		string = string.replace (/\"[^\"]*\"/, "_quote" + i);
+	    }
+	    else {
+		return {
+		    string: string,
+		    repl: repl
+		};
+	    }
+	    i ++;
+	}
+    };
+
+    function unreplace_quotes (array, repl) {
+	for (var i = 0; i < array.length; i ++) {
+	    if (array[i] in repl)
+		array[i] = repl[array[i]];
+	}
+	return array;
+    };
     
     $.csv = function(data, options) {  
 	var settings = $.extend ({
@@ -34,8 +61,13 @@
 
 	data = data.replace (/\r/g, '');
 	var rows = data.split ('\n');
+	if (rows[rows.length - 1].length == 0)
+	    rows.splice (rows.length - 1);
 	for (var i = 0; i < rows.length; i ++) {
+	    var repl = replace_quotes (rows[i]);
+	    rows[i] = repl.string;
 	    rows[i] = rows[i].split (settings.delim);
+	    rows[i] = unreplace_quotes (rows[i], repl.repl);
 	    for (var j = 0; j < rows[i].length; j ++) {
 		var value = rows[i][j]
 		if (isQuoted (value)) {

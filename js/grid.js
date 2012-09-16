@@ -21,8 +21,8 @@ function Grid (options) {
     var tex_data = new Uint8Array (cols * rows * 4);
 
     var dirty = false;
-    var write_color = function (i, j) {
-	var c = options.ramp[j];
+    var write_color = function (i, c) {
+	//var c = options.ramp[j];
 	tex_data[i * 4] = parseInt (c.r * 255);
 	tex_data[i * 4 + 1] = parseInt (c.g * 255);
 	tex_data[i * 4 + 2] = parseInt (c.b * 255);
@@ -86,14 +86,30 @@ function Grid (options) {
     var min_val = Infinity;
 
     this.set = function (i, j, val) {
+	if (i >= rows || j >= cols)
+	    throw "Index Out of Bounds";
 	var k = index (i, j);
 	data[k] = val;
-	if (val > max_val)
+	dirty = true;
+	/*if (val > max_val)
 	    max_val = val;
 	if (val < min_val)
 	    min_val = val;
-	dirty = true;
+	dirty = true;*/
 	//write_color (k, options.map (val));
+    };
+
+    this.raw_set = function (k, val) {
+	if (k >= rows * cols)
+	    throw "Index Out of Bounds: " + k;
+	data[k] = val;
+	dirty = true;
+    };
+
+    this.clear = function (val) {
+	for (var i = 0; i < rows * cols; i ++) {
+	    data[i] = val;
+	}
     };
 
     var framebuffer = null;
@@ -103,6 +119,15 @@ function Grid (options) {
 	    framebuffer = engine.framebuffer ();
 	buffers.update ();
 	if (dirty) {
+	    max_val = -Infinity;
+	    min_val = Infinity;
+	    for (var i = 0; i < rows * cols; i ++) {
+		var val = data[i];
+		if (val > max_val)
+		    max_val = val;
+		if (val < min_val)
+		    min_val = val;
+	    }
 	    for (var i = 0; i < rows * cols; i ++) {
 		write_color (i, options.map (min_val, max_val, data[i]));
 	    }

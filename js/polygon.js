@@ -60,7 +60,7 @@ function PolygonLayer (prop) {
     stroke_buffers.create ('vert', 2);
     stroke_buffers.create ('norm', 2);
     stroke_buffers.create ('color', 3);
-    //stroke_buffers.create ('unit', 3);
+    //stroke_buffers.create ('unit', 2);
     stroke_buffers.create ('alpha', 1);
 
     var layer = this;

@@ -2,7 +2,7 @@
 precision highp float;
 #endif
 
-#define KERNEL 10
+#define KERNEL 2
 #define STD 1.0
 #define PI 3.14159265
 
@@ -23,14 +23,14 @@ void main () {
   kernel[0] = 4.0;
   kernel[1] = 2.0;
   kernel[2] = 1.0;
-  kernel[3] = 0.0;
+  /*  kernel[3] = 0.0;
   kernel[4] = 0.0;
   kernel[5] = 0.0;
   kernel[6] = 0.0;
   kernel[7] = 0.0;
   kernel[8] = 0.0;
   kernel[9] = 0.0;
-  kernel[10] = 0.0;
+  kernel[10] = 0.0;*/
 
   float px = 1.0 / float (width);
   float py = 1.0 / float (height);

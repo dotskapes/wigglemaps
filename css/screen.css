@@ -17,13 +17,13 @@ div#container {
 div.scrollbar {
     float: right;
     width: 10px;
-    background-color: #aaaaaa;
+    /*background-color: #aaaaaa;*/
 }
 
 div.scroll-ob {
     width: 100%;
-    height: 30px;
-    background-color: black;
+    height: 20px;
+    background-color: white;
     opacity: .75;
 }
 
@@ -42,16 +42,14 @@ div.scroll-ob {
 }
 
 div.slider-container {
-    background-color: #cccccc;
+    background-color: rgba(51,51,51,.6);
     padding: 0px 10px;
-    border: solid 1px #eeeeee;
-    border-radius: 15px;
+    border: solid 1px white;
 }
 
 div.slider-box {
-    background-color: black;
-    border-radius: 15px;
-    opacity: .75;
+    background-color: white;
+    /*border-radius: 15px;*/
 }
 
 polygon#test {

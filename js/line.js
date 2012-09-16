@@ -69,7 +69,8 @@ function draw_lines (stroke_buffers, geom) {
 };
 
 function LineLayer () {
-    var default_line_color = new Color (0, 0, 0, 1);
+    var default_stroke = new Color (0, 0, 0, 1);
+    var default_stroke_alpha = 1.0;
     
     if (!line_shader) {
 	line_shader = makeProgram (BASE_DIR + 'shaders/line');
@@ -98,16 +99,68 @@ function LineLayer () {
 	this.attr = prop.attr;
 	this.id = new_feature_id ();
 
-	var set_color = function () {
+	/*var set_color = function () {
 	    var color = _style['stroke'];
 	    if (!color)
 		color = layer.style ('stroke');
 	    if (!color)
 		color = default_poly_stroke;
 	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
+	};*/
+
+	var stroke_start, stroke_count = 0;
+
+	var set_color = function () {
+	    var color;
+
+	    if (('stroke' in _style))
+		color = _style['stroke'];
+	    else
+		color = layer.style ('stroke');
+	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
 	};
 
+	var set_alpha = function () {
+	    //layer.alpha_front (_style['opacity'], start, count);
+	    var opacity;
+
+	    if ('stroke-opacity' in _style)
+		opacity = _style['stroke-opacity'];
+	    else
+		opacity = layer.style ('stroke-opacity');
+	    stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
+	};
+
+	stroke_start = stroke_buffers.count ();
 	draw_lines (stroke_buffers, this.geom);
+	stroke_count = this.geom.length * 6;
+
+	var _style = {};
+	copy_value (_style, prop.style, 'fill', hex_to_color);
+	copy_value (_style, prop.style, 'stroke', hex_to_color);
+	copy_value (_style, prop.style, 'fill-opacity', parseFloat);
+	copy_value (_style, prop.style, 'stroke-opacity', parseFloat);
+
+	this.style = function (key, val) {
+	    if (arguments.length == 1)
+		return _style[key];
+	    _style[key] = val;
+	    if (key == 'fill') {
+		set_color ();
+	    }
+	    if (key == 'stroke') {
+		set_color ();
+	    }	    
+	    if (key == 'fill-opacity') {
+		set_alpha ();
+	    }
+	    if (key == 'stroke-opacity') {
+		set_alpha ();
+	    }
+	};
+
+	set_color ();
+	set_alpha ();
     };
 
     var num_lines = 0;
@@ -128,21 +181,26 @@ function LineLayer () {
 	return l;
     }
 
-    this.update = function (engine, p) {
-
+    this.style = function (key, value) {
+	if (arguments.length > 1)
+	    throw "Not Implemented";
+	if (key == 'stroke')
+	    return default_stroke;
+	if (key == 'stroke-opacity')
+	    return default_stroke_alpha;
+	return null;
     };
 
-    this.draw = function (engine, dt, select) {
+    this.draw = function (engine, dt) {
 	stroke_buffers.update (dt);
 	if (num_lines > 0) {
-	    if (select)
-		return;
 	    gl.useProgram (line_shader);
 
 	    line_shader.data ('screen', engine.camera.mat3);
 	    line_shader.data ('pos', stroke_buffers.get ('vert'));
 	    line_shader.data ('norm', stroke_buffers.get ('norm'));
 	    line_shader.data ('color_in', stroke_buffers.get ('color'));
+	    line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
 
 	    line_shader.data ('px_w', 2.0 / engine.canvas.width ());
 	    line_shader.data ('px_h', 2.0 / engine.canvas.height ());
