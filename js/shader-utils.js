@@ -162,6 +162,8 @@ function addVars (shader, vert, frag) {
 		else if (d.type == 'mat3')
 		    gl.uniformMatrix3fv (d.loc, false, data);	
 		else if (d.type == 'sampler2D') {
+		    if ('texture' in data)
+			data = data.texture ();
 		    gl.activeTexture (gl['TEXTURE' + d.tex]); 
 		    gl.bindTexture (gl.TEXTURE_2D, data);
 		    gl.uniform1i (d.loc, d.tex);

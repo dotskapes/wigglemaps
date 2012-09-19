@@ -9,6 +9,10 @@ var total_calls = 0;
 
 function MultiTileLayer (options) {
     var layers = [];
+    var available = [];
+    for (var i = 0; i < 25; i ++) {
+	available.push (new Texture ());
+    }
     for (var i = 0; i < options.levels; i ++) {
 	var settings = copy (options);
 	if (settings.source == 'file')
@@ -18,6 +22,7 @@ function MultiTileLayer (options) {
 	settings.cols = settings.rows * 2;
 	settings.cellsize = 180 / settings.rows;
 	settings.z_index = 1.0 - z_base - i / 1000;
+	settings.available = available;
 	
 	var layer = new TileLayer (settings);
 	layers.push (layer);
@@ -100,7 +105,12 @@ function TileLayer (options) {
 	options.hue = 0.0;
     if (!options.hue_color)
 	options.hue_color = fcolor (0.0, 0.0, 0.0, 1.0);
-
+    if (!options.available) {
+	options.available = [];
+	for (var i = 0; i < 8; i ++)
+	    options.available.push (new Texture ());
+    }
+    
     if (!tile_shader)
 	tile_shader = makeProgram (BASE_DIR + 'shaders/tile');
 
@@ -161,6 +171,7 @@ function TileLayer (options) {
 
 		    delete tiles[tile.i][tile.j];
 		    
+		    options.available.push (tile.tex);
 		    tile.tex = null;
 		    tile.ready = false;
 		    
@@ -225,11 +236,23 @@ function TileLayer (options) {
 		    transparent: 'true'
 		});
 	    }
-	    tiles[i][j].tex = getTexture (path, (function (tile) {
+	    /*tiles[i][j].tex = getTexture (path, (function (tile) {
 		return function () {
 		    tile.ready = true;
 		};
-	    }) (tiles[i][j]))
+		});
+		}) (tiles[i][j]))*/
+	    if (options.available.length > 0)
+		tiles[i][j].tex = options.available.pop ();
+	    else 
+		tiles[i][j].tex = new Texture ();
+	    getImage (path, (function (tile) {
+		return function (img) {
+		    tile.tex.image (img);
+		    tile.ready = true;
+		}
+	    }) (tiles[i][j]));
+		
 	}
     };
 

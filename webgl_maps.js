@@ -7,6 +7,7 @@ $ (document).ready (function () {
 	'util',
 	'vect',
 	'shader-utils',
+	'utils/texture',
 	'camera',
 	'panner',
 	'events',
