@@ -39,6 +39,10 @@ function Slider (pos, size, units) {
 	return current;
     };
 
+    this.count = function () {
+	return units;
+    };
+
     var change_event = function (index) {};
     this.change = function (func) {
 	change_event = func;
@@ -49,7 +53,20 @@ function Slider (pos, size, units) {
 	release_event = func;
     };
 
+    this.dragging = function () {
+	return dragging;
+    };
+
     this.dom.append (bar);
+
+    this.set = function (index) {
+	if (index != current)
+	    change_event (index);
+	current = index;
+	var px = position (index);
+	bar.css ('left', px - SLIDER_WIDTH / 2);
+	release_event (index);
+    };
     
     $ (document).bind ('mouseup', function () {
 	if (!dragging)

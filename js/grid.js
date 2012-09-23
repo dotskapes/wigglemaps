@@ -84,6 +84,34 @@ function Grid (options) {
 
     var max_val = -Infinity;
     var min_val = Infinity;
+    var quantiles = {};
+
+    /*this.bounds = function () {
+	return {
+	    min: min_val,
+	    max: max_val
+	};
+    };*/
+
+    this.qunatiles = function (size, sort) {
+	if (!sort) {
+	    sort = function (a, b) {
+		return a - b;
+	    };
+	}
+	var points = []
+	for (var i = 0; i < data.length; i ++) {
+	    points.push (data[i]);
+	};
+	points.sort (sort);
+	var quantiles = [-Infinity];
+	for (var i = 1; i < size; i ++) {
+	    var b = parseInt (inc * i)
+	    quantiles.push (points[b]);
+	}
+	quantiles.push (Infinity);
+	return quantiles;
+    };
 
     this.set = function (i, j, val) {
 	if (i >= rows || j >= cols)

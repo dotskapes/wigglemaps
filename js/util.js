@@ -102,6 +102,10 @@ function Color (r, g, b, a) {
     this.vect = function () {
 	return this.array;
     };
+    
+    this.rgb = function () {
+	return 'rgb(' + parseInt (this.r * 255) + ',' + parseInt (this.g * 255) + ',' + parseInt (this.b * 255) + ')';
+    };
 };
 
 function icolor (r, g, b, a) {

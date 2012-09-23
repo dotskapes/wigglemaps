@@ -242,14 +242,15 @@ function TileLayer (options) {
 		};
 		});
 		}) (tiles[i][j]))*/
-	    if (options.available.length > 0)
-		tiles[i][j].tex = options.available.pop ();
-	    else 
+	    tiles[i][j].tex = options.available.pop ();
+	    if (!tiles[i][j].tex)
 		tiles[i][j].tex = new Texture ();
 	    getImage (path, (function (tile) {
 		return function (img) {
-		    tile.tex.image (img);
-		    tile.ready = true;
+		    if (tile.tex) {
+			tile.tex.image (img);
+			tile.ready = true;
+		    }
 		}
 	    }) (tiles[i][j]));
 		
