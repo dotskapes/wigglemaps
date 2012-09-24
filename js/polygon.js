@@ -124,15 +124,17 @@ function PolygonLayer (prop) {
 	var min = new vect (Infinity, Infinity);
 	var max = new vect (-Infinity, -Infinity);
 	$.each (this.geom, function (i, poly) {
-	    $.each (poly[0], function (j, pair) {
-		if (pair[0] < min.x)
-		    min.x = pair[0];
-		if (pair[0] > max.x)
-		    max.x = pair[0];
-		if (pair[1] < min.y)
-		    min.y = pair[1];
-		if (pair[1] > max.y)
-		    max.y = pair[1];
+	    $.each (poly, function (k, ring) {
+		$.each (ring, function (j, pair) {
+		    if (pair[0] < min.x)
+			min.x = pair[0];
+		    if (pair[0] > max.x)
+			max.x = pair[0];
+		    if (pair[1] < min.y)
+			min.y = pair[1];
+		    if (pair[1] > max.y)
+			max.y = pair[1];
+		});
 	    });
 	});
 	this.bounds = new Box (min, max);

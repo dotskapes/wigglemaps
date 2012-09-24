@@ -9,6 +9,7 @@
     <script type="text/javascript" src="../webgl_maps.js"></script>
     <script type="text/javascript" src="../js/geojson.js"></script>
     <script type="text/javascript" src="../js/ascii.js"></script>
+    <script type="text/javascript" src="../js/sgrid.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
@@ -63,34 +64,34 @@
 	    new Color (255, 255, 204, 255),
 	    new Color (255, 255, 255, 255),
 	];
-	
+
 	$.ajax ({
-	    url: 'data/glds10ag15.asc',
-	    dataType: 'text',
+	    url: 'data/glds10ag15.sgr',
+	    mimeType: 'text/plain; charset=x-user-defined',
 	    success: function (data) {
 		var MAX = .65;
 		var MIN = .1;
-		world_pop = AsciiGrid (data, {
+		world_pop = SparseGrid (data, {
 		    ramp: ramp,
 		    map: function (min, max, val) {
 			if (isNaN (val))
-			    return 0;
+			    return ramp[0];
 			var lval = Math.log (val + 1);
 			var lmin = Math.log (min + 1);
 			var lmax = Math.log (max + 1);
 			var tol = (lmax - lmin) * .05;
 			var p = (lval - (lmin - tol)) / (lmax - lmin + 2 * tol);
 			if (p > MAX)
-			    return ramp.length - 1;
+			    return ramp [ramp.length - 1];
 			if (p < MIN)
-			    return 0;
+			    return ramp[0];
 			var i = Math.floor (((p - MIN) / (MAX - MIN)) * (ramp.length - 2)) + 1; 
-			return i;
+			return ramp[i];
 		    },
 		    blur: true
 		});
 		map.append (world_pop);
-	    }	
+	    }
 	});
     });
 </script>
