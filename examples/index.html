@@ -1,23 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>WebGL Maps Examples</title>
+    <title>WiggleMaps Demos</title>
+    <style>
+    h1 {
+	font-family: Helvetica;
+    }
+
+    div {
+	margin: 30px;
+    }
+    </style>
   </head>
   <body>
-    <h1>WebGL Maps Examples</h1>
-    <a href="base.html">Base Layers</p>
-    <a href="linestring.html">Lines</p>
-    <a href="random.html">Dynamic Points</p>
-    <a href="div.html">Embeded in a Div</p>
-    <a href="poly_hole.html">Polygons with Holes</p>
-    <a href="raster.html">Raster Map</p>
-    <a href="choropleth.html">Choropleth</p>
-    <a href="filter.html">Filter By Attribute</p>
-    <a href="hover.html">Hover</p>
-    <a href="range.html">Range Search</p>
-    <a href="time.html">Time Slider</p>
-    <a href="elevation.html">Elevation Map</p>
-    <a href="altitude.html">Hillshading</p>
-    <a href="grid.html">Gridded Data</p>
+    <h1>WiggleMaps Demos</h1>
+    <div>
+      <a href="base.html">Base Layers</a> - A basic map showing how base layers can be toggled
+    </div>
+    <div>
+      <a href="div.html">Embeded in a Div</a> - Maps can be embedded anywhere on a page
+    </div>
+    <div>
+      <a href="raster.html">Raster Map</a> - Support for maps in raster formats
+    </div>
+    <div>
+      <a href="linestring.html">Lines</a> - A map showing a large number of lines being drawn from a big text file <b>(Warning long loading times)</b>. The API can handle these large text files, but loading from a binary format is reccomended for bigger datasets.
+    </div>
+    <div>
+      <a href="random.html">Dynamic Points</a> - 50,000 positioned randomly and drawn dynamically. This is meant to demonstrate the scalability of the mapping API
+    </div>
+    <div>
+      <a href="poly_hole.html">Polygons with Holes</a> - The trinagulation algorithm can handle any non-self-intersecting polygons, including ones with holes
+    </div>
+    <div>
+      <a href="grid.html">Gridded Data</a> - High resolution data. This map shows world population density (Source: <a href="http://sedac.ciesin.columbia.edu/data/collection/gpw-v3">CIESIN</a>)
+    </div>
+    <div>
+      <a href="binary.html">Shapefiles</a> - A layer loaded from a shapefile. This demonstrates the APIs ability to load from binary formats, which are much smaller than their text based counterparts.
+    </div>
+    <div>
+      <a href="choropleth.html">Choropleth</a> - In this example, a collection of points are aggregated dynamically across a polygon layer to create a choropleth map. A drop down is provided to toggle between which attribute determines the color of the map
+    </div>
+    <div>
+      <a href="filter.html">Filter By Attribute</a> - Layer Selectors allows for the dynamic selection of subsets of data and the changing of their styles as needed.
+    </div>
+    <div>
+      <a href="hover.html">Hover</a> - An event system captures mouse events and allows for dyanamic applications
+    </div>
+    <div>
+    <a href="range.html">Range Search</a> - A two dimensional range tree allows for fast range queries
+    </div>
+    <div>
+      <a href="time.html">Time Slider</a> - A time slider
+    </div>
+    <div>
+      <a href="elevation.html">Elevation Map</a> - Single banded eleveation data mapped to a color ramp dynamically
+    </div>
+    <div>
+      <a href="altitude.html">Hillshading</a> - Hillshade computed at runtime on the GPU
+    </div>
   </body>
 </html>

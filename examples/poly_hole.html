@@ -37,12 +37,20 @@
 	    inner.push ([x0 + x * 5, y0 + y * 5]);
 	}
 
-	poly.append ({
-	    geom: [
-		outer,
-		inner
-	    ]
-	});
+	var okay = false;
+	while (!okay) {
+	    try {
+		poly.append ({
+		    geom: [[
+			outer,
+			inner
+		    ]]
+		});
+		okay = true;
+	    }
+	    catch (e) {
+	    }
+	}
 	
 	map.append (poly);
     });

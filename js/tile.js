@@ -182,8 +182,8 @@ function TileLayer (options) {
     };
 
     var get_bounds = function () {
-	var smin = engine.camera.project (new vect (engine.canvas.position ().left, engine.canvas.position ().top + engine.canvas.height ()));
-	var smax = engine.camera.project (new vect (engine.canvas.position ().left + engine.canvas.width (), engine.canvas.position ().top));
+	var smin = engine.camera.project (new vect (engine.canvas.offset ().left, engine.canvas.offset ().top + engine.canvas.height ()));
+	var smax = engine.camera.project (new vect (engine.canvas.offset ().left + engine.canvas.width (), engine.canvas.offset ().top));
 	var min_col = Math.floor ((smin.x - min.x) / cellsize);
 	var max_col = Math.ceil ((smax.x - min.x) / cellsize);
 
