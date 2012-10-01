@@ -69,7 +69,7 @@ function draw_lines (stroke_buffers, geom) {
 };
 
 function LineLayer () {
-    var default_stroke = new Color (0, 0, 0, 1);
+    var default_stroke = new Color (.02, .44, .69, 1);
     var default_stroke_alpha = 1.0;
     
     if (!line_shader) {
