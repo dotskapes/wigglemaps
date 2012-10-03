@@ -3,7 +3,7 @@ var circle_tex;
 
 var unit = rect (0, 0, 1, 1);
 
-var default_point_color = new Color (116, 169, 207, 255);
+var default_point_color = new Color (.02, .44, .69, 1);
 var default_point_alpha = 1.0;
 
 function PointLayer (initial_points) {
