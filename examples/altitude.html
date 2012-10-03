@@ -10,7 +10,9 @@
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-    	var map = new Map ();
+    	var map = new Map (null, {
+	    base: 'ne1'
+	});
 	map.center (-80, 0);
 	map.extents (40);
 

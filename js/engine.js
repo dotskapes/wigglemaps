@@ -1,5 +1,7 @@
 //var set_id_color, bind_event;
 
+var TILE_SERVER = 'http://eland.ecohealthalliance.org:8080/wigglemaps';
+
 var Mouse = {
     x: 0,
     y: 0
@@ -111,7 +113,7 @@ function Engine (selector, options) {
 	    var settings = copy (options);
 	    copy_to (settings, {
 		source: 'file',
-		url: 'http://eland.ecohealthalliance.org:8080/wigglemaps/tiles/nasa_topo_bathy',
+		url: TILE_SERVER + '/tiles/nasa_topo_bathy',
 		levels: 8,
 		size: 256
 	    });
@@ -187,7 +189,7 @@ function Engine (selector, options) {
 	    var settings = copy (options);
 	    copy_to (settings, {
 		source: 'file',
-		url: BASE_DIR + '/tiles/NE1_HR_LC_SR_W_DR',
+		url: TILE_SERVER + '/tiles/NE1_HR_LC_SR_W_DR',
 		levels: 6,
 		size: 256
 	    });
@@ -242,6 +244,16 @@ function Engine (selector, options) {
 		    size: 256
 		}
 	    ], options);*/
+	}
+	else if (options.base == 'ne1') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: TILE_SERVER + '/tiles/NE1_HR_LC',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
 	}
 	else {
 	    base = null;

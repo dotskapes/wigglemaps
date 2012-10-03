@@ -73,7 +73,7 @@ void main () {
   vec3 y = vec3 (0.0, SHADE_RES, dy);
   vec3 norm = normalize (cross (x, y));
 
-  vec3 light = vec3 (cos (azimuth_rad), sin (azimuth_rad), altitude_rad);
+  vec3 light = normalize (vec3 (cos (azimuth_rad), sin (azimuth_rad), altitude_rad));
   //vec3 norm = normalize (vec3 (-dx, -dy, 1.0));
   vec3 shade = vec3 (0.0, 0.0, 0.0);
   float opacity = dot (light, norm);
