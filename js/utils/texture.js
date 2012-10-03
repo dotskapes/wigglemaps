@@ -34,6 +34,7 @@ function Texture (options) {
 
 function getImage (path, callback) {
     var img = new Image ();
+    img.crossOrigin = '';
     img.onload = function () {
 	callback (img);
     };
