@@ -111,7 +111,7 @@ function Engine (selector, options) {
 	    var settings = copy (options);
 	    copy_to (settings, {
 		source: 'file',
-		url: BASE_DIR + '/tiles/nasa_topo_bathy',
+		url: 'http://eland.ecohealthalliance.org:8080/tiles/nasa_topo_bathy',
 		levels: 8,
 		size: 256
 	    });
