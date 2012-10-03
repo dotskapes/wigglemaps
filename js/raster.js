@@ -65,11 +65,12 @@ function Hillshade (data) {
 	    return;
 	gl.useProgram (altitude_shader);
 
-	azimuth += OMEGA * dt;
-	if (azimuth >= 2 * Math.PI)
-	    azimuth -= 2 * Math.PI;
+	//azimuth += (OMEGA / (2 * Math.PI)) * dt;
+	while (azimuth >= 1.0)
+	    azimuth -= 1.0;
 	altitude_shader.data ('azimuth', azimuth);
-	altitude_shader.data ('azimuth', azimuth);
+	altitude_shader.data ('altitude', (Math.PI / 4) / (2 * Math.PI));
+
 
 	altitude_shader.data ('screen', engine.camera.mat3);
 	altitude_shader.data ('pos', pos_buffer);

@@ -17,10 +17,10 @@
 	$.ajax ({
 	    url: 'data/w100n40.kml',
 	    success: function (data) {
-		map.shade (data);
-		//alt = new Hillshade (data);
+		//map.shade (data);
+		alt = new Hillshade (data);
 
-		//map.append (alt);
+		map.append (alt);
 	    }
 	});
 

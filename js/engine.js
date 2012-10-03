@@ -452,11 +452,11 @@ function Engine (selector, options) {
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
     };
 
-    this.shade = null;
+    //this.shade = null;
 
-    var shade_buffer = this.framebuffer ();
+    //var shade_buffer = this.framebuffer ();
 
-    var draw_shade = function (dt, screen_tex) {
+    /*var draw_shade = function (dt, screen_tex) {
 	if (that.shade) {
 	    shade_buffer.activate ();
 
@@ -476,7 +476,7 @@ function Engine (selector, options) {
 	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
 	    
 	}
-    };
+    };*/
 
     /*this.post_draw = function (options) {
 	buffers.update ();
@@ -569,10 +569,10 @@ function Engine (selector, options) {
 	//    draw_blur (screen_buffer.tex ());
 	//}
 
-	if (shade_ready) {
+	/*if (shade_ready) {
 	    screen_buffer.deactivate ();
 	    draw_shade (dt, screen_buffer.tex);
-	}
+	}*/
 
 	that.sel.draw (that, dt);
 	//if (!dragging)
