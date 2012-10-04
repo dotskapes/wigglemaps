@@ -136,9 +136,9 @@ function is_list (elem) {
 };
 
 function isQuoted (value) {
-    var char = value[0];
-    if (char == '"' || char == "'") {
-	if (value[value.length - 1] == char)
+    var c = value[0];
+    if (c == '"' || c == "'") {
+	if (value[value.length - 1] == c)
 	    return true;
     }
     return false
@@ -176,6 +176,6 @@ function parseRGB (value) {
 	return new Color (color_match[1], color_match[2], color_match[3], 255);
 };
 
-function str_contains (string, char) {
-    return string.indexOf (char) != -1;
+function str_contains (string, c) {
+    return string.indexOf (c) != -1;
 };

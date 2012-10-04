@@ -39,7 +39,7 @@ var Map = function (selector, options) {
 	engine.attr (key, value);
     };
 
-    this.export = function () {
+    this.png = function () {
 	var data = engine.canvas.get (0).toDataURL ();
 	/*var form = $ ('<form method="POST" action="http://skapes.org/app_in/geodata/export.png"></form>')
 	var data_input = $ ('<input name="data" type="text" />');

@@ -1,11 +1,13 @@
+var wiggle = {};
 var BASE_DIR;
 
 $ (document).ready (function () {
     var webgl_js = [
+	'utils/jquery.hotkeys',
+	'utils/jquery.mousewheel',
 	'webgl-debug',
 	'rAF',
 	'util',
-	//'utils/jDataView/src/jdataview',
 	'utils/binary',
 	'vect',
 	'shader-utils',
@@ -18,7 +20,6 @@ $ (document).ready (function () {
 	'select',
 	'trapezoid',
 	'range',
-	//'style',
 	'feature',
 	'point',
 	'polygon',
@@ -37,8 +38,8 @@ $ (document).ready (function () {
 	'map'
     ];
 
-    BASE_DIR = $ ('script[src*="webgl_maps.js"]').attr ('src').replace ('webgl_maps.js', '');
-    
+    BASE_DIR = $ ('script[src*="wigglemaps.js"]').attr ('src').replace ('wigglemaps.js', '');
+
     $.each (webgl_js, function (index, value) {
 	$.ajax ({
 	    url: BASE_DIR + 'js/' + value + '.js',
