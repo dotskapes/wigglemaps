@@ -75,7 +75,7 @@ void main () {
 
   vec3 light = normalize (vec3 (cos (azimuth_rad), sin (azimuth_rad), altitude_rad));
   //vec3 norm = normalize (vec3 (-dx, -dy, 1.0));
-  vec3 shade = vec3 (0.0, 0.0, 0.0);
+  vec3 shade = vec3 (0.0, 0.1, 0.0);
   float opacity = dot (light, norm);
 
   gl_FragColor = vec4 (shade, opacity * ALPHA);
