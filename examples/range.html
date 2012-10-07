@@ -1,22 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Map</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-
-    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Range Search</title>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
-      $ (document).ready (function () {
-	var map = new Map ();
+      wiggle.ready (function () {
+	var map = new wiggle.Map ();
 	map.center (-55, -10);
 	$.ajax ({
 	    url: 'data/br_precip.json',
 	    dataType: 'json',
 	    success: function (data) {
-		br_precip = GeoJSON (data);
+		br_precip = wiggle.io.GeoJSON (data);
 		map.append (br_precip);
 		
 		var current = null;
@@ -24,7 +22,7 @@
 		    if (current)
 			current.style ('fill', null);
 		    current = br_precip.search (box);
-		    current.style ('fill', new Color (204, 85, 0, 255));
+		    current.style ('fill', wiggle.util.icolor (204, 85, 0, 255));
 		});
 	    }
 	});

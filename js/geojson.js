@@ -1,4 +1,4 @@
-function GeoJSON (data, options) {
+var GeoJSON = function (data, options) {
     var num_points = 0, num_polys = 0, num_lines = 0;
     var points = [], polys = [], lines = [];
     for (var i = 0; i < data.features.length; i ++) {

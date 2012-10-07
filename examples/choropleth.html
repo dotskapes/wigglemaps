@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Map</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-
-    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Choropleth</title>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
-    $ (document).ready (function () {
-	var map = new Map ();
+    wiggle.ready (function () {
+	var map = new wiggle.Map ();
 	map.center (-55, -10);
 
 	$.ajax ({
@@ -18,13 +16,13 @@
 	    dataType: 'json',
 	    success: function (data2) {
 		
-		br_pop = GeoJSON (data2);
+		br_pop = wiggle.io.GeoJSON (data2);
 
 		$.ajax ({
 		    url: 'data/br_precip.json',
 		    dataType: 'json',
 		    success: function (data) {
-			br_precip = GeoJSON (data);
+			br_precip = wiggle.io.GeoJSON (data);
 
 			var order = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 			br_pop.aggregate (br_precip, function (polys, point) {
@@ -49,14 +47,14 @@
 			});
 			
 			var colors = [
-			    new Color (214, 238, 246, 255),
-			    new Color (189, 201, 225, 255),
-			    new Color (116, 169, 207, 255),
-			    new Color (43, 140, 190, 255),
-			    new Color (4, 90, 141, 255),
+			    wiggle.util.icolor (214, 238, 246, 255),
+			    wiggle.util.icolor (189, 201, 225, 255),
+			    wiggle.util.icolor (116, 169, 207, 255),
+			    wiggle.util.icolor (43, 140, 190, 255),
+			    wiggle.util.icolor (4, 90, 141, 255),
 			];
 
-			var grey = new Color (.2, .2, .2, 1.0);
+			var grey = wiggle.util.fcolor (.2, .2, .2, 1.0);
 
 			br_pop.features ().style ('fill-opacity', .6);
 			br_pop.features ().style ('fill', colors[3]);
@@ -89,10 +87,10 @@
 			  feature.color (new Color (1, 0, 0, 1));
 			  });*/
 			
-			var bottom = new vect ($ (document).width () - 70 - 5 * 50, $ (document).height () - 70);
-			var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
-			var bar = new RangeBar (engine, colors, bottom, top);
-			engine.scene.push (bar);
+			//var bottom = new vect ($ (document).width () - 70 - 5 * 50, $ (document).height () - 70);
+			//var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
+			//var bar = new RangeBar (engine, colors, bottom, top);
+			//engine.scene.push (bar);
 		    }
 		});
 	    }

@@ -1,50 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Map</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-
-    <script type="text/javascript" src="../webgl_maps.js"></script>
-    <script type="text/javascript" src="../js/geojson.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Hover</title>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <link rel="stylesheet" type="text/css" href="popup.css" />
     <script type="text/javascript">
-    $ (document).ready (function () {
-	var map = new Map ();
+    wiggle.ready (function () {
+	var map = new wiggle.Map ();
 	map.center (-55, -10);
 	$.ajax ({
 	    url: 'data/subunits.json',
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
-		br_pop = GeoJSON (data);
+		br_pop = wiggle.io.GeoJSON (data);
 		map.append(br_pop);
     
 		var f = null;
-		/*$ (engine.canvas).mousemove (function (event) {
-		    if (f) {
-			f.style ('fill', new Color (.02, .44, .69, 1));
-			f = null;
-		    }
-		    var p = engine.camera.project (new vect (event.pageX, event.pageY));
-		    f = br_pop.contains (p);
-		    if (f) {
-			f.style ('fill', new Color (.32, .74, .99, 1));
-			$ ('#hover').text (f.attr.admin_name);
-		    }
-		    else
-			$ ('#hover').text ('NA');
-		});*/
+
 		br_pop.mouseover (function (f) {
-		    f.style ('fill', new Color (.32, .74, .99, 1));
+		    f.style ('fill', wiggle.util.fcolor (.32, .74, .99, 1));
 		    $ ('.popup .value').text (f.attr.SUBUNIT);
 		    $ ('.popup').css ('display', 'block');
 		});
 
 		br_pop.mouseout (function (f) {
-		    f.style ('fill', new Color (.02, .44, .69, 1));
+		    f.style ('fill', wiggle.util.fcolor (.02, .44, .69, 1));
 		    //$ ('#hover').text ('NA');
 		    $ ('.popup').css ('display', 'none');
 		});
@@ -55,27 +39,8 @@
 			left: event.pageX + 15
 		    });
 		});
-
-                /*br_pop.mouseover (function (feature) {
-		    $ ('#hover').text (feature.get (0).properties.admin_name);
-		    feature.highlight (new Color (204, 85, 0, 128));
-		});
-
-		br_pop.mouseout (function (feature) {
-		    $ ('#hover').text ('NA');
-		    feature.unhighlight ();
-		});*/
 	    }
 	});
-	/*$.ajax ({
-	    url: 'data/tiny_countries.json',
-	    dataType: 'json',
-     	    async: false,			
-	    success: function (data) {
-		br_pop = GeoJSON (data);
-		map.append(br_pop);
-	    }
-	});*/
     });
 </script>
 

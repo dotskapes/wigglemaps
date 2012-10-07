@@ -1,6 +1,7 @@
-all: combine
+all: build min
 
-combine: js/*
-	python build/combine.py
-	java -jar ~/yuicompressor-2.4.7/build/yuicompressor-2.4.7.jar -o wigglemaps.min.js wigglemaps.combined.js
-	rm wigglemaps.combined.js
+build: js/*
+	python scripts/compile.py js/base.js wigglemaps.js
+
+min: wigglemaps.js
+	python scripts/closure.py wigglemaps.js

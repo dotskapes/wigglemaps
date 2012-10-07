@@ -1,26 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Map</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-
-    <script type="text/javascript" src="../webgl_maps.js"></script>
-    <script type="text/javascript" src="../js/geojson.js"></script>
-    <script type="text/javascript" src="../js/ascii.js"></script>
-    <script type="text/javascript" src="../js/sgrid.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Gridded Map</title>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
-    $ (document).ready (function () {
-	var map = new Map (null, {
+    wiggle.ready (function () {
+	var map = new wiggle.Map (null, {
 	    //base: null,
 	    desaturate: 1.0,
 	    darken: .25,
 	    hue: .1,
-	    hue_color: fcolor (0, 0, 1, 1),
+	    hue_color: wiggle.util.fcolor (0, 0, 1, 1),
 	    //background: new Color (150, 150, 150, 255)
-	    background: new Color (10, 10, 10, 255),
+	    background: wiggle.util.icolor (10, 10, 10, 255),
 	    center: new vect (0, 0),
 	    extents: 360,
 	});
@@ -30,9 +25,9 @@
 	    dataType: 'json',
      	    async: false,			
 	    success: function (data) {
-		br_pop = GeoJSON (data, {
+		br_pop = wiggle.io.GeoJSON (data, {
 		    style: {
-			stroke: fcolor (.2, .2, .2, 1.0),
+			stroke: wiggle.util.fcolor (.2, .2, .2, 1.0),
 			'fill-opacity': 0.0
 		    }
 		});
@@ -40,29 +35,18 @@
 	    }
 	});
 
-	/*var ramp = [
-	    new Color (0, 0, 0, 0),
-	    new Color (189, 0, 38, 128),
-	    new Color (240, 59, 32, 128),
-	    new Color (253, 141, 60, 200),
-	    new Color (254, 178, 76, 200),
-	    new Color (254, 217, 118, 255),
-	    new Color (255, 255, 178, 255),
-	    new Color (255, 255, 255, 255),
-	];*/
-
 	var ramp = [
-	    new Color (0, 0, 0, 0),
-	    new Color (128, 0, 38, 64),
-	    new Color (189, 0, 38, 64),
-	    new Color (227, 26, 28, 128),
-	    new Color (252, 78, 42, 128),
-	    new Color (253, 141, 60, 200),
-	    new Color (254, 178, 76, 200),
-	    new Color (254, 217, 118, 255),
-	    new Color (255, 237, 160, 255),
-	    new Color (255, 255, 204, 255),
-	    new Color (255, 255, 255, 255),
+	    wiggle.util.icolor (0, 0, 0, 0),
+	    wiggle.util.icolor (128, 0, 38, 64),
+	    wiggle.util.icolor (189, 0, 38, 64),
+	    wiggle.util.icolor (227, 26, 28, 128),
+	    wiggle.util.icolor (252, 78, 42, 128),
+	    wiggle.util.icolor (253, 141, 60, 200),
+	    wiggle.util.icolor (254, 178, 76, 200),
+	    wiggle.util.icolor (254, 217, 118, 255),
+	    wiggle.util.icolor (255, 237, 160, 255),
+	    wiggle.util.icolor (255, 255, 204, 255),
+	    wiggle.util.icolor (255, 255, 255, 255),
 	];
 
 	$.ajax ({
@@ -71,7 +55,7 @@
 	    success: function (data) {
 		var MAX = .65;
 		var MIN = .1;
-		world_pop = SparseGrid (data, {
+		world_pop = wiggle.io.SparseGrid (data, {
 		    ramp: ramp,
 		    map: function (min, max, val) {
 			if (isNaN (val))

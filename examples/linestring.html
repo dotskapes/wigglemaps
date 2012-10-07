@@ -1,33 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Map</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-
-    <script type="text/javascript" src="../webgl_maps.js"></script>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
-    $ (document).ready (function () {
-	var map = new Map ();
+      wiggle.ready (function () {
+	var map = new wiggle.Map ();
 	map.center (-98, 41);
-
-	/*var line_layer = new LineLayer ();
-	line_layer.append ({
-	    geom: [
-		[-45, -30],
-		[0, 0],
-		[60, 15]
-	    ]
-	});
-	map.append (line_layer);*/
 
 	$.ajax ({
 	    url: 'data/railroads.json',
 	    dataType: 'json',
 	    success: function (data) {
-		roads = GeoJSON (data);
+		roads = wiggle.io.GeoJSON (data);
 		map.append (roads);
 
 	    }

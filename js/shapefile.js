@@ -4,7 +4,59 @@ var SHP_NULL = 0;
 var SHP_POINT = 1;
 var SHP_POLYGON = 5;
 
-function Shapefile (data, options) {
+var read_header = function (data) {
+    var code = bint32 (data, 0);
+    var length = bint32 (data, 24);
+    var version = lint32 (data, 28);
+    var shapetype = lint32 (data, 32);
+    
+    var xmin = ldbl64 (data, 36);
+    var ymin = ldbl64 (data, 44);
+    var xmax = ldbl64 (data, 52);
+    var ymax = ldbl64 (data, 60);
+    return {
+	code: code,
+	length: length,
+	version: version,
+	shapetype: shapetype,
+	bounds: new Box (new vect (xmin, ymin), new (xmax, ymax))
+    }
+};
+
+var load_shx = function (data) {
+    var indices = [];
+    var append_index = function (offset) {
+	indices.push (2 * bint32 (data, offset))
+	return offset + 8;
+    };
+    var offset = 100;
+    while (offset < data.length) {
+	offset = append_index (offset);
+    }
+    return indices;
+};
+
+var Shapefile = function (options) {
+    var path = options.path;
+    $.ajax ({
+	url: path + '.shx',
+	mimeType: 'text/plain; charset=x-user-defined',
+	success: function (data) {
+	    var indices = load_shx (data);
+
+	    $.ajax ({
+		url: path + '.shp',
+		mimeType: 'text/plain; charset=x-user-defined',
+		success: function (data) {
+		    var layer = load_shp (data, indices, options);
+		    options.success (layer);
+		}
+	    });
+	}
+    });
+};
+
+var load_shp = function (data, indices, options) {
     var points = [];
     var polys = [];
 
@@ -25,9 +77,10 @@ function Shapefile (data, options) {
 	var record_offset = offset + 8;
 
 	var geom_type = lint32 (data, record_offset);
+
 	if (geom_type == SHP_NULL) {
 	    console.log ("NULL Shape");
-	    return offset + 12;
+	    //return offset + 12;
 	}
 	else if (geom_type == SHP_POINT) {
 	    var x = ldbl64 (data, record_offset + 4);
@@ -66,28 +119,19 @@ function Shapefile (data, options) {
 	else {
 	    throw "Not Implemented: " + geom_type;
 	}
-	return offset + 2 * record_length + SHP_HEADER_LEN;
+	//return offset + 2 * record_length + SHP_HEADER_LEN;
     };
-    
-    var code = bint32 (data, 0);
-    var length = bint32 (data, 24);
-    var version = lint32 (data, 28);
-    var shapetype = lint32 (data, 32);
-    console.log ('meta', length, version, shapetype);
 
-    var xmin = ldbl64 (data, 36);
-    var ymin = ldbl64 (data, 44);
-    var xmax = ldbl64 (data, 52);
-    var ymax = ldbl64 (data, 60);
-    console.log ('bounds', xmin, ymin, xmax, ymax);
-
-    var offset = 100;
-    while (offset < length * 2) {
-	offset = read_record (offset);
+    //var offset = 100;
+    //while (offset < length * 2) {
+    //    offset = read_record (offset);
+    //}
+    for (var i = 0; i < indices.length; i ++) {
+	var offset = indices[i];
+	read_record (offset);
     }
 
     if (points.length > 0) {
-	console.log (points);
 	var p_layer = new PointLayer (points.length);
 	$.each (points, function (i, v) {
 	    p_layer.append (v);

@@ -3,19 +3,15 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>WMS Layer</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
-
-    <script type="text/javascript" src="../webgl_maps.js"></script>
-    <script type="text/javascript" src="../js/tile.js"></script>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	var map = new Map ();
+	var map = new wiggle.Map ();
 	map.center (-55, -10);
 	
-	wms = WMS ({
+	wms = wiggle.io.WMS ({
 	    url: 'http://eland.ecohealthalliance.org:8080/geoserver-dev/ows',
 	    layer: 'sf:ne_10m_admin_1_states_provinces_shp',
 	});
