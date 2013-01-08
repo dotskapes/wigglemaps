@@ -54,6 +54,7 @@
 	    GeoJSON: GeoJSON,
 	    KML: KML,
 	    SparseGrid: SparseGrid,
+	    AsciiGrid: AsciiGrid,
 	    WMS: WMS
 	},
 	util: {
