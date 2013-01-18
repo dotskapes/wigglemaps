@@ -2657,8 +2657,8 @@ function trapezoid_polygon (poly_in) {
     new Trapezoid (poly[index], poly[j], */
     
 };    function Box (v1, v2) {
-    this.min = v1;
-    this.max = v2;
+    this.min = v1.clone ();
+    this.max = v2.clone ();
     this.contains = function (p) {
 	return (v1.x <= p.x) && (v2.x >= p.x) && (v1.y <= p.y) && (v2.y >= p.y);
     };
@@ -2843,7 +2843,8 @@ function RangeTree (elem) {
 	this.root.search (result, box);
 	return result;
     };
-};    var EARTH = 6378.1
+};
+    var EARTH = 6378.1
 
 var new_feature_id = (function () {
     var current_id = 1;
@@ -2925,6 +2926,10 @@ function PointLayer (initial_points) {
 	this.attr = prop.attr;
 
 	this.id = new_feature_id ();
+
+	var p = new vect (prop.geom[0][0], prop.geom[0][1]);
+
+	this.bounds = new Box (p.clone (), p.clone ());
 	var start, count;
 	
 	var total_points = 0;
@@ -2997,6 +3002,8 @@ function PointLayer (initial_points) {
 
     var _properties = {};
     var features = {};
+
+    this.bounds = null
     
     this.append = function (data) {
 	var p = new Point (data);
@@ -3007,6 +3014,11 @@ function PointLayer (initial_points) {
 	num_points ++;
 	dirty = true;	
 	tree = null;
+
+	if (this.bounds)
+	    this.bounds.union (p.bounds);
+	else
+	    this.bounds = p.bounds.clone ();
 
 	return p;
     };
@@ -3107,7 +3119,8 @@ function PointLayer (initial_points) {
 	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
 	}
     };
-};    var poly_shader = null;
+};
+    var poly_shader = null;
 
 
 //var default_poly_color = new Color (0, 0, 1, 1);

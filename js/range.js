@@ -1,6 +1,6 @@
 function Box (v1, v2) {
-    this.min = v1;
-    this.max = v2;
+    this.min = v1.clone ();
+    this.max = v2.clone ();
     this.contains = function (p) {
 	return (v1.x <= p.x) && (v2.x >= p.x) && (v1.y <= p.y) && (v2.y >= p.y);
     };

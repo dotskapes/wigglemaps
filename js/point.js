@@ -35,6 +35,10 @@ function PointLayer (initial_points) {
 	this.attr = prop.attr;
 
 	this.id = new_feature_id ();
+
+	var p = new vect (prop.geom[0][0], prop.geom[0][1]);
+
+	this.bounds = new Box (p.clone (), p.clone ());
 	var start, count;
 	
 	var total_points = 0;
@@ -107,6 +111,8 @@ function PointLayer (initial_points) {
 
     var _properties = {};
     var features = {};
+
+    this.bounds = null
     
     this.append = function (data) {
 	var p = new Point (data);
@@ -117,6 +123,11 @@ function PointLayer (initial_points) {
 	num_points ++;
 	dirty = true;	
 	tree = null;
+
+	if (this.bounds)
+	    this.bounds.union (p.bounds);
+	else
+	    this.bounds = p.bounds.clone ();
 
 	return p;
     };
