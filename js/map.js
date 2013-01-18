@@ -17,6 +17,16 @@ var Map = function (selector, options) {
 	engine.scene.push (layer);
     };
 
+    this.remove = function (layer) {
+	for (var i = 0; i < engine.scene.length; i ++) {
+	    if (engine.scene[i] == layer) {
+		engine.scene.splice (i, 1);
+		return true;
+	    }
+	}
+	return false;
+    };
+
     this.shade = function (data) {
 	var shade = new Hillshade (data);
 	engine.shade = shade;
