@@ -123,12 +123,13 @@ function PolygonLayer (prop) {
 	    while (count < 100) {
 		try {
                     p = triangulate_polygon (poly);
+                    break;
 		} catch (e) {
 		    count ++;
 		}
 	    }
 	    if (count == 100)
-		console.log ('rendering polygon failed')
+                throw "Rendering Polygon Failed";
 
             // End temp error handling code
             

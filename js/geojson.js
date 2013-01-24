@@ -1,3 +1,4 @@
+var GeoJSON2JSON
 var GeoJSON = function (data, options) {
     var num_points = 0, num_polys = 0, num_lines = 0;
     var points = [], polys = [], lines = [];
@@ -7,6 +8,7 @@ var GeoJSON = function (data, options) {
 	    if (feature.geometry.type == 'Point') {
 		num_points ++;
 		points.push ({
+                    type: 'Point',
 		    geom: [feature.geometry.coordinates],
 		    attr: feature.properties
 		});
@@ -14,6 +16,7 @@ var GeoJSON = function (data, options) {
 	    if (feature.geometry.type == 'MultiPoint') {
 		num_points += feature.geometry.cooordinates.length;
 		points.push ({
+                    type: 'Point',
 		    geom: feature.geometry.coordinates,
 		    attr: feature.properties
 		});
@@ -30,6 +33,7 @@ var GeoJSON = function (data, options) {
 		}
 		num_polys ++;
 		polys.push ({
+                    type: 'Polygon',
 		    geom: [oriented],
 		    attr: feature.properties
 		});
@@ -49,6 +53,7 @@ var GeoJSON = function (data, options) {
 		});
 		num_polys ++;
 		polys.push ({
+                    type: 'Polygon',
 		    geom: rings,
 		    attr: feature.properties
 		});
@@ -57,6 +62,7 @@ var GeoJSON = function (data, options) {
 		$.each (feature.geometry.coordinates, function (i, line) {
 		    num_lines ++;
 		    lines.push ({
+                        type: 'Line',
 			geom: line,
 			attr: feature.properties
 		    });

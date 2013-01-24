@@ -3245,12 +3245,13 @@ function PolygonLayer (prop) {
 	    while (count < 100) {
 		try {
                     p = triangulate_polygon (poly);
+                    break;
 		} catch (e) {
 		    count ++;
 		}
 	    }
 	    if (count == 100)
-		console.log ('rendering polygon failed')
+                throw "Rendering Polygon Failed";
 
             // End temp error handling code
             
@@ -4726,7 +4727,8 @@ function TileLayer (options) {
 
     var layer = new MultiTileLayer (settings);
     return layer;
-};    var GeoJSON = function (data, options) {
+};    var GeoJSON2JSON
+var GeoJSON = function (data, options) {
     var num_points = 0, num_polys = 0, num_lines = 0;
     var points = [], polys = [], lines = [];
     for (var i = 0; i < data.features.length; i ++) {
@@ -4735,6 +4737,7 @@ function TileLayer (options) {
 	    if (feature.geometry.type == 'Point') {
 		num_points ++;
 		points.push ({
+                    type: 'Point',
 		    geom: [feature.geometry.coordinates],
 		    attr: feature.properties
 		});
@@ -4742,6 +4745,7 @@ function TileLayer (options) {
 	    if (feature.geometry.type == 'MultiPoint') {
 		num_points += feature.geometry.cooordinates.length;
 		points.push ({
+                    type: 'Point',
 		    geom: feature.geometry.coordinates,
 		    attr: feature.properties
 		});
@@ -4758,6 +4762,7 @@ function TileLayer (options) {
 		}
 		num_polys ++;
 		polys.push ({
+                    type: 'Polygon',
 		    geom: [oriented],
 		    attr: feature.properties
 		});
@@ -4777,6 +4782,7 @@ function TileLayer (options) {
 		});
 		num_polys ++;
 		polys.push ({
+                    type: 'Polygon',
 		    geom: rings,
 		    attr: feature.properties
 		});
@@ -4785,6 +4791,7 @@ function TileLayer (options) {
 		$.each (feature.geometry.coordinates, function (i, line) {
 		    num_lines ++;
 		    lines.push ({
+                        type: 'Line',
 			geom: line,
 			attr: feature.properties
 		    });
@@ -5334,7 +5341,8 @@ function Layer (data) {
 	    gl.drawArrays (gl.TRIANGLES, 0, poly_buffer.numItems); 
 	}
     };
-};*/    var SHP_HEADER_LEN = 8;
+};*/
+    var SHP_HEADER_LEN = 8;
 
 var SHP_NULL = 0;
 var SHP_POINT = 1;
