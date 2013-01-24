@@ -117,7 +117,23 @@ function PolygonLayer (prop) {
 	var simple = [];
 	var fill_count = 0;
 	$.each (this.geom, function (i, poly) {
-	    var p = triangulate_polygon (poly);
+            // Begin temp error handling code
+            var p;
+	    var count = 0;
+	    while (count < 100) {
+		try {
+                    p = triangulate_polygon (poly);
+		} catch (e) {
+		    count ++;
+		}
+	    }
+	    if (count == 100)
+		console.log ('rendering polygon failed')
+
+            // End temp error handling code
+            
+	    //var p = triangulate_polygon (poly);
+            
 	    fill_count += p.length / 2;
 	    simple.push (p);
 	});
