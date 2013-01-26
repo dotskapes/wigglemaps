@@ -1,4 +1,4 @@
-function Texture (options) {
+function Texture (gl, options) {
     var settings = copy (options);
     default_model (settings, {
 	mag_filter: gl.LINEAR,

@@ -42,27 +42,13 @@ function PolygonLayer (prop) {
 	default_poly_stroke_alpha = prop.style['stroke-opacity'];
     else
 	default_poly_stroke_alpha = 1.0;
+
+    var initialized = false;
     
-    if (!poly_shader) {
-	poly_shader = makeProgram (BASE_DIR + 'shaders/poly');
-    }
-    if (!line_shader) {
-	line_shader = makeProgram (BASE_DIR + 'shaders/line');
-    }
     this.id = new_feature_id ();
 
-    var fill_buffers = new Buffers (1024);
-    fill_buffers.create ('vert', 2);
-    fill_buffers.create ('color', 3);
-    fill_buffers.create ('alpha', 1);
-
-    var stroke_buffers = new Buffers (1024);
-    stroke_buffers.create ('vert', 2);
-    stroke_buffers.create ('norm', 2);
-    stroke_buffers.create ('color', 3);
-    //stroke_buffers.create ('unit', 2);
-    stroke_buffers.create ('alpha', 1);
-
+    var fill_buffers, stroke_buffers;
+    
     var layer = this;
 
     function Polygon (prop) {
@@ -114,30 +100,6 @@ function PolygonLayer (prop) {
 	    stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
 	};
 	
-	var simple = [];
-	var fill_count = 0;
-	$.each (this.geom, function (i, poly) {
-            // Begin temp error handling code
-            var p;
-	    var count = 0;
-	    while (count < 100) {
-		try {
-                    p = triangulate_polygon (poly);
-                    break;
-		} catch (e) {
-		    count ++;
-		}
-	    }
-	    if (count == 100)
-                throw "Rendering Polygon Failed";
-
-            // End temp error handling code
-            
-	    //var p = triangulate_polygon (poly);
-            
-	    fill_count += p.length / 2;
-	    simple.push (p);
-	});
 	var min = new vect (Infinity, Infinity);
 	var max = new vect (-Infinity, -Infinity);
 	$.each (this.geom, function (i, poly) {
@@ -155,21 +117,54 @@ function PolygonLayer (prop) {
 	    });
 	});
 	this.bounds = new Box (min, max);
-	fill_start = fill_buffers.alloc (fill_count);
-	var current = fill_start;
-	$.each (simple, function (i, p) {	
-	    var count = p.length / 2;;
-	    fill_buffers.write ('vert', p, current, count);
-	    current += count;
-	});
 
-	stroke_start = stroke_buffers.count ();
-	$.each (this.geom, function (i, poly) {
-	    for (var i = 0; i < poly.length; i ++) {
-		stroke_count += poly[i].length * 6;    
-		draw_lines (stroke_buffers, poly[i]);
-	    }
-	});
+        this.initialize = function () {
+	    var simple = [];
+	    fill_count = 0;
+	    $.each (this.geom, function (i, poly) {
+                // Begin temp error handling code
+                var p;
+	        var count = 0;
+	        while (count < 100) {
+		    try {
+                        p = triangulate_polygon (poly);
+                        break;
+		    } catch (e) {
+		        count ++;
+		    }
+	        }
+	        if (count == 100)
+                    throw "Rendering Polygon Failed";
+                
+                // End temp error handling code
+                
+	        //var p = triangulate_polygon (poly);
+                
+	        fill_count += p.length / 2;
+	        simple.push (p);
+	    });
+
+	    fill_start = fill_buffers.alloc (fill_count);
+	    var current = fill_start;
+            
+	    $.each (simple, function (i, p) {	
+	        var count = p.length / 2;;
+	        fill_buffers.write ('vert', p, current, count);
+	        current += count;
+	    });
+            
+            
+	    stroke_start = stroke_buffers.count ();
+	    $.each (this.geom, function (i, poly) {
+	        for (var i = 0; i < poly.length; i ++) {
+		    stroke_count += poly[i].length * 6;    
+		    draw_lines (stroke_buffers, poly[i]);
+	        }
+	    });
+
+	    set_color ();
+	    set_alpha ();
+        };
 
 	/*stroke_count = this.geom[0].length * 6;
 	stroke_start = draw_lines (stroke_buffers, this.geom[0]);
@@ -201,9 +196,6 @@ function PolygonLayer (prop) {
 		set_alpha ();
 	    }
 	};
-
-	set_color ();
-	set_alpha ();
     };	
 
     var features = {};
@@ -290,6 +282,9 @@ function PolygonLayer (prop) {
 	num_polys ++;
 	dirty = true;
 	tree = null;
+        
+        if (initialized)
+            p.initialize ();
     };
     
     this.style = function (key, value) {
@@ -354,9 +349,39 @@ function PolygonLayer (prop) {
 	current_over = null;*/
     };
 
+    this.initialize = function (engine) {
+        if (!poly_shader) {
+	    poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+        }
+        if (!line_shader) {
+	    line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
+        }
+
+        fill_buffers = new Buffers (engine.gl, 1024);
+        fill_buffers.create ('vert', 2);
+        fill_buffers.create ('color', 3);
+        fill_buffers.create ('alpha', 1);
+        
+        stroke_buffers = new Buffers (engine.gl, 1024);
+        stroke_buffers.create ('vert', 2);
+        stroke_buffers.create ('norm', 2);
+        stroke_buffers.create ('color', 3);
+        //stroke_buffers.create ('unit', 2);
+        stroke_buffers.create ('alpha', 1);
+
+        //for (var i = 0; i < features.length; i ++) {
+        for (var key in features) {
+            features[key].initialize ();
+        }
+        initialized = true;
+    };
+
     this.draw = function (engine, dt, select) {
 	if (select)
 	    return;
+
+        var gl = engine.gl;
+
 	fill_buffers.update (dt);	
 	stroke_buffers.update (dt);	
 	if (dirty) {

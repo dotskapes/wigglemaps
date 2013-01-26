@@ -4,7 +4,7 @@
 
 var DEBUG = false;
 
-gl = null;
+//gl = null;
 
 
 function setContext (canvas) {
@@ -24,6 +24,7 @@ function setContext (canvas) {
 	    premultipliedAlpha: false
 	}), throwOnGLError);
     }
+    return gl;
 };
 
 function rect (x, y, w, h) {
@@ -66,25 +67,25 @@ function rectv (p1, p2, z) {
     return verts;
 };
 
-function makeProgram (path) {
+function makeProgram (gl, path) {
     if (!gl)
 	return null;
     var shader = gl.createProgram();
 
-    var vert_shader = getShader (gl.VERTEX_SHADER, path + '/vert.glsl');
-    var frag_shader = getShader (gl.FRAGMENT_SHADER, path + '/frag.glsl');
+    var vert_shader = getShader (gl, gl.VERTEX_SHADER, path + '/vert.glsl');
+    var frag_shader = getShader (gl, gl.FRAGMENT_SHADER, path + '/frag.glsl');
 
     gl.attachShader(shader, vert_shader);
     gl.attachShader(shader, frag_shader);
     gl.linkProgram(shader);
 
-    addVars (shader, vert_shader, frag_shader);
+    addVars (gl, shader, vert_shader, frag_shader);
     //addVars (gl, shader, frag, vert_shader, frag_shader);
 
     return shader;
 };
 
-function getShader (type, path) {
+function getShader (gl, type, path) {
     var shader = gl.createShader (type);
 
     $.ajax ({
@@ -106,7 +107,7 @@ function getShader (type, path) {
     return shader;
 };
 
-function addVars (shader, vert, frag) {
+function addVars (gl, shader, vert, frag) {
     var uniforms = {};
     var attr = {};
 
@@ -184,7 +185,7 @@ function addVars (shader, vert, frag) {
     }
 };
 
-function repeats (data, itemSize, count) {
+function repeats (gl, data, itemSize, count) {
     var buffer = gl.createBuffer ();
     buffer.itemSize = itemSize;
     buffer.numItems = count;
@@ -200,7 +201,7 @@ function repeats (data, itemSize, count) {
     return buffer;
 };
 
-function staticBuffer (data, itemSize) {
+function staticBuffer (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var float_data = new Float32Array (data);
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
@@ -212,7 +213,7 @@ function staticBuffer (data, itemSize) {
     return buffer;
 };
 
-function staticBufferJoin (data, itemSize) {
+function staticBufferJoin (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var count = 0;
     for (var i = 0; i < data.length; i ++) {
@@ -235,7 +236,7 @@ function staticBufferJoin (data, itemSize) {
     return buffer;
 };
 
-function dynamicBuffer (items, itemSize) {
+function dynamicBuffer (gl, items, itemSize) {
     if (!gl)
 	return null;
     var buffer = gl.createBuffer ();
@@ -256,7 +257,7 @@ function dynamicBuffer (items, itemSize) {
     return buffer;
 };
 
-function indexBuffer (items, itemSize) {
+function indexBuffer (gl, items, itemSize) {
     var buffer = gl.createBuffer ();
     gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
     var float_data = new Uint16Array (items);
@@ -276,7 +277,7 @@ function indexBuffer (items, itemSize) {
 };
 
 var tex_count = 0;
-function getTexture (path, callback) {
+function getTexture (gl, path, callback) {
     var tex = gl.createTexture ();
     tex.id = tex_count;
     tex_count ++;

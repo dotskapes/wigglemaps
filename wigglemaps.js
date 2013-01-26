@@ -624,7 +624,7 @@ function lfloat32 (data, offset) {
 
 var DEBUG = false;
 
-gl = null;
+//gl = null;
 
 
 function setContext (canvas) {
@@ -644,6 +644,7 @@ function setContext (canvas) {
 	    premultipliedAlpha: false
 	}), throwOnGLError);
     }
+    return gl;
 };
 
 function rect (x, y, w, h) {
@@ -686,25 +687,25 @@ function rectv (p1, p2, z) {
     return verts;
 };
 
-function makeProgram (path) {
+function makeProgram (gl, path) {
     if (!gl)
 	return null;
     var shader = gl.createProgram();
 
-    var vert_shader = getShader (gl.VERTEX_SHADER, path + '/vert.glsl');
-    var frag_shader = getShader (gl.FRAGMENT_SHADER, path + '/frag.glsl');
+    var vert_shader = getShader (gl, gl.VERTEX_SHADER, path + '/vert.glsl');
+    var frag_shader = getShader (gl, gl.FRAGMENT_SHADER, path + '/frag.glsl');
 
     gl.attachShader(shader, vert_shader);
     gl.attachShader(shader, frag_shader);
     gl.linkProgram(shader);
 
-    addVars (shader, vert_shader, frag_shader);
+    addVars (gl, shader, vert_shader, frag_shader);
     //addVars (gl, shader, frag, vert_shader, frag_shader);
 
     return shader;
 };
 
-function getShader (type, path) {
+function getShader (gl, type, path) {
     var shader = gl.createShader (type);
 
     $.ajax ({
@@ -726,7 +727,7 @@ function getShader (type, path) {
     return shader;
 };
 
-function addVars (shader, vert, frag) {
+function addVars (gl, shader, vert, frag) {
     var uniforms = {};
     var attr = {};
 
@@ -804,7 +805,7 @@ function addVars (shader, vert, frag) {
     }
 };
 
-function repeats (data, itemSize, count) {
+function repeats (gl, data, itemSize, count) {
     var buffer = gl.createBuffer ();
     buffer.itemSize = itemSize;
     buffer.numItems = count;
@@ -820,7 +821,7 @@ function repeats (data, itemSize, count) {
     return buffer;
 };
 
-function staticBuffer (data, itemSize) {
+function staticBuffer (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var float_data = new Float32Array (data);
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
@@ -832,7 +833,7 @@ function staticBuffer (data, itemSize) {
     return buffer;
 };
 
-function staticBufferJoin (data, itemSize) {
+function staticBufferJoin (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var count = 0;
     for (var i = 0; i < data.length; i ++) {
@@ -855,7 +856,7 @@ function staticBufferJoin (data, itemSize) {
     return buffer;
 };
 
-function dynamicBuffer (items, itemSize) {
+function dynamicBuffer (gl, items, itemSize) {
     if (!gl)
 	return null;
     var buffer = gl.createBuffer ();
@@ -876,7 +877,7 @@ function dynamicBuffer (items, itemSize) {
     return buffer;
 };
 
-function indexBuffer (items, itemSize) {
+function indexBuffer (gl, items, itemSize) {
     var buffer = gl.createBuffer ();
     gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
     var float_data = new Uint16Array (items);
@@ -896,7 +897,7 @@ function indexBuffer (items, itemSize) {
 };
 
 var tex_count = 0;
-function getTexture (path, callback) {
+function getTexture (gl, path, callback) {
     var tex = gl.createTexture ();
     tex.id = tex_count;
     tex_count ++;
@@ -944,7 +945,7 @@ function getTexture (path, callback) {
     });
     return jxhr;
 }*/
-    function Texture (options) {
+    function Texture (gl, options) {
     var settings = copy (options);
     default_model (settings, {
 	mag_filter: gl.LINEAR,
@@ -1281,7 +1282,7 @@ function getImage (path, callback) {
     };
 };    //var set_id_color, bind_event;
 
-var TILE_SERVER = 'http://eland.ecohealthalliance.org:8080/wigglemaps';
+var TILE_SERVER = 'http://eland.ecohealthalliance.org/wigglemaps';
 
 var Mouse = {
     x: 0,
@@ -1291,7 +1292,7 @@ var Mouse = {
 var blur_shader = null;
 var light_shader = null;
 
-function Engine (selector, options) {
+function Engine (selector, map, options) {
     if (!options) {
 	options = {};
     }
@@ -1328,19 +1329,20 @@ function Engine (selector, options) {
 	}
     };
 
-    setContext (this.canvas, DEBUG);
+    var gl = setContext (this.canvas, DEBUG);
+    this.gl = gl;
     gl.viewport (0, 0, that.canvas.width (), that.canvas.height ());
 
     gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable (gl.BLEND);
 
     if (!blur_shader) {
-	blur_shader = makeProgram (BASE_DIR + 'shaders/blur');
+	blur_shader = makeProgram (gl, BASE_DIR + 'shaders/blur');
     }
     if (!light_shader) {
-	light_shader = makeProgram (BASE_DIR + 'shaders/light');
+	light_shader = makeProgram (gl, BASE_DIR + 'shaders/light');
     }
-    var buffers = new Buffers (6);
+    var buffers = new Buffers (gl, 6);
     buffers.create ('vert', 2);
     buffers.create ('tex', 2);
 
@@ -1539,6 +1541,8 @@ function Engine (selector, options) {
 	else {
 	    base = null;
 	}
+        if (base)
+            base.initialize (that);
     };
     set_base ();
 
@@ -2018,7 +2022,7 @@ function Engine (selector, options) {
     requestAnimationFrame (draw);
     
 };
-    function Buffers (initial_size) {
+    function Buffers (gl, initial_size) {
     var data = {};
     
     var size;
@@ -2049,7 +2053,7 @@ function Engine (selector, options) {
 	for (name in data) {
 	    var new_array = new Float32Array (new_size * data[name].len);
 	    var old_array = data[name].array;
-	    var new_buffer = dynamicBuffer (size, data[name].len);
+	    var new_buffer = dynamicBuffer (gl, size, data[name].len);
 	    
 	    copy_array (new_array, old_array);
 	    data[name].array = new_array;
@@ -2062,7 +2066,7 @@ function Engine (selector, options) {
 	if (!len)
 	    throw "Length of buffer must be a positive integer";
 	var array = new Float32Array (size * len);
-	var buffer = dynamicBuffer (size, len);
+	var buffer = dynamicBuffer (gl, size, len);
 	data[name] = {
 	    array: array,
 	    buffer: buffer,
@@ -2113,16 +2117,17 @@ function Engine (selector, options) {
 	    }
 	}
     };
-};    var sel_box_shader = null;
+};
+    var sel_box_shader = null;
 function SelectionBox (engine) {
     if (!sel_box_shader)
-	sel_box_shader = makeProgram (BASE_DIR + 'shaders/selbox');
+	sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
     var start = null;
     var end = null;
-    var sel_buffer = dynamicBuffer (6, 2);
-    var bound_buffer = staticBuffer (rect (0, 0, 1, 1), 2);
+    var sel_buffer = dynamicBuffer (engine.gl, 6, 2);
+    var bound_buffer = staticBuffer (engine.gl, rect (0, 0, 1, 1), 2);
     var reset_rect = function () {
 	sel_buffer.update (rectv (start, end), 0);
     };
@@ -2195,7 +2200,8 @@ function SelectionBox (engine) {
 	    gl.drawArrays (gl.TRIANGLES, 0, sel_buffer.numItems); 
 	}
     };
-};    function circle (index, length) {
+};
+    function circle (index, length) {
     while (index >= length)
 	index -= length;
     while (index < 0)
@@ -3164,27 +3170,13 @@ function PolygonLayer (prop) {
 	default_poly_stroke_alpha = prop.style['stroke-opacity'];
     else
 	default_poly_stroke_alpha = 1.0;
+
+    var initialized = false;
     
-    if (!poly_shader) {
-	poly_shader = makeProgram (BASE_DIR + 'shaders/poly');
-    }
-    if (!line_shader) {
-	line_shader = makeProgram (BASE_DIR + 'shaders/line');
-    }
     this.id = new_feature_id ();
 
-    var fill_buffers = new Buffers (1024);
-    fill_buffers.create ('vert', 2);
-    fill_buffers.create ('color', 3);
-    fill_buffers.create ('alpha', 1);
-
-    var stroke_buffers = new Buffers (1024);
-    stroke_buffers.create ('vert', 2);
-    stroke_buffers.create ('norm', 2);
-    stroke_buffers.create ('color', 3);
-    //stroke_buffers.create ('unit', 2);
-    stroke_buffers.create ('alpha', 1);
-
+    var fill_buffers, stroke_buffers;
+    
     var layer = this;
 
     function Polygon (prop) {
@@ -3236,30 +3228,6 @@ function PolygonLayer (prop) {
 	    stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
 	};
 	
-	var simple = [];
-	var fill_count = 0;
-	$.each (this.geom, function (i, poly) {
-            // Begin temp error handling code
-            var p;
-	    var count = 0;
-	    while (count < 100) {
-		try {
-                    p = triangulate_polygon (poly);
-                    break;
-		} catch (e) {
-		    count ++;
-		}
-	    }
-	    if (count == 100)
-                throw "Rendering Polygon Failed";
-
-            // End temp error handling code
-            
-	    //var p = triangulate_polygon (poly);
-            
-	    fill_count += p.length / 2;
-	    simple.push (p);
-	});
 	var min = new vect (Infinity, Infinity);
 	var max = new vect (-Infinity, -Infinity);
 	$.each (this.geom, function (i, poly) {
@@ -3277,21 +3245,54 @@ function PolygonLayer (prop) {
 	    });
 	});
 	this.bounds = new Box (min, max);
-	fill_start = fill_buffers.alloc (fill_count);
-	var current = fill_start;
-	$.each (simple, function (i, p) {	
-	    var count = p.length / 2;;
-	    fill_buffers.write ('vert', p, current, count);
-	    current += count;
-	});
 
-	stroke_start = stroke_buffers.count ();
-	$.each (this.geom, function (i, poly) {
-	    for (var i = 0; i < poly.length; i ++) {
-		stroke_count += poly[i].length * 6;    
-		draw_lines (stroke_buffers, poly[i]);
-	    }
-	});
+        this.initialize = function () {
+	    var simple = [];
+	    fill_count = 0;
+	    $.each (this.geom, function (i, poly) {
+                // Begin temp error handling code
+                var p;
+	        var count = 0;
+	        while (count < 100) {
+		    try {
+                        p = triangulate_polygon (poly);
+                        break;
+		    } catch (e) {
+		        count ++;
+		    }
+	        }
+	        if (count == 100)
+                    throw "Rendering Polygon Failed";
+                
+                // End temp error handling code
+                
+	        //var p = triangulate_polygon (poly);
+                
+	        fill_count += p.length / 2;
+	        simple.push (p);
+	    });
+
+	    fill_start = fill_buffers.alloc (fill_count);
+	    var current = fill_start;
+            
+	    $.each (simple, function (i, p) {	
+	        var count = p.length / 2;;
+	        fill_buffers.write ('vert', p, current, count);
+	        current += count;
+	    });
+            
+            
+	    stroke_start = stroke_buffers.count ();
+	    $.each (this.geom, function (i, poly) {
+	        for (var i = 0; i < poly.length; i ++) {
+		    stroke_count += poly[i].length * 6;    
+		    draw_lines (stroke_buffers, poly[i]);
+	        }
+	    });
+
+	    set_color ();
+	    set_alpha ();
+        };
 
 	/*stroke_count = this.geom[0].length * 6;
 	stroke_start = draw_lines (stroke_buffers, this.geom[0]);
@@ -3323,9 +3324,6 @@ function PolygonLayer (prop) {
 		set_alpha ();
 	    }
 	};
-
-	set_color ();
-	set_alpha ();
     };	
 
     var features = {};
@@ -3412,6 +3410,9 @@ function PolygonLayer (prop) {
 	num_polys ++;
 	dirty = true;
 	tree = null;
+        
+        if (initialized)
+            p.initialize ();
     };
     
     this.style = function (key, value) {
@@ -3476,9 +3477,39 @@ function PolygonLayer (prop) {
 	current_over = null;*/
     };
 
+    this.initialize = function (engine) {
+        if (!poly_shader) {
+	    poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+        }
+        if (!line_shader) {
+	    line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
+        }
+
+        fill_buffers = new Buffers (engine.gl, 1024);
+        fill_buffers.create ('vert', 2);
+        fill_buffers.create ('color', 3);
+        fill_buffers.create ('alpha', 1);
+        
+        stroke_buffers = new Buffers (engine.gl, 1024);
+        stroke_buffers.create ('vert', 2);
+        stroke_buffers.create ('norm', 2);
+        stroke_buffers.create ('color', 3);
+        //stroke_buffers.create ('unit', 2);
+        stroke_buffers.create ('alpha', 1);
+
+        //for (var i = 0; i < features.length; i ++) {
+        for (var key in features) {
+            features[key].initialize ();
+        }
+        initialized = true;
+    };
+
     this.draw = function (engine, dt, select) {
 	if (select)
 	    return;
+
+        var gl = engine.gl;
+
 	fill_buffers.update (dt);	
 	stroke_buffers.update (dt);	
 	if (dirty) {
@@ -4059,6 +4090,10 @@ function Grid (options) {
 	return elem.length;
     }
 
+    this.items = function () {
+        return elem;
+    };
+
     this.attr = function (field) {
 	if (!elem.length)
 	    return null;
@@ -4199,7 +4234,8 @@ function Grid (options) {
 	}
 	return this;
     };
-};    var raster_shader = null;
+};
+    var raster_shader = null;
 
 function KML (data) {
     var bounds = $ (data).find ('LatLonBox');
@@ -4389,12 +4425,11 @@ var NUM_TILES = 8;
 var total_drawn = 0;
 var total_calls = 0;
 
+var tile_shader = null;
 function MultiTileLayer (options) {
     var layers = [];
     var available = [];
-    for (var i = 0; i < 25; i ++) {
-	available.push (new Texture ());
-    }
+
     for (var i = 0; i < options.levels; i ++) {
 	var settings = copy (options);
 	if (settings.source == 'file')
@@ -4411,16 +4446,41 @@ function MultiTileLayer (options) {
     }
     var z_top = 1.0 - z_base - options.levels / 1000;
     z_base += (options.levels + 2) / 1000;
-    layers[0].fetch_all ();
-    layers[0].noexpire (true);
 
-    var buffers = new Buffers (NUM_TILES * 6);
-    buffers.create ('vert', 3);
-    buffers.create ('tex', 2);
-    buffers.create ('lookup', 1);
-    buffers.alloc (NUM_TILES * 6);
+    var buffers = null;
+
+    var initialized = false;
+    this.initialize = function (engine) {
+        if (!tile_shader)
+	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+
+        buffers = new Buffers (engine.gl, NUM_TILES * 6);
+        buffers.create ('vert', 3);
+        buffers.create ('tex', 2);
+        buffers.create ('lookup', 1);
+        buffers.alloc (NUM_TILES * 6);
+
+        for (var i = 0; i < 25; i ++) {
+	    available.push (new Texture (engine.gl));
+        }
+
+        for (var i = 0; i < layers.length; i ++) {
+            layers[i].initialize (engine);
+        }
+
+        layers[0].fetch_all ();
+        layers[0].noexpire (true);
+        
+        initialized = true;
+    };
 
     this.draw = function (engine, dt) {
+        //if (!initialized)
+        //    initialize (engine);
+
+	gl.useProgram (tile_shader);
+	tile_shader.data ('screen', engine.camera.mat3);
+
 	total_drawn = 0;
 	total_calls = 0;
 	var min = Infinity
@@ -4451,9 +4511,6 @@ function MultiTileLayer (options) {
 	}*/
 	//layers[min_layer].draw (engine, dt);
 
-	gl.useProgram (tile_shader);
-	tile_shader.data ('screen', engine.camera.mat3);
-
 	if (current.ready ()) {
 	    current.draw (engine, dt, buffers, 0, true);
 	}
@@ -4475,7 +4532,6 @@ function MultiTileLayer (options) {
     };
 };
 
-var tile_shader = null;
 function TileLayer (options) {
     if (!options)
 	options = {};
@@ -4490,12 +4546,14 @@ function TileLayer (options) {
     if (!options.available) {
 	options.available = [];
 	for (var i = 0; i < 8; i ++)
-	    options.available.push (new Texture ());
+	    options.available.push (new Texture (gl));
     }
-    
-    if (!tile_shader)
-	tile_shader = makeProgram (BASE_DIR + 'shaders/tile');
 
+    var gl = null;
+    var change_context = function (new_gl) {
+        gl = new_gl;
+    };
+    
     var url = options.url;
     var min = options.min;
     var rows = options.rows;
@@ -4626,7 +4684,7 @@ function TileLayer (options) {
 		}) (tiles[i][j]))*/
 	    tiles[i][j].tex = options.available.pop ();
 	    if (!tiles[i][j].tex)
-		tiles[i][j].tex = new Texture ();
+		tiles[i][j].tex = new Texture (gl);
 	    getImage (path, (function (tile) {
 		return function (img) {
 		    if (tile.tex) {
@@ -4667,7 +4725,21 @@ function TileLayer (options) {
 	}
     };
 
+    var initialized = false;
+    this.initialize = function (engine) {
+        if (initialized)
+            throw "Not Implemented: Migrating Tile Layers to New Map";
+
+        if (!tile_shader)
+	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+
+        change_context (engine.gl);
+        initialized = true;
+    };
+
     this.draw = function (engine, dt, buffers, count, flush) {
+        if (!initialized)
+            this.initialize (engine);
 
 	var do_draw = function () {
 	    total_calls ++;
@@ -4698,7 +4770,7 @@ function TileLayer (options) {
 
 		    tile_shader.data ('sampler' + count, tiles[i][j].tex);
 		    if (tiles[i][j].tex == null)
-			throw "bad";
+			throw "badness";
 		    count ++;
 		    total_drawn ++;
 
@@ -5644,8 +5716,6 @@ function Slider (pos, size, units) {
     });
     
 };    var Map = function (selector, options) {
-    engine = new Engine (selector, options);
-
     this.center = function (x, y) {
 	engine.camera.position (new vect (x, y));
     };
@@ -5659,6 +5729,7 @@ function Slider (pos, size, units) {
     };
 
     this.append = function (layer) {
+        layer.initialize (engine);
 	engine.scene.push (layer);
     };
 
@@ -5720,6 +5791,8 @@ function Slider (pos, size, units) {
     this.click = function (func) {
 	click_func = func;
     };
+
+    engine = new Engine (selector, this, options);
 
     engine.canvas.click (function (event) {
 	if (click_func) {

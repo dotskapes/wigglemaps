@@ -1,13 +1,13 @@
 var sel_box_shader = null;
 function SelectionBox (engine) {
     if (!sel_box_shader)
-	sel_box_shader = makeProgram (BASE_DIR + 'shaders/selbox');
+	sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
     var start = null;
     var end = null;
-    var sel_buffer = dynamicBuffer (6, 2);
-    var bound_buffer = staticBuffer (rect (0, 0, 1, 1), 2);
+    var sel_buffer = dynamicBuffer (engine.gl, 6, 2);
+    var bound_buffer = staticBuffer (engine.gl, rect (0, 0, 1, 1), 2);
     var reset_rect = function () {
 	sel_buffer.update (rectv (start, end), 0);
     };

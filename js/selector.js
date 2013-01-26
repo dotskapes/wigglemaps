@@ -8,6 +8,10 @@ var LayerSelector = function (elem) {
 	return elem.length;
     }
 
+    this.items = function () {
+        return elem;
+    };
+
     this.attr = function (field) {
 	if (!elem.length)
 	    return null;

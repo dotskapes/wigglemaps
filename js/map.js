@@ -1,6 +1,4 @@
 var Map = function (selector, options) {
-    engine = new Engine (selector, options);
-
     this.center = function (x, y) {
 	engine.camera.position (new vect (x, y));
     };
@@ -14,6 +12,7 @@ var Map = function (selector, options) {
     };
 
     this.append = function (layer) {
+        layer.initialize (engine);
 	engine.scene.push (layer);
     };
 
@@ -75,6 +74,8 @@ var Map = function (selector, options) {
     this.click = function (func) {
 	click_func = func;
     };
+
+    engine = new Engine (selector, this, options);
 
     engine.canvas.click (function (event) {
 	if (click_func) {

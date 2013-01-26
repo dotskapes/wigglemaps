@@ -1,4 +1,4 @@
-function Buffers (initial_size) {
+function Buffers (gl, initial_size) {
     var data = {};
     
     var size;
@@ -29,7 +29,7 @@ function Buffers (initial_size) {
 	for (name in data) {
 	    var new_array = new Float32Array (new_size * data[name].len);
 	    var old_array = data[name].array;
-	    var new_buffer = dynamicBuffer (size, data[name].len);
+	    var new_buffer = dynamicBuffer (gl, size, data[name].len);
 	    
 	    copy_array (new_array, old_array);
 	    data[name].array = new_array;
@@ -42,7 +42,7 @@ function Buffers (initial_size) {
 	if (!len)
 	    throw "Length of buffer must be a positive integer";
 	var array = new Float32Array (size * len);
-	var buffer = dynamicBuffer (size, len);
+	var buffer = dynamicBuffer (gl, size, len);
 	data[name] = {
 	    array: array,
 	    buffer: buffer,

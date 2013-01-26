@@ -1,6 +1,6 @@
 //var set_id_color, bind_event;
 
-var TILE_SERVER = 'http://eland.ecohealthalliance.org:8080/wigglemaps';
+var TILE_SERVER = 'http://eland.ecohealthalliance.org/wigglemaps';
 
 var Mouse = {
     x: 0,
@@ -10,7 +10,7 @@ var Mouse = {
 var blur_shader = null;
 var light_shader = null;
 
-function Engine (selector, options) {
+function Engine (selector, map, options) {
     if (!options) {
 	options = {};
     }
@@ -47,19 +47,20 @@ function Engine (selector, options) {
 	}
     };
 
-    setContext (this.canvas, DEBUG);
+    var gl = setContext (this.canvas, DEBUG);
+    this.gl = gl;
     gl.viewport (0, 0, that.canvas.width (), that.canvas.height ());
 
     gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable (gl.BLEND);
 
     if (!blur_shader) {
-	blur_shader = makeProgram (BASE_DIR + 'shaders/blur');
+	blur_shader = makeProgram (gl, BASE_DIR + 'shaders/blur');
     }
     if (!light_shader) {
-	light_shader = makeProgram (BASE_DIR + 'shaders/light');
+	light_shader = makeProgram (gl, BASE_DIR + 'shaders/light');
     }
-    var buffers = new Buffers (6);
+    var buffers = new Buffers (gl, 6);
     buffers.create ('vert', 2);
     buffers.create ('tex', 2);
 
@@ -258,6 +259,8 @@ function Engine (selector, options) {
 	else {
 	    base = null;
 	}
+        if (base)
+            base.initialize (that);
     };
     set_base ();
 

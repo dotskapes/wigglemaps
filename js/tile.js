@@ -7,12 +7,11 @@ var NUM_TILES = 8;
 var total_drawn = 0;
 var total_calls = 0;
 
+var tile_shader = null;
 function MultiTileLayer (options) {
     var layers = [];
     var available = [];
-    for (var i = 0; i < 25; i ++) {
-	available.push (new Texture ());
-    }
+
     for (var i = 0; i < options.levels; i ++) {
 	var settings = copy (options);
 	if (settings.source == 'file')
@@ -29,16 +28,41 @@ function MultiTileLayer (options) {
     }
     var z_top = 1.0 - z_base - options.levels / 1000;
     z_base += (options.levels + 2) / 1000;
-    layers[0].fetch_all ();
-    layers[0].noexpire (true);
 
-    var buffers = new Buffers (NUM_TILES * 6);
-    buffers.create ('vert', 3);
-    buffers.create ('tex', 2);
-    buffers.create ('lookup', 1);
-    buffers.alloc (NUM_TILES * 6);
+    var buffers = null;
+
+    var initialized = false;
+    this.initialize = function (engine) {
+        if (!tile_shader)
+	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+
+        buffers = new Buffers (engine.gl, NUM_TILES * 6);
+        buffers.create ('vert', 3);
+        buffers.create ('tex', 2);
+        buffers.create ('lookup', 1);
+        buffers.alloc (NUM_TILES * 6);
+
+        for (var i = 0; i < 25; i ++) {
+	    available.push (new Texture (engine.gl));
+        }
+
+        for (var i = 0; i < layers.length; i ++) {
+            layers[i].initialize (engine);
+        }
+
+        layers[0].fetch_all ();
+        layers[0].noexpire (true);
+        
+        initialized = true;
+    };
 
     this.draw = function (engine, dt) {
+        //if (!initialized)
+        //    initialize (engine);
+
+	gl.useProgram (tile_shader);
+	tile_shader.data ('screen', engine.camera.mat3);
+
 	total_drawn = 0;
 	total_calls = 0;
 	var min = Infinity
@@ -69,9 +93,6 @@ function MultiTileLayer (options) {
 	}*/
 	//layers[min_layer].draw (engine, dt);
 
-	gl.useProgram (tile_shader);
-	tile_shader.data ('screen', engine.camera.mat3);
-
 	if (current.ready ()) {
 	    current.draw (engine, dt, buffers, 0, true);
 	}
@@ -93,7 +114,6 @@ function MultiTileLayer (options) {
     };
 };
 
-var tile_shader = null;
 function TileLayer (options) {
     if (!options)
 	options = {};
@@ -108,12 +128,14 @@ function TileLayer (options) {
     if (!options.available) {
 	options.available = [];
 	for (var i = 0; i < 8; i ++)
-	    options.available.push (new Texture ());
+	    options.available.push (new Texture (gl));
     }
-    
-    if (!tile_shader)
-	tile_shader = makeProgram (BASE_DIR + 'shaders/tile');
 
+    var gl = null;
+    var change_context = function (new_gl) {
+        gl = new_gl;
+    };
+    
     var url = options.url;
     var min = options.min;
     var rows = options.rows;
@@ -244,7 +266,7 @@ function TileLayer (options) {
 		}) (tiles[i][j]))*/
 	    tiles[i][j].tex = options.available.pop ();
 	    if (!tiles[i][j].tex)
-		tiles[i][j].tex = new Texture ();
+		tiles[i][j].tex = new Texture (gl);
 	    getImage (path, (function (tile) {
 		return function (img) {
 		    if (tile.tex) {
@@ -285,7 +307,21 @@ function TileLayer (options) {
 	}
     };
 
+    var initialized = false;
+    this.initialize = function (engine) {
+        if (initialized)
+            throw "Not Implemented: Migrating Tile Layers to New Map";
+
+        if (!tile_shader)
+	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+
+        change_context (engine.gl);
+        initialized = true;
+    };
+
     this.draw = function (engine, dt, buffers, count, flush) {
+        if (!initialized)
+            this.initialize (engine);
 
 	var do_draw = function () {
 	    total_calls ++;
@@ -316,7 +352,7 @@ function TileLayer (options) {
 
 		    tile_shader.data ('sampler' + count, tiles[i][j].tex);
 		    if (tiles[i][j].tex == null)
-			throw "bad";
+			throw "badness";
 		    count ++;
 		    total_drawn ++;
 
