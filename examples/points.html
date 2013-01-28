@@ -16,12 +16,12 @@
 	    dataType: 'json',
 	    success: function (data) {
                 var layer = wiggle.io.GeoJSON (data);
-                layer.features ().style ('fill', wiggle.util.icolor (255, 0, 0, 255));
-                layer.style ('opacity', .5);
                 map.append (layer);
-                layer.style ('opacity', 1.0);
                 layer.mouseover (function (features) {
                     features.style ('fill', wiggle.util.icolor (0, 255, 0, 255));
+                });
+                layer.mouseout (function (features) {
+                    features.style ('fill', null);
                 });
             }
         });
@@ -29,5 +29,6 @@
     </script>
   </head>
   <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
   </body>
 </html>

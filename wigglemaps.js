@@ -3026,8 +3026,9 @@ function RangeTree (elem) {
     });
     this.root = new RangeNode (elem, 0, elem.length - 1, parseInt ((elem.length - 1) / 2));
 
-    this.search = function (min, max) {
-	var box = new Box (min, max);
+    this.search = function (_box) {
+	//var box = new Box (min, max);
+        var box = _box.clone ();
 	var result = [];
 	this.root.search (result, box);
 	return result;
@@ -3057,12 +3058,12 @@ var Point = function (prop, feature) {
 
     // Check if a point (usually a mouse position) is contained in the buffer
     // of this Point
-    this.contains = function (engine, p) {
+    this.map_contains = function (engine, p) {
         var s = engine.camera.screen (p);
-        var rad = this.style ('radius');
+        var rad = this.compute ('radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
-            return (vect.dist (v, s) < rad)
+            return (vect.dist (v, s) < rad);
         }
     };
 };
@@ -3071,14 +3072,45 @@ var Point = function (prop, feature) {
 // on points faster. This datatype is immutable. Points cannot be added or removed 
 // from it.
 var PointCollection = function (points) {
+    var search_points = [];
+    var max_radius = 0;
+    $.each (points, function (key, point) {
+        var radius = point.compute ('radius');
+        if (radius > max_radius)
+            max_radius = radius;
+        $.each (point.geom, function (index, pair) {
+            search_points.push ({
+                x: pair[0],
+                y: pair[1],
+                ref: point
+            });
+        });
+    });
+    var range_tree = new RangeTree (search_points);
+
     // Search a rectangle for point contained within
-    this.search = function () {
-        
+    this.search = function (box) {
+        var elem = range_tree.search (box);
+	var results = [];
+	$.each (elem, function (index, point) {
+	    results.push (point.ref);
+	});
+	return new LayerSelector (results);
     };
 
     // Determine if a point is contained in the buffer of any of the points
-    this.contains = function () {
-
+    this.map_contains = function (engine, p) {
+        var s = engine.camera.screen (p);
+        var min = vect.add (s, new vect (-max_radius, max_radius));
+        var max = vect.add (s, new vect (max_radius, -max_radius));
+        var box = new Box (engine.camera.project (min), engine.camera.project (max));
+        var elem = range_tree.search (box);
+        var results = [];
+	$.each (elem, function (index, point) {
+	    if (point.ref.map_contains (engine, p))
+                results.push (point.ref);
+	});
+        return new LayerSelector (results);
     };
 };
 
@@ -3475,11 +3507,27 @@ function Layer () {
 
     // Geometry queries
 
-    this.search = function () {
-        if (dirty) {}
+    this.search = function (box) {
+        if (dirty) {
+            this.update ();
+        }
+        var results = new LayerSelector ([]);
+        for (var key in collections) {
+            var search_results = collections[key].search (box);
+            results = results.join (search_results);
+        }
+        return results;
     };
-    this.contains = function (engine, p) {
-        if (dirty) {}
+    this.map_contains = function (engine, p) {
+        if (dirty) {
+            this.update ();
+        }
+        var results = new LayerSelector ([]);
+        for (var key in collections) {
+            var search_results = collections[key].map_contains (engine, p);
+            results = results.join (search_results);
+        }
+        return results;
 	/*var results = [];
 	for (var i in features) {
 	    var feature = features[i];
@@ -3520,7 +3568,7 @@ function Layer () {
     var current_over = {};
     this.update_move = function (engine, p) {
 	if (over_func || out_func) {
-	    var c = this.contains (engine, p);
+	    var c = this.map_contains (engine, p);
 	    var new_over = {};
 	    if (c) {
 		c.each (function (i, f) {
@@ -3562,9 +3610,20 @@ function Layer () {
         }
     };
 
+    // Update the data structures
+    this.update = function () {
+        var selector = this.features ();
+        for (var key in geom_types) {
+            collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
+        }
+        dirty = false;
+    };
+
     // Draw all features in the layer
     this.draw = function (dt) {
-        if (dirty) {}
+        if (dirty) {
+            this.update ();
+        }
 
         if (!layer_initialized) {
             throw "Layer has not yet been initialized";
@@ -3610,8 +3669,12 @@ var Feature = function (prop, layer) {
         // Update all styles in the renderer
         view.update_all ();
     };
+
+    this.compute = function (key) {
+        return derived_style (this, layer, key);
+    };
     
-    this.style = function (key, value) {
+    this.style = function (key, value, derived) {
         // Getter if only one argument passed
         if (arguments.length < 2) {
             if (feature_style[key] !== undefined)
@@ -4642,6 +4705,28 @@ function Grid (options) {
 
     this.items = function () {
         return elem;
+    };
+
+    this.type = function (key) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (elem[i].type == key)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.join = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            result.push (elem[i]);        
+        }
+        for (var i = 0; i < selector.count (); i ++) {
+            var item = selector.get (i);
+            if (!this.id (item.id))
+                result.push (item);
+        }
+        return new LayerSelector (result);
     };
 
     this.attr = function (field) {

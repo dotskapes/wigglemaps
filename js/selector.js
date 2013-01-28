@@ -12,6 +12,28 @@ var LayerSelector = function (elem) {
         return elem;
     };
 
+    this.type = function (key) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (elem[i].type == key)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.join = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            result.push (elem[i]);        
+        }
+        for (var i = 0; i < selector.count (); i ++) {
+            var item = selector.get (i);
+            if (!this.id (item.id))
+                result.push (item);
+        }
+        return new LayerSelector (result);
+    };
+
     this.attr = function (field) {
 	if (!elem.length)
 	    return null;

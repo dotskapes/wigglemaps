@@ -22,12 +22,12 @@ var Point = function (prop, feature) {
 
     // Check if a point (usually a mouse position) is contained in the buffer
     // of this Point
-    this.contains = function (engine, p) {
+    this.map_contains = function (engine, p) {
         var s = engine.camera.screen (p);
-        var rad = this.style ('radius');
+        var rad = this.compute ('radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
-            return (vect.dist (v, s) < rad)
+            return (vect.dist (v, s) < rad);
         }
     };
 };
@@ -36,14 +36,45 @@ var Point = function (prop, feature) {
 // on points faster. This datatype is immutable. Points cannot be added or removed 
 // from it.
 var PointCollection = function (points) {
+    var search_points = [];
+    var max_radius = 0;
+    $.each (points, function (key, point) {
+        var radius = point.compute ('radius');
+        if (radius > max_radius)
+            max_radius = radius;
+        $.each (point.geom, function (index, pair) {
+            search_points.push ({
+                x: pair[0],
+                y: pair[1],
+                ref: point
+            });
+        });
+    });
+    var range_tree = new RangeTree (search_points);
+
     // Search a rectangle for point contained within
-    this.search = function () {
-        
+    this.search = function (box) {
+        var elem = range_tree.search (box);
+	var results = [];
+	$.each (elem, function (index, point) {
+	    results.push (point.ref);
+	});
+	return new LayerSelector (results);
     };
 
     // Determine if a point is contained in the buffer of any of the points
-    this.contains = function () {
-
+    this.map_contains = function (engine, p) {
+        var s = engine.camera.screen (p);
+        var min = vect.add (s, new vect (-max_radius, max_radius));
+        var max = vect.add (s, new vect (max_radius, -max_radius));
+        var box = new Box (engine.camera.project (min), engine.camera.project (max));
+        var elem = range_tree.search (box);
+        var results = [];
+	$.each (elem, function (index, point) {
+	    if (point.ref.map_contains (engine, p))
+                results.push (point.ref);
+	});
+        return new LayerSelector (results);
     };
 };
 

@@ -32,8 +32,12 @@ var Feature = function (prop, layer) {
         // Update all styles in the renderer
         view.update_all ();
     };
+
+    this.compute = function (key) {
+        return derived_style (this, layer, key);
+    };
     
-    this.style = function (key, value) {
+    this.style = function (key, value, derived) {
         // Getter if only one argument passed
         if (arguments.length < 2) {
             if (feature_style[key] !== undefined)

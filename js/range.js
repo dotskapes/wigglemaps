@@ -179,8 +179,9 @@ function RangeTree (elem) {
     });
     this.root = new RangeNode (elem, 0, elem.length - 1, parseInt ((elem.length - 1) / 2));
 
-    this.search = function (min, max) {
-	var box = new Box (min, max);
+    this.search = function (_box) {
+	//var box = new Box (min, max);
+        var box = _box.clone ();
 	var result = [];
 	this.root.search (result, box);
 	return result;

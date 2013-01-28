@@ -57,11 +57,27 @@ function Layer () {
 
     // Geometry queries
 
-    this.search = function () {
-        if (dirty) {}
+    this.search = function (box) {
+        if (dirty) {
+            this.update ();
+        }
+        var results = new LayerSelector ([]);
+        for (var key in collections) {
+            var search_results = collections[key].search (box);
+            results = results.join (search_results);
+        }
+        return results;
     };
-    this.contains = function (engine, p) {
-        if (dirty) {}
+    this.map_contains = function (engine, p) {
+        if (dirty) {
+            this.update ();
+        }
+        var results = new LayerSelector ([]);
+        for (var key in collections) {
+            var search_results = collections[key].map_contains (engine, p);
+            results = results.join (search_results);
+        }
+        return results;
 	/*var results = [];
 	for (var i in features) {
 	    var feature = features[i];
@@ -102,7 +118,7 @@ function Layer () {
     var current_over = {};
     this.update_move = function (engine, p) {
 	if (over_func || out_func) {
-	    var c = this.contains (engine, p);
+	    var c = this.map_contains (engine, p);
 	    var new_over = {};
 	    if (c) {
 		c.each (function (i, f) {
@@ -144,9 +160,20 @@ function Layer () {
         }
     };
 
+    // Update the data structures
+    this.update = function () {
+        var selector = this.features ();
+        for (var key in geom_types) {
+            collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
+        }
+        dirty = false;
+    };
+
     // Draw all features in the layer
     this.draw = function (dt) {
-        if (dirty) {}
+        if (dirty) {
+            this.update ();
+        }
 
         if (!layer_initialized) {
             throw "Layer has not yet been initialized";
