@@ -1281,7 +1281,7 @@ function getImage (path, callback) {
     };
 };    //var set_id_color, bind_event;
 
-var TILE_SERVER = 'http://eland.ecohealthalliance.org:8080/wigglemaps';
+var TILE_SERVER = 'http://eland.ecohealthalliance.org/wigglemaps';
 
 var Mouse = {
     x: 0,
