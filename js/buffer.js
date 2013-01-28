@@ -84,7 +84,7 @@ function Buffers (gl, initial_size) {
 	return data[name].array;
     };
 
-    this.update = function (dt) {
+    this.update = function () {
 	for (name in data) {
 	    if (data[name].dirty) {
 		if (data[name].buffer)

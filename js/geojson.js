@@ -1,21 +1,17 @@
-var GeoJSON2JSON
 var GeoJSON = function (data, options) {
-    var num_points = 0, num_polys = 0, num_lines = 0;
-    var points = [], polys = [], lines = [];
+    var layer = new Layer ();
     for (var i = 0; i < data.features.length; i ++) {
 	var feature = data.features[i];
 	if (feature.type == 'Feature') {
 	    if (feature.geometry.type == 'Point') {
-		num_points ++;
-		points.push ({
+		layer.append ({
                     type: 'Point',
 		    geom: [feature.geometry.coordinates],
 		    attr: feature.properties
 		});
 	    }
 	    if (feature.geometry.type == 'MultiPoint') {
-		num_points += feature.geometry.cooordinates.length;
-		points.push ({
+		layer.append ({
                     type: 'Point',
 		    geom: feature.geometry.coordinates,
 		    attr: feature.properties
@@ -31,8 +27,7 @@ var GeoJSON = function (data, options) {
 		    }
 		    oriented.push (o_ring);
 		}
-		num_polys ++;
-		polys.push ({
+		layer.append ({
                     type: 'Polygon',
 		    geom: [oriented],
 		    attr: feature.properties
@@ -51,8 +46,7 @@ var GeoJSON = function (data, options) {
 		    }
 		    rings.push (oriented);
 		});
-		num_polys ++;
-		polys.push ({
+		layer.append ({
                     type: 'Polygon',
 		    geom: rings,
 		    attr: feature.properties
@@ -60,8 +54,7 @@ var GeoJSON = function (data, options) {
 	    }
 	    if (feature.geometry.type == 'MultiLineString') {
 		$.each (feature.geometry.coordinates, function (i, line) {
-		    num_lines ++;
-		    lines.push ({
+		    layer.append ({
                         type: 'Line',
 			geom: line,
 			attr: feature.properties
@@ -70,7 +63,8 @@ var GeoJSON = function (data, options) {
 	    }
 	}
     }
-    if (num_points > 0) {
+    return layer;
+    /*if (num_points > 0) {
 	var p_layer = new PointLayer (num_points);
 	$.each (points, function (i, v) {
 	    p_layer.append (v);
@@ -100,7 +94,7 @@ var GeoJSON = function (data, options) {
 	    line_layer.append (v);
 	});
 	return line_layer;
-    }
+    }*/
 };
 
 /*function triangulate_polygon (elem) {

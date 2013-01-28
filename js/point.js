@@ -1,3 +1,52 @@
+// A point for the layer. A point is actually a multi-point, so it can be
+// made up of many "spatial" points. The geometry format for the point type is:
+// [[lon, lat], [lon, lat], [lon, lat], ...]
+var Point = function (prop, feature) {
+    Feature.call (this, prop, feature);
+
+    // Converts geometry representation of a point to a vector
+    var geom2vect = function (geom) {
+        return new vect (geom[0], geom[1]);
+    };
+
+    // Set the bounding box for the point
+    this.bounds = null;
+    for (var i = 0; i < this.geom.length; i ++) {
+        var pos = geom2vect (this.geom[i]);
+        var bbox = new Box (pos.clone (), pos.clone ());
+	if (this.bounds)
+	    this.bounds.union (bbox);
+	else
+	    this.bounds = bbox;
+    }
+
+    // Check if a point (usually a mouse position) is contained in the buffer
+    // of this Point
+    this.contains = function (engine, p) {
+        var s = engine.camera.screen (p);
+        var rad = this.style ('radius');
+        for (var i = 0; i < this.geom.length; i ++) {
+            var v = engine.camera.screen (geom2vect (this.geom[i]));
+            return (vect.dist (v, s) < rad)
+        }
+    };
+};
+
+// Contains point specific operations, particualrly to perform geometric queries
+// on points faster. This datatype is immutable. Points cannot be added or removed 
+// from it.
+var PointCollection = function (points) {
+    // Search a rectangle for point contained within
+    this.search = function () {
+        
+    };
+
+    // Determine if a point is contained in the buffer of any of the points
+    this.contains = function () {
+
+    };
+};
+
 var point_shader = null;
 var circle_tex;
 

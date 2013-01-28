@@ -987,6 +987,138 @@ function getImage (path, callback) {
     };
     img.src = path;
 };
+    // Default style properties
+var default_style = {
+    'fill': new Color (.02, .44, .69, 1),
+    'opacity': 1.0,
+    'radius': 5.0
+};
+
+// Cascading style lookup
+function derived_style (feature, layer, key) {
+    var value = feature.style (key); 
+    if (value === null) {
+        value = layer.style (key);
+        if (value === null) {
+            value = default_style[key];
+        }
+    }
+    return value;
+};
+
+// function StyleManager () {
+//     var matches = {};
+
+//     var strip_whitespace = function (arg) {
+// 	var val = arg.match (/^\s*([^\s]+)\s*$/);
+// 	if (!val.length)
+// 	    return null;
+// 	return val[1];
+//     };
+
+//     var is_geometry = function (val) {
+// 	return (val == 'polygon' || val == 'point' || val == 'line' || val == '*');
+//     };
+
+//     var parse_selector = function (arg) {
+// 	var is_id = str_contains (arg, '#');
+// 	var is_class = str_contains (arg, '.');
+// 	if (is_id && is_class)
+// 	    return null;
+// 	//if (is_id || is_class) {
+// 	var selector_match = arg.match (/^(\w*)([\.\#](\w+))?$/)
+// 	if (!selector_match)
+// 	    return null;
+// 	var sel_type = selector_match[1];
+// 	if (!sel_type)
+// 	    sel_type = '*';
+// 	if (!is_geometry (sel_type))
+// 	    return null;
+// 	console.log ('found', sel_type);
+// 	//var name_match = arg.match (/^(\w*)[\.\#](\w+)/);
+// 	var name = selector_match[2];
+// 	if (!name)
+// 	    name = '*';
+// 	return {
+// 	    type: sel_type,
+// 	    name: name
+// 	};
+// 	//}
+//     };
+
+//     var split_arg = function (arg) {
+// 	arg = arg.replace (/\s*([,()])\s*/g, '$1');
+// 	var vals = arg.split (' ');
+// 	var result = [];
+// 	$.each (vals, function (i, v) {
+// 	    if (v.length > 0)
+// 		result.push (v);
+// 	});
+// 	return result;
+//     };
+
+//     var convert_type = function (name, val) {
+// 	var results = [];
+// 	$.each (val, function (i, v) {
+// 	    if (isRGB (v)) {
+// 		results.push (parseRGB (v));
+// 	    }
+// 	    else if (isInt (v)) {
+// 		results.push (parseInt (v));
+// 	    }
+// 	    else if (isFloat (v)) {
+// 		results.push (parseFloat (v));
+// 	    }
+// 	    else {
+// 		results.push (v);
+// 	    }
+// 	});
+// 	return results;
+//     };
+
+//     var parse_prop = function (prop, string) {
+// 	args = string.split (':');
+// 	if (args.length != 2) {
+// 	    if (string != ' ' && string != '')
+// 		console.log ('Error parsing css string:', string);
+// 	    return;
+// 	}
+// 	var name = strip_whitespace (args[0]);
+// 	var val = split_arg (args[1]);
+// 	if (!name || !val)
+// 	    return;
+// 	prop[name] = convert_type (name, val);
+//     };
+
+//     $.each (document.styleSheets, function (i, sheet) {
+// 	$.each (sheet.rules || sheet.cssRules, function (j, rule) {
+// 	    var selector_ob = parse_selector (rule.selectorText);
+// 	    if (!selector_ob)
+// 		return;
+// 	    var prop_raw = rule.style.cssText.split (';')
+// 	    console.log (prop_raw);
+// 	    var prop = {};
+// 	    $.each (prop_raw, function (k, string) {
+// 		parse_prop (prop, string);
+// 	    });
+// 	    if (!(selector_ob.type in matches))
+// 		matches[selector_ob.type] = {}
+// 	    matches[selector_ob.type][selector_ob.name] = prop;
+// 	    //if (!(rule.selectorText in matches))
+// 	    //    matches[rule.selectorText] = prop;
+// 	    //else
+// 	    //    matches.concat (prop)
+// 	});
+//     });
+//     console.log ('css', matches);
+//     // var pages = $ ('link[rel="stylesheet"]')
+//     var defaults = {};
+//     var layers = {};
+//     var features = {};
+//     this.register = function (feature) {
+	
+//     };
+// };
     function Camera (canvas, options) {
     if (!options)
 	options = {};
@@ -2108,7 +2240,7 @@ function Engine (selector, map, options) {
 	return data[name].array;
     };
 
-    this.update = function (dt) {
+    this.update = function () {
 	for (name in data) {
 	    if (data[name].dirty) {
 		if (data[name].buffer)
@@ -2662,7 +2794,58 @@ function trapezoid_polygon (poly_in) {
     var j = circle (index, poly);
     new Trapezoid (poly[index], poly[j], */
     
-};    function Box (v1, v2) {
+};    function AABBNode (feature, bounds, first, second) {
+    this.bounds = bounds;
+    this.feature = feature;
+
+    this.first = null;
+    this.second = null;
+
+    this.dist = function (node) {
+        return vect.dist (this.bounds.centroid (), node.bounds.centroid ());
+    };
+    
+    this.join = function (node) {
+        return new AABBNode (null, this.bounds.union (node.bounds), this, node);
+    };
+};
+
+function AABBTree (features) {
+    var nodes = [];
+    
+    for (var key in features) {
+        var node = new AABBNode (features[key], features[key].bounds, null, null);
+        nodes.push (node);
+    }
+
+    var join_nearest = function () {
+        var min_dist = Infinity;
+        var min_i = -1;
+        var min_j = -1;
+        for (var i = 0; i < nodes.length; i ++) {
+            for (var j = 0; j < i; j ++) {
+                var dist = nodes[i].dist (nodes[j]);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    min_i = i;
+                    min_j = j;
+                }
+            }
+        }
+        var new_box = nodes[min_i].join (nodes[min_j]);
+        nodes.splice (min_i, 1);
+        nodes.splice (min_j, 1);
+        nodes.push (new_box);
+    };
+
+    while (nodes.length > 2) {
+        join_nearest ();
+    }
+
+    console.log (nodes[0]);
+    
+};
+    function Box (v1, v2) {
     this.min = v1.clone ();
     this.max = v2.clone ();
     this.contains = function (p) {
@@ -2850,52 +3033,56 @@ function RangeTree (elem) {
 	return result;
     };
 };
-    var EARTH = 6378.1
+    // A point for the layer. A point is actually a multi-point, so it can be
+// made up of many "spatial" points. The geometry format for the point type is:
+// [[lon, lat], [lon, lat], [lon, lat], ...]
+var Point = function (prop, feature) {
+    Feature.call (this, prop, feature);
 
-var new_feature_id = (function () {
-    var current_id = 1;
-    return function () {
-	var id = current_id;
-	current_id ++;
-	return id;
+    // Converts geometry representation of a point to a vector
+    var geom2vect = function (geom) {
+        return new vect (geom[0], geom[1]);
     };
-}) ();
 
-var rand_map = (function () {
-    var factor = 1e-6
-    var xmap = {} 
-    var ymap = {} 
-    return function (x, y) {
-	// Temporary Fix
-	return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
-	// End Temp
-	var key = x.toString () + ',' + y.toString ();
-	if (!(key in xmap)) {
-	    xmap[key] = x + Math.random () * factor - (factor / 2);
-	    ymap[key] = y + Math.random () * factor - (factor / 2);
-	}
-	return new vect (xmap[key], ymap[key]);
+    // Set the bounding box for the point
+    this.bounds = null;
+    for (var i = 0; i < this.geom.length; i ++) {
+        var pos = geom2vect (this.geom[i]);
+        var bbox = new Box (pos.clone (), pos.clone ());
+	if (this.bounds)
+	    this.bounds.union (bbox);
+	else
+	    this.bounds = bbox;
+    }
+
+    // Check if a point (usually a mouse position) is contained in the buffer
+    // of this Point
+    this.contains = function (engine, p) {
+        var s = engine.camera.screen (p);
+        var rad = this.style ('radius');
+        for (var i = 0; i < this.geom.length; i ++) {
+            var v = engine.camera.screen (geom2vect (this.geom[i]));
+            return (vect.dist (v, s) < rad)
+        }
     };
-}) ();
+};
 
-function Polygon (geom, prop) {
-    if (!prop)
-	prop = {};
-    if (!prop.attr)
-	prop.attr = {};
-    if (!prop.style)
-	prop.style = {};
+// Contains point specific operations, particualrly to perform geometric queries
+// on points faster. This datatype is immutable. Points cannot be added or removed 
+// from it.
+var PointCollection = function (points) {
+    // Search a rectangle for point contained within
+    this.search = function () {
+        
+    };
 
-    this.geom = geom;
-    this.attr = prop.attr;
-    this.id = null;
+    // Determine if a point is contained in the buffer of any of the points
+    this.contains = function () {
 
-    var layer = null;
-    var start_outline, count_outline;
-    var start_main, count_main;
-    var buffers = null;
-   
-};    var point_shader = null;
+    };
+};
+
+var point_shader = null;
 var circle_tex;
 
 var unit = rect (0, 0, 1, 1);
@@ -3126,6 +3313,369 @@ function PointLayer (initial_points) {
 	}
     };
 };
+    var INITIAL_POINTS = 1024;
+
+var point_shader = null;
+
+function PointRenderer (engine, layer) {
+    if (!point_shader) {
+	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
+    }
+
+    // The required buffers for rendering
+    var buffers = new Buffers (engine.gl, INITIAL_POINTS);
+    buffers.create ('vert', 2);
+    buffers.create ('unit', 2);
+    buffers.create ('color', 3);
+    buffers.create ('alpha', 1);
+
+    // A list of views of the object
+    var views = [];
+    
+    // Rendering class for an individual point
+    var PointView = function (feature) {
+        // The start index of the buffer
+        var start;
+        
+        // The number of vertices in the buffer for this feature
+        var count;
+        
+        // Instructions on how to write to the buffers for specific styles
+        var style_map = {
+            'fill': function (color) {
+	        buffers.repeat ('color', color.array, start, count);                
+            },
+            'opacity': function (opacity) {
+	        buffers.repeat ('alpha', [opacity], start, count);
+            }
+        };
+
+        // Update the buffers for a specific property
+        this.update = function (key) {
+            var value = derived_style (feature, layer, key);
+            if (!value)
+                throw "Style property does not exist";
+            style_map[key] (value);
+        };
+        
+        // Update all buffers for all properties
+        this.update_all = function () {
+            for (var key in style_map) {
+                this.update (key);
+            }
+        };
+
+        var feature_geom = feature.geom;
+
+	var total_points = feature_geom.length;
+	count = 6 * total_points;
+	start = buffers.alloc (count);
+
+	$.each (feature_geom, function (index, point) {
+	    buffers.repeat ('vert', point, start + index * 6, 6);
+	    buffers.write ('unit', unit, start + index * 6, 6);
+	});
+
+        this.update_all ();
+    };
+
+    this.create = function (feature_geom, feature_style) {
+        var view = new PointView (feature_geom, feature_style);
+        views.push (view);
+        return view;
+    };
+
+    // Update all features with a style property
+    this.update = function (key) {
+        for (var i = 0; i < views.length; i ++) {
+            views[i].update (key);
+        }
+    };
+
+    this.draw = function () {
+	buffers.update ();
+
+	gl.useProgram (point_shader);
+        
+	point_shader.data ('screen', engine.camera.mat3);
+
+	point_shader.data ('pos', buffers.get ('vert'));
+	point_shader.data ('circle_in', buffers.get ('unit'));
+
+	point_shader.data ('color_in', buffers.get ('color'));  
+	point_shader.data ('alpha_in', buffers.get ('alpha')); 
+
+	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
+	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
+	point_shader.data ('rad', 5);
+        
+	//point_shader.data ('glyph', circle_tex);
+        
+	point_shader.data ('zoom', 1.0 / engine.camera.level);
+        
+	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
+    };
+};
+    var geom_types = {
+    'Point': {
+        geometry: Point,
+        renderer: PointRenderer,
+        collection: PointCollection
+    }
+};
+
+function Layer () {
+    // The renderers for displaying geometries
+    var renderers = {};
+
+    // Collections for each geometry type
+    var collections = {};
+
+    // If rendering for the layer has been initialized
+    var layer_initialized = false;
+
+    // The layer's style properties
+    var layer_style = {};
+
+    // Lookup for each geometry type
+    var features = {};
+
+    // If new geometry collections need to be instantiated
+    var dirty = false;
+
+    this.style = function (key, value) {
+        // Getter if only one argument passed
+        if (arguments.length < 2) {
+            if (layer_style[key] !== undefined)
+                return layer_style[key];
+            else
+                return null;
+        }
+        // Otherwise, set property
+        else {
+            layer_style[key] = value;
+            // If initialized, update rendering property
+            if (layer_initialized) {
+                for (var id in renderers) {
+                    renderers[id].update (key);
+                }
+            }
+        }
+    };
+
+    this.bounds = null;
+
+    this.features = function () {
+        var elem = [];
+        for (var id in features) {
+            elem.push (features[id]);
+        }
+        return new LayerSelector (elem);
+    };
+
+    // Geometry queries
+
+    this.search = function () {
+        if (dirty) {}
+    };
+    this.contains = function (engine, p) {
+        if (dirty) {}
+	/*var results = [];
+	for (var i in features) {
+	    var feature = features[i];
+            if (feature.contains (engine, p))
+                results.push (feature);
+        }
+        return new LayerSelector (results);*/
+    };
+    
+    this.append = function (feature) {
+        var f = new geom_types[feature.type]['geometry'] (feature, this);
+        features[f.id] = f;
+
+        // Update the layer bounding box
+	if (this.bounds)
+	    this.bounds.union (f.bounds);
+	else
+	    this.bounds = f.bounds.clone ();
+
+        // If the layer has already been initialized, initialize the feature
+        if (layer_initialized) {
+            f.initialize (renderers[f.type]);
+        }
+        dirty = true;
+    };
+
+    // User defined event handler functions
+    var over_func = null, out_func = null;
+    this.mouseover = function (func) {
+	over_func = func;
+    };
+
+    this.mouseout = function (func) {
+        out_func = func;
+    };
+
+    // Receive low level mouse position handlers from the bound engine
+    var current_over = {};
+    this.update_move = function (engine, p) {
+	if (over_func || out_func) {
+	    var c = this.contains (engine, p);
+	    var new_over = {};
+	    if (c) {
+		c.each (function (i, f) {
+		    new_over[f.id] = f;
+		});
+	    }
+	    for (var key in current_over) {
+		if (!(key in new_over) && out_func) 
+		    out_func (current_over[key]);
+	    }
+	    for (var key in new_over) {
+		if (!(key in current_over) && over_func) 
+		    over_func (new_over[key]);
+	    }
+	    current_over = new_over;    
+        }
+    };
+    this.force_out = function () {
+	for (var key in current_over) {
+	    if (out_func)
+		out_func (current_over[key]);
+	}
+	current_over = {};
+    };
+
+    // Sets up the renderers for each geometry
+    this.initialize = function (engine) {
+        //Setup the renderers for the layer
+        for (var key in geom_types) {
+            renderers[key] = new geom_types[key]['renderer'] (engine, this);
+        }
+
+        layer_initialized = true;
+
+        // Initialize all existing geometry for rendering
+        for (var id in features) {
+            var f = features[id];
+            features[id].initialize (renderers[f.type]);
+        }
+    };
+
+    // Draw all features in the layer
+    this.draw = function (dt) {
+        if (dirty) {}
+
+        if (!layer_initialized) {
+            throw "Layer has not yet been initialized";
+        }
+        for (var key in renderers) {
+            renderers[key].draw ();
+        }
+        //polygon_renderer.draw ();
+        //line_renderer.draw ();
+    };
+};
+    // Constructor for the basic geometry types that can be rendered
+var Feature = function (prop, layer) {
+    // The set of features styles
+    var feature_style = {};
+
+    // A view for a specific point. Provides callbacks to update the renderer
+    var view = null;
+
+    // Unique feature ID
+    this.id = new_feature_id ();
+
+    // The Geometry type
+    this.type = prop.type;
+
+    // Attribute getter and setter
+    this.attr = function (key, value) {
+
+    };
+
+    // The geometry of the object
+    this.geom = prop.geom;
+
+    // Retreives the geometry of the object
+    this.geometry = function () {
+
+    };
+
+    // Set the properties for the renderer
+    this.initialize = function (renderer) {
+        // Create a location in the renderer for the feature
+        view = renderer.create (this);
+        // Update all styles in the renderer
+        view.update_all ();
+    };
+    
+    this.style = function (key, value) {
+        // Getter if only one argument passed
+        if (arguments.length < 2) {
+            if (feature_style[key] !== undefined)
+                return feature_style[key];
+            else
+                return null;
+        }
+        // Otherwise, set property
+        else {
+            feature_style[key] = value;
+
+            // If initialized, update rendering property
+            if (view)
+                view.update (key);
+        }
+    };
+};
+
+var EARTH = 6378.1
+
+var new_feature_id = (function () {
+    var current_id = 1;
+    return function () {
+	var id = current_id;
+	current_id ++;
+	return id;
+    };
+}) ();
+
+var rand_map = (function () {
+    var factor = 1e-6
+    var xmap = {} 
+    var ymap = {} 
+    return function (x, y) {
+	// Temporary Fix
+	return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
+	// End Temp
+	var key = x.toString () + ',' + y.toString ();
+	if (!(key in xmap)) {
+	    xmap[key] = x + Math.random () * factor - (factor / 2);
+	    ymap[key] = y + Math.random () * factor - (factor / 2);
+	}
+	return new vect (xmap[key], ymap[key]);
+    };
+}) ();
+
+/*function Polygon (geom, prop) {
+  if (!prop)
+  prop = {};
+  if (!prop.attr)
+  prop.attr = {};
+  if (!prop.style)
+  prop.style = {};
+
+  this.geom = geom;
+  this.attr = prop.attr;
+  this.id = null;
+
+  var layer = null;
+  var start_outline, count_outline;
+  var start_main, count_main;
+  var buffers = null;
+  
+  };*/
     var poly_shader = null;
 
 
@@ -4799,24 +5349,20 @@ function TileLayer (options) {
 
     var layer = new MultiTileLayer (settings);
     return layer;
-};    var GeoJSON2JSON
-var GeoJSON = function (data, options) {
-    var num_points = 0, num_polys = 0, num_lines = 0;
-    var points = [], polys = [], lines = [];
+};    var GeoJSON = function (data, options) {
+    var layer = new Layer ();
     for (var i = 0; i < data.features.length; i ++) {
 	var feature = data.features[i];
 	if (feature.type == 'Feature') {
 	    if (feature.geometry.type == 'Point') {
-		num_points ++;
-		points.push ({
+		layer.append ({
                     type: 'Point',
 		    geom: [feature.geometry.coordinates],
 		    attr: feature.properties
 		});
 	    }
 	    if (feature.geometry.type == 'MultiPoint') {
-		num_points += feature.geometry.cooordinates.length;
-		points.push ({
+		layer.append ({
                     type: 'Point',
 		    geom: feature.geometry.coordinates,
 		    attr: feature.properties
@@ -4832,8 +5378,7 @@ var GeoJSON = function (data, options) {
 		    }
 		    oriented.push (o_ring);
 		}
-		num_polys ++;
-		polys.push ({
+		layer.append ({
                     type: 'Polygon',
 		    geom: [oriented],
 		    attr: feature.properties
@@ -4852,8 +5397,7 @@ var GeoJSON = function (data, options) {
 		    }
 		    rings.push (oriented);
 		});
-		num_polys ++;
-		polys.push ({
+		layer.append ({
                     type: 'Polygon',
 		    geom: rings,
 		    attr: feature.properties
@@ -4861,8 +5405,7 @@ var GeoJSON = function (data, options) {
 	    }
 	    if (feature.geometry.type == 'MultiLineString') {
 		$.each (feature.geometry.coordinates, function (i, line) {
-		    num_lines ++;
-		    lines.push ({
+		    layer.append ({
                         type: 'Line',
 			geom: line,
 			attr: feature.properties
@@ -4871,7 +5414,8 @@ var GeoJSON = function (data, options) {
 	    }
 	}
     }
-    if (num_points > 0) {
+    return layer;
+    /*if (num_points > 0) {
 	var p_layer = new PointLayer (num_points);
 	$.each (points, function (i, v) {
 	    p_layer.append (v);
@@ -4901,7 +5445,7 @@ var GeoJSON = function (data, options) {
 	    line_layer.append (v);
 	});
 	return line_layer;
-    }
+    }*/
 };
 
 /*function triangulate_polygon (elem) {

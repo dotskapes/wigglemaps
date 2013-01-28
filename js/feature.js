@@ -1,10 +1,16 @@
 // Constructor for the basic geometry types that can be rendered
-var Feature = function () {
+var Feature = function (prop, layer) {
     // The set of features styles
     var feature_style = {};
 
     // A view for a specific point. Provides callbacks to update the renderer
     var view = null;
+
+    // Unique feature ID
+    this.id = new_feature_id ();
+
+    // The Geometry type
+    this.type = prop.type;
 
     // Attribute getter and setter
     this.attr = function (key, value) {
@@ -22,7 +28,7 @@ var Feature = function () {
     // Set the properties for the renderer
     this.initialize = function (renderer) {
         // Create a location in the renderer for the feature
-        view = renderer.create (feature_geom, feature_style);
+        view = renderer.create (this);
         // Update all styles in the renderer
         view.update_all ();
     };
@@ -30,14 +36,18 @@ var Feature = function () {
     this.style = function (key, value) {
         // Getter if only one argument passed
         if (arguments.length < 2) {
-            return feature_style[key];
+            if (feature_style[key] !== undefined)
+                return feature_style[key];
+            else
+                return null;
         }
         // Otherwise, set property
         else {
             feature_style[key] = value;
+
             // If initialized, update rendering property
-            if (layer_initialized)
-                view.update (key)
+            if (view)
+                view.update (key);
         }
     };
 };
