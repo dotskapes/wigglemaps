@@ -11,7 +11,7 @@
 	var map = new wiggle.Map ();
 	map.center (-55, -10);
 	$.ajax ({
-	    url: 'data/br_precip.json',
+	    url: 'data/br_pop.json',
 	    dataType: 'json',
 	    success: function (data) {
 		br_precip = wiggle.io.GeoJSON (data);

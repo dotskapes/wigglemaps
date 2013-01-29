@@ -1,6 +1,7 @@
 var INITIAL_POINTS = 1024;
 
 var point_shader = null;
+var unit = rect (0, 0, 1, 1);
 
 function PointRenderer (engine, layer) {
     if (!point_shader) {

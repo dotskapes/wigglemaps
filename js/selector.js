@@ -102,14 +102,14 @@ var LayerSelector = function (elem) {
 	new_elem = [];
 	if (field2) {
 	    for (var i = 0; i < elem.length; i ++) {
-		if (operators[op] (elem[i].attr[field1], elem[i].attr[field2])) {
+		if (operators[op] (elem[i].attr(field1), elem[i].attr(field2))) {
 		    new_elem.push (elem[i]);
 		}
 	    }
 	}
 	else {
 	    for (var i = 0; i < elem.length; i ++) {
-		if (operators[op] (elem[i].attr[field1], val)) {
+		if (operators[op] (elem[i].attr(field1), val)) {
 		    new_elem.push (elem[i]);
 		}
 	    }
@@ -128,7 +128,7 @@ var LayerSelector = function (elem) {
 
     this.quantile = function (field, q, total) {
 	elem.sort (function (a, b) {
-	    return a.attr[field] - b.attr[field];
+	    return a.attr(field) - b.attr(field);
 	});
 	var top = Math.round (q * this.length / total);
 	var bottom = Math.round ((q - 1) * this.length / total);
