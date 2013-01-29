@@ -9,7 +9,9 @@ var default_style = {
     },
     'Polygon': {
         'fill': new Color (.02, .44, .69, 1.0),
-        'fill-opacity': .5
+        'fill-opacity': .5,
+        'stroke': new Color (.02, .44, .69, 1.0),
+        'stroke-opacity': 1.0
     }
 };
 

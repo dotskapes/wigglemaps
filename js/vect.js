@@ -92,7 +92,7 @@ vect.dir = function (v1, v2) {
     v.normalize ();
     return v;
 }
-    
+
 vect.dot2d = function (v1, v2) {
     return (v1.x * v2.x) + (v1.y * v2.y);
 };
@@ -118,20 +118,20 @@ vect.intersects = function (a, b, c, d, tol) {
 
 vect.intersect2dt = function (a, b, c, d) {
     var denom = a.x * (d.y - c.y) +
-                b.x * (c.y - d.y) +
-                d.x * (b.y - a.y) +
-                c.x * (a.y - b.y);
+        b.x * (c.y - d.y) +
+        d.x * (b.y - a.y) +
+        c.x * (a.y - b.y);
 
     if (denom == 0)
 	return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
-                c.x * (a.y - d.y) +
-                d.x * (c.y - a.y);
+        c.x * (a.y - d.y) +
+        d.x * (c.y - a.y);
     var s = num_s / denom;
 
     var num_t = -(a.x * (c.y - b.y) +
-                 b.x * (a.y - c.y) +
+                  b.x * (a.y - c.y) +
 		  c.x * (b.y - a.y));
     var t = num_t / denom;
     
@@ -140,20 +140,20 @@ vect.intersect2dt = function (a, b, c, d) {
 
 vect.intersect2dpos = function (a, b, c, d) {
     var denom = a.x * (d.y - c.y) +
-                b.x * (c.y - d.y) +
-                d.x * (b.y - a.y) +
-                c.x * (a.y - b.y);
+        b.x * (c.y - d.y) +
+        d.x * (b.y - a.y) +
+        c.x * (a.y - b.y);
 
     if (denom == 0)
 	return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
-                c.x * (a.y - d.y) +
-                d.x * (c.y - a.y);
+        c.x * (a.y - d.y) +
+        d.x * (c.y - a.y);
     var s = num_s / denom;
 
     var num_t = -(a.x * (c.y - b.y) +
-                 b.x * (a.y - c.y) +
+                  b.x * (a.y - c.y) +
 		  c.x * (b.y - a.y));
     var t = num_t / denom;
     

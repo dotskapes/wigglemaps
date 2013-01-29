@@ -23,7 +23,8 @@ var Point = function (prop, layer) {
     // Check if a point (usually a mouse position) is contained in the buffer
     // of this Point
     this.map_contains = function (engine, p) {
-        var s = engine.camera.screen (p);
+        //var s = engine.camera.screen (p);
+        var s = p;
         var rad = this.compute ('radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
@@ -66,7 +67,8 @@ var PointCollection = function (points) {
 
     // Determine if a point is contained in the buffer of any of the points
     this.map_contains = function (engine, p) {
-        var s = engine.camera.screen (p);
+        //var s = engine.camera.screen (p);
+        var s = p;
         var min = vect.add (s, new vect (-max_radius, max_radius));
         var max = vect.add (s, new vect (max_radius, -max_radius));
         var box = new Box (engine.camera.project (min), engine.camera.project (max));

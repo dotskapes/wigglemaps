@@ -23,6 +23,7 @@
     // #include 'range.js'
     // #include 'point.js'
     // #include 'point_renderer.js'
+    // #include 'line_renderer.js'
     // #include 'polygon_renderer.js'
     // #include 'layer.js'
     // #include 'feature.js'

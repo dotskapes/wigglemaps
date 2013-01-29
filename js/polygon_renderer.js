@@ -7,6 +7,8 @@ function PolygonRenderer (engine, layer) {
 	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
 
+    var line_renderer = new LineRenderer (engine, layer);
+
     var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
     fill_buffers.create ('color', 3);
@@ -15,6 +17,9 @@ function PolygonRenderer (engine, layer) {
     var views = [];
 
     var PolygonView = function (feature) {
+
+        var lines = line_renderer.create (feature);
+
         var fill_start;
 
         var fill_count;
@@ -75,10 +80,12 @@ function PolygonRenderer (engine, layer) {
 	var current = fill_start;
         
 	$.each (simple, function (i, p) {	
-	    var count = p.length / 2;;
+	    var count = p.length / 2;
 	    fill_buffers.write ('vert', p, current, count);
 	    current += count;
 	});
+
+        this.update_all ();
     };
 
     this.create = function (feature_geom, feature_style) {
@@ -104,5 +111,7 @@ function PolygonRenderer (engine, layer) {
 	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
 	
 	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
+
+        line_renderer.draw ();
     };
 };

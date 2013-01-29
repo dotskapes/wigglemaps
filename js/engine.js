@@ -720,7 +720,8 @@ function Engine (selector, map, options) {
 	    //var pos = that.camera.project (new vect (event.clientX, event.clientY));
 	}
 	else {
-	    var p = that.camera.project (new vect (Mouse.x, Mouse.y));
+	    //var p = that.camera.project (new vect (Mouse.x, Mouse.y));
+            var p = new vect (Mouse.x, Mouse.y);
 	    $.each (that.scene, function (i, layer) {
 		if (layer.update_move)
 		    layer.update_move (that, p);

@@ -20,6 +20,35 @@ function Polygon (prop, layer) {
     this.bounds = new Box (min, max);
 
     this.map_contains = function (engine, p) {
+        return this.contains (engine.camera.project (p));
+    };
+
+    this.contains = function (p) {
+	var s = 0;
+	var results = [];
+        var feature = this;
+	if (feature.bounds.contains (p)) {
+	    s ++;
+	    for (var j = 0; j < feature.geom.length; j ++) {
+		var poly = feature.geom[j];
+		var count = 0;
+		$.each (poly, function (k, ring) {
+		    for (var l = 0; l < ring.length; l ++) {
+			var m = (l + 1) % ring.length;
+			if ((p.y - ring[l][1]) / (p.y - ring[m][1]) < 0) {
+			    var inf = new vect (720, p.y);
+			    var v1 = new vect (ring[l][0], ring[l][1]);
+			    var v2 = new vect (ring[m][0], ring[m][1]);
+			    if (vect.intersects (p, inf, v1, v2))
+				count ++
+			}
+		    }
+		});
+		if ((count % 2) == 1) {
+                    return true;
+		}
+	    }
+	}
         return false;
     };
 
@@ -31,7 +60,12 @@ function PolygonCollection (polygons) {
     };
 
     this.map_contains = function (engine, p) {
-        return new LayerSelector ([]);
+        var results = [];
+        for (var i = 0; i < polygons.length; i ++) {
+            if (polygons[i].map_contains (engine, p))
+                results.push (polygons[i]);
+        }
+        return new LayerSelector (results);
     };
 };
 

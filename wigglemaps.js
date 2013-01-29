@@ -92,7 +92,7 @@ vect.dir = function (v1, v2) {
     v.normalize ();
     return v;
 }
-    
+
 vect.dot2d = function (v1, v2) {
     return (v1.x * v2.x) + (v1.y * v2.y);
 };
@@ -118,20 +118,20 @@ vect.intersects = function (a, b, c, d, tol) {
 
 vect.intersect2dt = function (a, b, c, d) {
     var denom = a.x * (d.y - c.y) +
-                b.x * (c.y - d.y) +
-                d.x * (b.y - a.y) +
-                c.x * (a.y - b.y);
+        b.x * (c.y - d.y) +
+        d.x * (b.y - a.y) +
+        c.x * (a.y - b.y);
 
     if (denom == 0)
 	return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
-                c.x * (a.y - d.y) +
-                d.x * (c.y - a.y);
+        c.x * (a.y - d.y) +
+        d.x * (c.y - a.y);
     var s = num_s / denom;
 
     var num_t = -(a.x * (c.y - b.y) +
-                 b.x * (a.y - c.y) +
+                  b.x * (a.y - c.y) +
 		  c.x * (b.y - a.y));
     var t = num_t / denom;
     
@@ -140,20 +140,20 @@ vect.intersect2dt = function (a, b, c, d) {
 
 vect.intersect2dpos = function (a, b, c, d) {
     var denom = a.x * (d.y - c.y) +
-                b.x * (c.y - d.y) +
-                d.x * (b.y - a.y) +
-                c.x * (a.y - b.y);
+        b.x * (c.y - d.y) +
+        d.x * (b.y - a.y) +
+        c.x * (a.y - b.y);
 
     if (denom == 0)
 	return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
-                c.x * (a.y - d.y) +
-                d.x * (c.y - a.y);
+        c.x * (a.y - d.y) +
+        d.x * (c.y - a.y);
     var s = num_s / denom;
 
     var num_t = -(a.x * (c.y - b.y) +
-                 b.x * (a.y - c.y) +
+                  b.x * (a.y - c.y) +
 		  c.x * (b.y - a.y));
     var t = num_t / denom;
     
@@ -170,6 +170,7 @@ vect.rotate = function (v, omega) {
     var v = new vect (xp, yp, v.z);
     return v;
 };
+
 (function () {
 
     var BASE_DIR = '';
@@ -998,7 +999,9 @@ var default_style = {
     },
     'Polygon': {
         'fill': new Color (.02, .44, .69, 1.0),
-        'fill-opacity': .5
+        'fill-opacity': .5,
+        'stroke': new Color (.02, .44, .69, 1.0),
+        'stroke-opacity': 1.0
     }
 };
 
@@ -2142,7 +2145,8 @@ function Engine (selector, map, options) {
 	    //var pos = that.camera.project (new vect (event.clientX, event.clientY));
 	}
 	else {
-	    var p = that.camera.project (new vect (Mouse.x, Mouse.y));
+	    //var p = that.camera.project (new vect (Mouse.x, Mouse.y));
+            var p = new vect (Mouse.x, Mouse.y);
 	    $.each (that.scene, function (i, layer) {
 		if (layer.update_move)
 		    layer.update_move (that, p);
@@ -3087,7 +3091,8 @@ var Point = function (prop, layer) {
     // Check if a point (usually a mouse position) is contained in the buffer
     // of this Point
     this.map_contains = function (engine, p) {
-        var s = engine.camera.screen (p);
+        //var s = engine.camera.screen (p);
+        var s = p;
         var rad = this.compute ('radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
@@ -3130,7 +3135,8 @@ var PointCollection = function (points) {
 
     // Determine if a point is contained in the buffer of any of the points
     this.map_contains = function (engine, p) {
-        var s = engine.camera.screen (p);
+        //var s = engine.camera.screen (p);
+        var s = p;
         var min = vect.add (s, new vect (-max_radius, max_radius));
         var max = vect.add (s, new vect (max_radius, -max_radius));
         var box = new Box (engine.camera.project (min), engine.camera.project (max));
@@ -3516,6 +3522,95 @@ function PointRenderer (engine, layer) {
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
     };
 };
+    var INITIAL_LINES = 1024;
+
+var line_shader = null;
+
+function LineRenderer (engine, layer) {
+    if (!line_shader) {
+	line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');        
+    }
+
+    var stroke_buffers = new Buffers (engine.gl, 1024);
+    stroke_buffers.create ('vert', 2);
+    stroke_buffers.create ('norm', 2);
+    stroke_buffers.create ('color', 3);
+    //stroke_buffers.create ('unit', 2);
+    stroke_buffers.create ('alpha', 1);
+
+    var views = [];
+
+    var LineView = function (feature) {
+        
+	var stroke_start = stroke_buffers.count ();
+        var stroke_count = 0;
+
+        var style_map = {
+            'stroke': function (color) {
+	        stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
+            },
+            'stroke-opacity': function (opacity) {
+	        stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
+            }
+        };
+
+        // Update the buffers for a specific property
+        this.update = function (key) {
+            var value = derived_style (feature, layer, key);
+            if (value === null)
+                throw "Style property does not exist";
+            style_map[key] (value);
+        };
+        
+        // Update all buffers for all properties
+        this.update_all = function () {
+            for (var key in style_map) {
+                this.update (key);
+            }
+        };
+
+	$.each (feature.geom, function (i, poly) {
+	    for (var i = 0; i < poly.length; i ++) {
+		stroke_count += poly[i].length * 6;    
+		draw_lines (stroke_buffers, poly[i]);
+	    }
+	});
+
+        this.update_all ();
+    };
+
+    this.create = function (feature_geom, feature_style) {
+        var view = new LineView (feature_geom, feature_style);
+        views.push (view);
+        return view;
+    };
+
+    // Update all features with a style property
+    this.update = function (key) {
+        for (var i = 0; i < views.length; i ++) {
+            views[i].update (key);
+        }
+    };
+
+    this.draw = function () {
+	stroke_buffers.update ();	
+
+	gl.useProgram (line_shader);
+	
+	line_shader.data ('screen', engine.camera.mat3);
+	line_shader.data ('pos', stroke_buffers.get ('vert'));
+	line_shader.data ('norm', stroke_buffers.get ('norm'));
+	line_shader.data ('color_in', stroke_buffers.get ('color'));
+	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
+	//line_shader.data ('circle_in', stroke_buffers.get ('unit'));
+	
+	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
+	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
+	
+	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
+    }
+
+};
     var INITIAL_POLYGONS = 1024;
 
 var poly_shader = null;
@@ -3525,6 +3620,8 @@ function PolygonRenderer (engine, layer) {
 	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
 
+    var line_renderer = new LineRenderer (engine, layer);
+
     var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
     fill_buffers.create ('color', 3);
@@ -3533,6 +3630,9 @@ function PolygonRenderer (engine, layer) {
     var views = [];
 
     var PolygonView = function (feature) {
+
+        var lines = line_renderer.create (feature);
+
         var fill_start;
 
         var fill_count;
@@ -3593,10 +3693,12 @@ function PolygonRenderer (engine, layer) {
 	var current = fill_start;
         
 	$.each (simple, function (i, p) {	
-	    var count = p.length / 2;;
+	    var count = p.length / 2;
 	    fill_buffers.write ('vert', p, current, count);
 	    current += count;
 	});
+
+        this.update_all ();
     };
 
     this.create = function (feature_geom, feature_style) {
@@ -3622,6 +3724,8 @@ function PolygonRenderer (engine, layer) {
 	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
 	
 	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
+
+        line_renderer.draw ();
     };
 };
     var geom_types = {
@@ -3946,6 +4050,35 @@ var rand_map = (function () {
     this.bounds = new Box (min, max);
 
     this.map_contains = function (engine, p) {
+        return this.contains (engine.camera.project (p));
+    };
+
+    this.contains = function (p) {
+	var s = 0;
+	var results = [];
+        var feature = this;
+	if (feature.bounds.contains (p)) {
+	    s ++;
+	    for (var j = 0; j < feature.geom.length; j ++) {
+		var poly = feature.geom[j];
+		var count = 0;
+		$.each (poly, function (k, ring) {
+		    for (var l = 0; l < ring.length; l ++) {
+			var m = (l + 1) % ring.length;
+			if ((p.y - ring[l][1]) / (p.y - ring[m][1]) < 0) {
+			    var inf = new vect (720, p.y);
+			    var v1 = new vect (ring[l][0], ring[l][1]);
+			    var v2 = new vect (ring[m][0], ring[m][1]);
+			    if (vect.intersects (p, inf, v1, v2))
+				count ++
+			}
+		    }
+		});
+		if ((count % 2) == 1) {
+                    return true;
+		}
+	    }
+	}
         return false;
     };
 
@@ -3957,7 +4090,12 @@ function PolygonCollection (polygons) {
     };
 
     this.map_contains = function (engine, p) {
-        return new LayerSelector ([]);
+        var results = [];
+        for (var i = 0; i < polygons.length; i ++) {
+            if (polygons[i].map_contains (engine, p))
+                results.push (polygons[i]);
+        }
+        return new LayerSelector (results);
     };
 };
 
