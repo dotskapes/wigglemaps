@@ -27,8 +27,10 @@ var Point = function (prop, feature) {
         var rad = this.compute ('radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
-            return (vect.dist (v, s) < rad);
+            if (vect.dist (v, s) < rad)
+                return true;
         }
+        return false;
     };
 };
 
@@ -69,12 +71,12 @@ var PointCollection = function (points) {
         var max = vect.add (s, new vect (max_radius, -max_radius));
         var box = new Box (engine.camera.project (min), engine.camera.project (max));
         var elem = range_tree.search (box);
-        var results = [];
-	$.each (elem, function (index, point) {
+        for (var i = 0; i < elem.length; i ++) {
+            var point = elem[i];
 	    if (point.ref.map_contains (engine, p))
-                results.push (point.ref);
-	});
-        return new LayerSelector (results);
+                return new LayerSelector ([point.ref]);
+	}
+        return new LayerSelector ([]);
     };
 };
 

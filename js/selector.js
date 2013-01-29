@@ -35,10 +35,11 @@ var LayerSelector = function (elem) {
     };
 
     this.attr = function (field) {
-	if (!elem.length)
+        throw "Not Implemented";
+	/*if (!elem.length)
 	    return null;
 	else
-	    return elem[0].attr[field];
+	    return elem[0].attr(field);*/
     };
 
     this.get = function (i) {
@@ -138,10 +139,10 @@ var LayerSelector = function (elem) {
 	var min = Infinity;
 	var max = -Infinity;
 	for (var i = 0; i < elem.length; i ++) {
-	    if (min > elem[i].attr[field])
-		min = elem[i].attr[field];
-	    if (max < elem[i].attr[field])
-		max = elem[i].attr[field];
+	    if (min > elem[i].attr(field))
+		min = elem[i].attr(field);
+	    if (max < elem[i].attr(field))
+		max = elem[i].attr(field);
 	}
 	return {
 	    min: min,

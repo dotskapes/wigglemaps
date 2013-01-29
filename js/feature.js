@@ -12,9 +12,13 @@ var Feature = function (prop, layer) {
     // The Geometry type
     this.type = prop.type;
 
+    var attr = prop.attr;
+
     // Attribute getter and setter
     this.attr = function (key, value) {
-
+        if (arguments.length < 2) {
+            return attr[key]
+        }
     };
 
     // The geometry of the object

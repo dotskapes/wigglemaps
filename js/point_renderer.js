@@ -6,11 +6,15 @@ function PointRenderer (engine, layer) {
     if (!point_shader) {
 	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
+    
+    // A value greater than or equal to the maximum radius of each point
+    var max_rad = 10.0;
 
     // The required buffers for rendering
     var buffers = new Buffers (engine.gl, INITIAL_POINTS);
     buffers.create ('vert', 2);
     buffers.create ('unit', 2);
+    buffers.create ('rad', 1);
     buffers.create ('color', 3);
     buffers.create ('alpha', 1);
 
@@ -32,6 +36,11 @@ function PointRenderer (engine, layer) {
             },
             'opacity': function (opacity) {
 	        buffers.repeat ('alpha', [opacity], start, count);
+            },
+            'radius': function (rad) {
+                if (rad > max_rad)
+                    max_rad = rad;
+                buffers.repeat ('rad', [rad], start, count);
             }
         };
 
@@ -92,11 +101,11 @@ function PointRenderer (engine, layer) {
 
 	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
 	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
-	point_shader.data ('rad', 5);
+	point_shader.data ('rad', buffers.get ('rad'));
+
+	point_shader.data ('max_rad', max_rad);
         
 	//point_shader.data ('glyph', circle_tex);
-        
-	point_shader.data ('zoom', 1.0 / engine.camera.level);
         
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
     };

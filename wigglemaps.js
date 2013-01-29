@@ -3063,8 +3063,10 @@ var Point = function (prop, feature) {
         var rad = this.compute ('radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
-            return (vect.dist (v, s) < rad);
+            if (vect.dist (v, s) < rad)
+                return true;
         }
+        return false;
     };
 };
 
@@ -3105,12 +3107,12 @@ var PointCollection = function (points) {
         var max = vect.add (s, new vect (max_radius, -max_radius));
         var box = new Box (engine.camera.project (min), engine.camera.project (max));
         var elem = range_tree.search (box);
-        var results = [];
-	$.each (elem, function (index, point) {
+        for (var i = 0; i < elem.length; i ++) {
+            var point = elem[i];
 	    if (point.ref.map_contains (engine, p))
-                results.push (point.ref);
-	});
-        return new LayerSelector (results);
+                return new LayerSelector ([point.ref]);
+	}
+        return new LayerSelector ([]);
     };
 };
 
@@ -3353,11 +3355,15 @@ function PointRenderer (engine, layer) {
     if (!point_shader) {
 	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
+    
+    // A value greater than or equal to the maximum radius of each point
+    var max_rad = 10.0;
 
     // The required buffers for rendering
     var buffers = new Buffers (engine.gl, INITIAL_POINTS);
     buffers.create ('vert', 2);
     buffers.create ('unit', 2);
+    buffers.create ('rad', 1);
     buffers.create ('color', 3);
     buffers.create ('alpha', 1);
 
@@ -3379,6 +3385,11 @@ function PointRenderer (engine, layer) {
             },
             'opacity': function (opacity) {
 	        buffers.repeat ('alpha', [opacity], start, count);
+            },
+            'radius': function (rad) {
+                if (rad > max_rad)
+                    max_rad = rad;
+                buffers.repeat ('rad', [rad], start, count);
             }
         };
 
@@ -3439,11 +3450,11 @@ function PointRenderer (engine, layer) {
 
 	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
 	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
-	point_shader.data ('rad', 5);
+	point_shader.data ('rad', buffers.get ('rad'));
+
+	point_shader.data ('max_rad', max_rad);
         
 	//point_shader.data ('glyph', circle_tex);
-        
-	point_shader.data ('zoom', 1.0 / engine.camera.level);
         
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
     };
@@ -3649,9 +3660,13 @@ var Feature = function (prop, layer) {
     // The Geometry type
     this.type = prop.type;
 
+    var attr = prop.attr;
+
     // Attribute getter and setter
     this.attr = function (key, value) {
-
+        if (arguments.length < 2) {
+            return attr[key]
+        }
     };
 
     // The geometry of the object
@@ -4730,10 +4745,11 @@ function Grid (options) {
     };
 
     this.attr = function (field) {
-	if (!elem.length)
+        throw "Not Implemented";
+	/*if (!elem.length)
 	    return null;
 	else
-	    return elem[0].attr[field];
+	    return elem[0].attr(field);*/
     };
 
     this.get = function (i) {
@@ -4833,10 +4849,10 @@ function Grid (options) {
 	var min = Infinity;
 	var max = -Infinity;
 	for (var i = 0; i < elem.length; i ++) {
-	    if (min > elem[i].attr[field])
-		min = elem[i].attr[field];
-	    if (max < elem[i].attr[field])
-		max = elem[i].attr[field];
+	    if (min > elem[i].attr(field))
+		min = elem[i].attr(field);
+	    if (max < elem[i].attr(field))
+		max = elem[i].attr(field);
 	}
 	return {
 	    min: min,
