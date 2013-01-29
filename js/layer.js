@@ -3,6 +3,11 @@ var geom_types = {
         geometry: Point,
         renderer: PointRenderer,
         collection: PointCollection
+    },
+    'Polygon': {
+        geometry: Polygon,
+        renderer: PolygonRenderer,
+        collection: PolygonCollection
     }
 };
 

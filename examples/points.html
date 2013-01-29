@@ -16,7 +16,7 @@
 	    url: 'data/br_precip.json',
 	    dataType: 'json',
 	    success: function (data) {
-                var layer = wiggle.io.GeoJSON (data);
+                layer = wiggle.io.GeoJSON (data);
                 var range = layer.features ().range ('annual');
                 layer.features ().style ('radius', function (f) {
                     var size = Math.floor (6 * (f.attr ('annual') - range.min) / (range.max - range.min));
@@ -24,10 +24,10 @@
                 });
                 map.append (layer);
                 layer.mouseover (function (features) {
-                    features.style ('fill', wiggle.util.fcolor (.32, .74, .99, 1));
+                    features.style ('stroke', wiggle.util.fcolor (.32, .74, .99, 1));
                 });
                 layer.mouseout (function (features) {
-                    features.style ('fill', null);
+                    features.style ('stroke', null);
                 });
             }
         });

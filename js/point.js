@@ -1,8 +1,8 @@
 // A point for the layer. A point is actually a multi-point, so it can be
 // made up of many "spatial" points. The geometry format for the point type is:
 // [[lon, lat], [lon, lat], [lon, lat], ...]
-var Point = function (prop, feature) {
-    Feature.call (this, prop, feature);
+var Point = function (prop, layer) {
+    Feature.call (this, prop, layer);
 
     // Converts geometry representation of a point to a vector
     var geom2vect = function (geom) {

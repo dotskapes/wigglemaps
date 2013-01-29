@@ -14,8 +14,12 @@ function PointRenderer (engine, layer) {
     var buffers = new Buffers (engine.gl, INITIAL_POINTS);
     buffers.create ('vert', 2);
     buffers.create ('unit', 2);
+    buffers.create ('stroke_width', 1);
     buffers.create ('rad', 1);
-    buffers.create ('color', 3);
+    buffers.create ('fill_color', 3);
+    buffers.create ('fill', 1);
+    buffers.create ('stroke_color', 3);
+    buffers.create ('stroke', 1);
     buffers.create ('alpha', 1);
 
     // A list of views of the object
@@ -32,7 +36,12 @@ function PointRenderer (engine, layer) {
         // Instructions on how to write to the buffers for specific styles
         var style_map = {
             'fill': function (color) {
-	        buffers.repeat ('color', color.array, start, count);                
+                if (color == 'none') {
+	            buffers.repeat ('fill', [-.75], start, count);
+                }
+                else {
+	            buffers.repeat ('fill', [.75], start, count);
+	            buffers.repeat ('fill_color', color.array, start, count);                                }
             },
             'opacity': function (opacity) {
 	        buffers.repeat ('alpha', [opacity], start, count);
@@ -41,13 +50,25 @@ function PointRenderer (engine, layer) {
                 if (rad > max_rad)
                     max_rad = rad;
                 buffers.repeat ('rad', [rad], start, count);
+            },
+            'stroke': function (color) {
+                if (color == 'none') {
+	            buffers.repeat ('stroke', [-.75], start, count);
+                }
+                else {
+	            buffers.repeat ('stroke', [.75], start, count);
+	            buffers.repeat ('stroke_color', color.array, start, count);
+                }
+            },
+            'stroke-width': function (width) {
+                buffers.repeat ('stroke_width', [width], start, count);                
             }
         };
 
         // Update the buffers for a specific property
         this.update = function (key) {
             var value = derived_style (feature, layer, key);
-            if (!value)
+            if (value === null)
                 throw "Style property does not exist";
             style_map[key] (value);
         };
@@ -96,12 +117,20 @@ function PointRenderer (engine, layer) {
 	point_shader.data ('pos', buffers.get ('vert'));
 	point_shader.data ('circle_in', buffers.get ('unit'));
 
-	point_shader.data ('color_in', buffers.get ('color'));  
+	point_shader.data ('color_in', buffers.get ('fill_color'));  
+	point_shader.data ('stroke_color_in', buffers.get ('stroke_color'));  
 	point_shader.data ('alpha_in', buffers.get ('alpha')); 
+
+        point_shader.data ('fill_in', buffers.get ('fill'));
+        point_shader.data ('stroke_in', buffers.get ('stroke'));
 
 	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
 	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
 	point_shader.data ('rad', buffers.get ('rad'));
+
+        
+
+	point_shader.data ('stroke_width_in', buffers.get ('stroke_width'));
 
 	point_shader.data ('max_rad', max_rad);
         

@@ -1,21 +1,44 @@
+function Polygon (prop, layer) {
+    Feature.call (this, prop, layer);
+    
+    var min = new vect (Infinity, Infinity);
+    var max = new vect (-Infinity, -Infinity);
+    $.each (this.geom, function (i, poly) {
+	$.each (poly, function (k, ring) {
+	    $.each (ring, function (j, pair) {
+		if (pair[0] < min.x)
+		    min.x = pair[0];
+		if (pair[0] > max.x)
+		    max.x = pair[0];
+		if (pair[1] < min.y)
+		    min.y = pair[1];
+		if (pair[1] > max.y)
+		    max.y = pair[1];
+	    });
+	});
+    });
+    this.bounds = new Box (min, max);
+
+    this.map_contains = function (engine, p) {
+        return false;
+    };
+
+};
+
+function PolygonCollection (polygons) {
+    this.search = function () {
+        return new LayerSelector ([]);
+    };
+
+    this.map_contains = function (engine, p) {
+        return new LayerSelector ([]);
+    };
+};
+
 var poly_shader = null;
 
 
 //var default_poly_color = new Color (0, 0, 1, 1);
-
-var triangulate_polygon = function (elem) {
-    var poly = [];
-    for (var k = 0; k < elem.length; k++) {
-	var p = [];
-	//for (var i = elem[k].length - 1; i >= 1; i --) {
-	for (var i = 1; i < elem[k].length; i ++) {
-	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
-	}
-	p.push (poly[0]);
-	poly.push (p);
-    }
-    return trapezoid_polygon (poly); 
-};
 
 function PolygonLayer (prop) {
     if (!prop)

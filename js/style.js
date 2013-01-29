@@ -1,8 +1,16 @@
 // Default style properties
 var default_style = {
-    'fill': new Color (.02, .44, .69, 1),
-    'opacity': 1.0,
-    'radius': 5.0
+    'Point': {
+        'fill': new Color (.02, .44, .69, 1.0),
+        'opacity': 1.0,
+        'radius': 5.0,
+        'stroke': 'none',
+        'stroke-width': 2.0
+    },
+    'Polygon': {
+        'fill': new Color (.02, .44, .69, 1.0),
+        'fill-opacity': .5
+    }
 };
 
 // Cascading style lookup
@@ -11,7 +19,7 @@ function derived_style (feature, layer, key) {
     if (value === null) {
         value = layer.style (key);
         if (value === null) {
-            value = default_style[key];
+            value = default_style[feature.type][key];
         }
     }
     return value;

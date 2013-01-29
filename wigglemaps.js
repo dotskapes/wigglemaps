@@ -989,9 +989,17 @@ function getImage (path, callback) {
 };
     // Default style properties
 var default_style = {
-    'fill': new Color (.02, .44, .69, 1),
-    'opacity': 1.0,
-    'radius': 5.0
+    'Point': {
+        'fill': new Color (.02, .44, .69, 1.0),
+        'opacity': 1.0,
+        'radius': 5.0,
+        'stroke': 'none',
+        'stroke-width': 2.0
+    },
+    'Polygon': {
+        'fill': new Color (.02, .44, .69, 1.0),
+        'fill-opacity': .5
+    }
 };
 
 // Cascading style lookup
@@ -1000,7 +1008,7 @@ function derived_style (feature, layer, key) {
     if (value === null) {
         value = layer.style (key);
         if (value === null) {
-            value = default_style[key];
+            value = default_style[feature.type][key];
         }
     }
     return value;
@@ -2333,7 +2341,21 @@ function SelectionBox (engine) {
 	}
     };
 };
-    function circle (index, length) {
+    var triangulate_polygon = function (elem) {
+    var poly = [];
+    for (var k = 0; k < elem.length; k++) {
+	var p = [];
+	//for (var i = elem[k].length - 1; i >= 1; i --) {
+	for (var i = 1; i < elem[k].length; i ++) {
+	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
+	}
+	p.push (poly[0]);
+	poly.push (p);
+    }
+    return trapezoid_polygon (poly); 
+};
+
+function circle (index, length) {
     while (index >= length)
 	index -= length;
     while (index < 0)
@@ -2794,7 +2816,8 @@ function trapezoid_polygon (poly_in) {
     var j = circle (index, poly);
     new Trapezoid (poly[index], poly[j], */
     
-};    function AABBNode (feature, bounds, first, second) {
+};
+    function AABBNode (feature, bounds, first, second) {
     this.bounds = bounds;
     this.feature = feature;
 
@@ -3024,9 +3047,14 @@ function RangeTree (elem) {
     elem.sort (function (a, b) {
 	return a.x - b.x;
     });
-    this.root = new RangeNode (elem, 0, elem.length - 1, parseInt ((elem.length - 1) / 2));
+    if (elem.length > 0)
+        this.root = new RangeNode (elem, 0, elem.length - 1, parseInt ((elem.length - 1) / 2));
+    else
+        this.root == null;
 
     this.search = function (_box) {
+        if (!this.root)
+            return [];
 	//var box = new Box (min, max);
         var box = _box.clone ();
 	var result = [];
@@ -3037,8 +3065,8 @@ function RangeTree (elem) {
     // A point for the layer. A point is actually a multi-point, so it can be
 // made up of many "spatial" points. The geometry format for the point type is:
 // [[lon, lat], [lon, lat], [lon, lat], ...]
-var Point = function (prop, feature) {
-    Feature.call (this, prop, feature);
+var Point = function (prop, layer) {
+    Feature.call (this, prop, layer);
 
     // Converts geometry representation of a point to a vector
     var geom2vect = function (geom) {
@@ -3363,8 +3391,12 @@ function PointRenderer (engine, layer) {
     var buffers = new Buffers (engine.gl, INITIAL_POINTS);
     buffers.create ('vert', 2);
     buffers.create ('unit', 2);
+    buffers.create ('stroke_width', 1);
     buffers.create ('rad', 1);
-    buffers.create ('color', 3);
+    buffers.create ('fill_color', 3);
+    buffers.create ('fill', 1);
+    buffers.create ('stroke_color', 3);
+    buffers.create ('stroke', 1);
     buffers.create ('alpha', 1);
 
     // A list of views of the object
@@ -3381,7 +3413,12 @@ function PointRenderer (engine, layer) {
         // Instructions on how to write to the buffers for specific styles
         var style_map = {
             'fill': function (color) {
-	        buffers.repeat ('color', color.array, start, count);                
+                if (color == 'none') {
+	            buffers.repeat ('fill', [-.75], start, count);
+                }
+                else {
+	            buffers.repeat ('fill', [.75], start, count);
+	            buffers.repeat ('fill_color', color.array, start, count);                                }
             },
             'opacity': function (opacity) {
 	        buffers.repeat ('alpha', [opacity], start, count);
@@ -3390,13 +3427,25 @@ function PointRenderer (engine, layer) {
                 if (rad > max_rad)
                     max_rad = rad;
                 buffers.repeat ('rad', [rad], start, count);
+            },
+            'stroke': function (color) {
+                if (color == 'none') {
+	            buffers.repeat ('stroke', [-.75], start, count);
+                }
+                else {
+	            buffers.repeat ('stroke', [.75], start, count);
+	            buffers.repeat ('stroke_color', color.array, start, count);
+                }
+            },
+            'stroke-width': function (width) {
+                buffers.repeat ('stroke_width', [width], start, count);                
             }
         };
 
         // Update the buffers for a specific property
         this.update = function (key) {
             var value = derived_style (feature, layer, key);
-            if (!value)
+            if (value === null)
                 throw "Style property does not exist";
             style_map[key] (value);
         };
@@ -3445,12 +3494,20 @@ function PointRenderer (engine, layer) {
 	point_shader.data ('pos', buffers.get ('vert'));
 	point_shader.data ('circle_in', buffers.get ('unit'));
 
-	point_shader.data ('color_in', buffers.get ('color'));  
+	point_shader.data ('color_in', buffers.get ('fill_color'));  
+	point_shader.data ('stroke_color_in', buffers.get ('stroke_color'));  
 	point_shader.data ('alpha_in', buffers.get ('alpha')); 
+
+        point_shader.data ('fill_in', buffers.get ('fill'));
+        point_shader.data ('stroke_in', buffers.get ('stroke'));
 
 	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
 	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
 	point_shader.data ('rad', buffers.get ('rad'));
+
+        
+
+	point_shader.data ('stroke_width_in', buffers.get ('stroke_width'));
 
 	point_shader.data ('max_rad', max_rad);
         
@@ -3459,11 +3516,124 @@ function PointRenderer (engine, layer) {
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
     };
 };
+    var INITIAL_POLYGONS = 1024;
+
+var poly_shader = null;
+
+function PolygonRenderer (engine, layer) {
+    if (!poly_shader) {
+	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+    }
+
+    var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
+    fill_buffers.create ('vert', 2);
+    fill_buffers.create ('color', 3);
+    fill_buffers.create ('alpha', 1);
+
+    var views = [];
+
+    var PolygonView = function (feature) {
+        var fill_start;
+
+        var fill_count;
+
+        var style_map = {
+            'fill': function (color) {
+	        fill_buffers.repeat ('color', color.array, fill_start, fill_count);
+            },
+            'fill-opacity': function (opacity) {
+	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
+            }
+        };
+
+        // Update the buffers for a specific property
+        this.update = function (key) {
+            var value = derived_style (feature, layer, key);
+            if (value === null)
+                throw "Style property does not exist";
+            style_map[key] (value);
+        };
+        
+        // Update all buffers for all properties
+        this.update_all = function () {
+            for (var key in style_map) {
+                this.update (key);
+            }
+        };
+
+        var feature_geom = feature.geom;
+
+	var simple = [];
+	fill_count = 0;
+
+	$.each (feature_geom, function (i, poly) {
+            // Begin temp error handling code
+            var p;
+	    var count = 0;
+	    while (count < 100) {
+		try {
+                    p = triangulate_polygon (poly);
+                    break;
+		} catch (e) {
+		    count ++;
+		}
+	    }
+	    if (count == 100)
+                throw "Rendering Polygon Failed";
+            
+            // End temp error handling code
+            
+	    //var p = triangulate_polygon (poly);
+            
+	    fill_count += p.length / 2;
+	    simple.push (p);
+	});
+        
+	fill_start = fill_buffers.alloc (fill_count);
+	var current = fill_start;
+        
+	$.each (simple, function (i, p) {	
+	    var count = p.length / 2;;
+	    fill_buffers.write ('vert', p, current, count);
+	    current += count;
+	});
+    };
+
+    this.create = function (feature_geom, feature_style) {
+        var view = new PolygonView (feature_geom, feature_style);
+        views.push (view);
+        return view;
+    };
+
+    // Update all features with a style property
+    this.update = function (key) {
+        for (var i = 0; i < views.length; i ++) {
+            views[i].update (key);
+        }
+    };
+
+    this.draw = function () {
+	fill_buffers.update ();
+	gl.useProgram (poly_shader);
+        
+	poly_shader.data ('screen', engine.camera.mat3);
+	poly_shader.data ('pos', fill_buffers.get ('vert'));
+	poly_shader.data ('color_in', fill_buffers.get ('color'));  
+	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
+	
+	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
+    };
+};
     var geom_types = {
     'Point': {
         geometry: Point,
         renderer: PointRenderer,
         collection: PointCollection
+    },
+    'Polygon': {
+        geometry: Polygon,
+        renderer: PolygonRenderer,
+        collection: PolygonCollection
     }
 };
 
@@ -3754,24 +3924,47 @@ var rand_map = (function () {
   var buffers = null;
   
   };*/
-    var poly_shader = null;
+    function Polygon (prop, layer) {
+    Feature.call (this, prop, layer);
+    
+    var min = new vect (Infinity, Infinity);
+    var max = new vect (-Infinity, -Infinity);
+    $.each (this.geom, function (i, poly) {
+	$.each (poly, function (k, ring) {
+	    $.each (ring, function (j, pair) {
+		if (pair[0] < min.x)
+		    min.x = pair[0];
+		if (pair[0] > max.x)
+		    max.x = pair[0];
+		if (pair[1] < min.y)
+		    min.y = pair[1];
+		if (pair[1] > max.y)
+		    max.y = pair[1];
+	    });
+	});
+    });
+    this.bounds = new Box (min, max);
+
+    this.map_contains = function (engine, p) {
+        return false;
+    };
+
+};
+
+function PolygonCollection (polygons) {
+    this.search = function () {
+        return new LayerSelector ([]);
+    };
+
+    this.map_contains = function (engine, p) {
+        return new LayerSelector ([]);
+    };
+};
+
+var poly_shader = null;
 
 
 //var default_poly_color = new Color (0, 0, 1, 1);
-
-var triangulate_polygon = function (elem) {
-    var poly = [];
-    for (var k = 0; k < elem.length; k++) {
-	var p = [];
-	//for (var i = elem[k].length - 1; i >= 1; i --) {
-	for (var i = 1; i < elem[k].length; i ++) {
-	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
-	}
-	p.push (poly[0]);
-	poly.push (p);
-    }
-    return trapezoid_polygon (poly); 
-};
 
 function PolygonLayer (prop) {
     if (!prop)
