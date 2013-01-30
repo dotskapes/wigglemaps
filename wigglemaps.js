@@ -4605,7 +4605,7 @@ function Elevation (data) {
 var hillshade_shader = null;
 function Hillshade (data) {
     if (!hillshade_shader)
-	hillshade_shader = makeProgram (BASE_DIR + 'shaders/hillshade');
+	hillshade_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/hillshade');
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
@@ -4615,7 +4615,7 @@ function Hillshade (data) {
     //var max = data.max;
     //var url = data.url;
     var ready = false;
-    var image = getTexture (url, function () {
+    var image = getTexture (engine.gl, url, function () {
 	ready = true;
     });
 
@@ -4623,10 +4623,14 @@ function Hillshade (data) {
 	return ready;
     };
 
-    var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (rectv (min, max), 2);
+    var tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
+    var pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
 
     var azimuth = 315.0;
+
+    this.initialize = function (engine) {
+
+    };
 
     this.draw = function (engine, dt) {
 	if (!ready)
@@ -4658,7 +4662,8 @@ function Hillshade (data) {
 
 	return azimuth;
     };
-};    var TIMEOUT = 1000;
+};
+    var TIMEOUT = 1000;
 
 var z_base = 0;
 
