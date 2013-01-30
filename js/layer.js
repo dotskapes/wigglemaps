@@ -58,6 +58,7 @@ function Layer (prop) {
                     renderers[id].update (key);
                 }
             }
+            return this;
         }
     };
 
