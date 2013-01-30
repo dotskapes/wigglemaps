@@ -3543,6 +3543,14 @@ function Layer (prop) {
         return new LayerSelector (elem);
     };
 
+    var props = {};
+    this.properties = function () {
+        var results = [];
+        for (var key in props)
+            results.push (key);
+        return results;
+    };
+
     // Geometry queries
 
     this.search = function (box) {
@@ -3584,6 +3592,10 @@ function Layer (prop) {
 	    this.bounds.union (f.bounds);
 	else
 	    this.bounds = f.bounds.clone ();
+
+        for (var key in feature.attr) {
+            props[key] = true;
+        };
 
         // If the layer has already been initialized, initialize the feature
         if (layer_initialized) {
