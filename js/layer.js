@@ -73,10 +73,12 @@ function Layer (prop) {
     };
 
     var props = {};
-    this.properties = function () {
+    this.properties = function (numeric) {
         var results = [];
-        for (var key in props)
-            results.push (key);
+        for (var key in props) {
+            if (!numeric || (numeric && props[key]))
+                results.push (key);
+        }
         return results;
     };
 
@@ -123,7 +125,18 @@ function Layer (prop) {
 	    this.bounds = f.bounds.clone ();
 
         for (var key in feature.attr) {
-            props[key] = true;
+            if (props[key] === undefined) { 
+                if (!isNaN (feature.attr[key]))
+                    props[key] = true;
+                else
+                    props[key] = false;
+            }
+            else {
+                if (!isNaN (feature.attr[key]) && props[key])
+                    props[key] = true;
+                else
+                    props[key] = false;
+            }
         };
 
         // If the layer has already been initialized, initialize the feature

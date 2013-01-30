@@ -138,12 +138,19 @@ var LayerSelector = function (elem) {
     this.range = function (field) {
 	var min = Infinity;
 	var max = -Infinity;
+        var okay = false;
 	for (var i = 0; i < elem.length; i ++) {
-	    if (min > elem[i].attr(field))
-		min = elem[i].attr(field);
-	    if (max < elem[i].attr(field))
-		max = elem[i].attr(field);
+            var val = elem[i].attr(field);
+            if (!isNaN (val)) {
+                okay = true;
+	        if (min > val)
+		    min = val;
+	        if (max < val)
+		    max = val;
+            }
 	}
+        if (!okay)
+            return null;
 	return {
 	    min: min,
 	    max: max
