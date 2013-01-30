@@ -22,6 +22,7 @@
     // #include 'aabb.js'
     // #include 'range.js'
     // #include 'point.js'
+    // #include 'feature_renderer.js'
     // #include 'point_renderer.js'
     // #include 'line_renderer.js'
     // #include 'polygon_renderer.js'
@@ -48,9 +49,7 @@
     window.wiggle = {
 	Map: Map,
 	layer: {
-	    PointLayer: PointLayer,
-	    LineLayer: LineLayer,
-	    PolygonLayer: PolygonLayer,
+            Layer: Layer,
 	    Grid: Grid,
 	    Hillshade: Hillshade,
 	    Elevation: Elevation

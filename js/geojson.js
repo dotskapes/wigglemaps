@@ -1,5 +1,7 @@
 var GeoJSON = function (data, options) {
-    var layer = new Layer ();
+    if (options === undefined)
+        options = {};
+    var layer = new Layer (options);
     for (var i = 0; i < data.features.length; i ++) {
 	var feature = data.features[i];
 	if (feature.type == 'Feature') {
@@ -56,7 +58,7 @@ var GeoJSON = function (data, options) {
 		$.each (feature.geometry.coordinates, function (i, line) {
 		    layer.append ({
                         type: 'Line',
-			geom: line,
+			geom: [[line]],
 			attr: feature.properties
 		    });
 		});

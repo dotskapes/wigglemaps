@@ -3,6 +3,8 @@ var INITIAL_POLYGONS = 1024;
 var poly_shader = null;
 
 function PolygonRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
     if (!poly_shader) {
 	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
@@ -14,9 +16,8 @@ function PolygonRenderer (engine, layer) {
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
 
-    var views = [];
-
     var PolygonView = function (feature) {
+        FeatureView.call (this, feature, layer);
 
         var lines = line_renderer.create (feature);
 
@@ -24,27 +25,12 @@ function PolygonRenderer (engine, layer) {
 
         var fill_count;
 
-        var style_map = {
+        this.style_map = {
             'fill': function (color) {
 	        fill_buffers.repeat ('color', color.array, fill_start, fill_count);
             },
             'fill-opacity': function (opacity) {
 	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
-            }
-        };
-
-        // Update the buffers for a specific property
-        this.update = function (key) {
-            var value = derived_style (feature, layer, key);
-            if (value === null)
-                throw "Style property does not exist";
-            style_map[key] (value);
-        };
-        
-        // Update all buffers for all properties
-        this.update_all = function () {
-            for (var key in style_map) {
-                this.update (key);
             }
         };
 
@@ -88,17 +74,8 @@ function PolygonRenderer (engine, layer) {
         this.update_all ();
     };
 
-    this.create = function (feature_geom, feature_style) {
-        var view = new PolygonView (feature_geom, feature_style);
-        views.push (view);
-        return view;
-    };
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            views[i].update (key);
-        }
+    this.view_factory = function (feature) {
+        return new PolygonView (feature, layer);
     };
 
     this.draw = function () {

@@ -8,10 +8,15 @@ var geom_types = {
         geometry: Polygon,
         renderer: PolygonRenderer,
         collection: PolygonCollection
+    },
+    'Line': {
+        geometry: Line,
+        renderer: LineRenderer,
+        collection: LineCollection
     }
 };
 
-function Layer () {
+function Layer (prop) {
     // The renderers for displaying geometries
     var renderers = {};
 
@@ -29,6 +34,12 @@ function Layer () {
 
     // If new geometry collections need to be instantiated
     var dirty = false;
+
+    // Copy over the defined styles
+    if (prop.style) {
+        for (var key in prop.style)
+            layer_style[key] = prop.style[key];
+    }
 
     this.style = function (key, value) {
         // Getter if only one argument passed

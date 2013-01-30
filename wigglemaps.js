@@ -1002,6 +1002,10 @@ var default_style = {
         'fill-opacity': .5,
         'stroke': new Color (.02, .44, .69, 1.0),
         'stroke-opacity': 1.0
+    },
+    'Line': {
+        'stroke': new Color (.02, .44, .69, 1.0),
+        'stroke-opacity': 1.0
     }
 };
 
@@ -3149,236 +3153,44 @@ var PointCollection = function (points) {
         return new LayerSelector ([]);
     };
 };
+    function FeatureRenderer (engine, layer) {
+    // A list of views of the object
+    this.views = [];
 
-var point_shader = null;
-var circle_tex;
-
-var unit = rect (0, 0, 1, 1);
-
-var default_point_color = new Color (.02, .44, .69, 1);
-var default_point_alpha = 1.0;
-
-function PointLayer (initial_points) {
-    if (!point_shader) {
-	point_shader = makeProgram (BASE_DIR + 'shaders/point');
-	circle_tex = getTexture (BASE_DIR + 'images/circle.png');
-    }
-    this.id = new_feature_id ();
-
-    var buffers = new Buffers (initial_points);
-    buffers.create ('vert', 2);
-    buffers.create ('unit', 2);
-    buffers.create ('color', 3);
-    buffers.create ('alpha', 1);
-
-    var layer = this;
-
-    var Point = function (prop) {
-	if (!prop)
-	    prop = {};
-	if (!prop.geom)
-	    prop.geom = [];
-	if (!prop.attr)
-	    prop.attr = {};
-	if (!prop.style)
-	    prop.style = {};
-
-	this.geom = prop.geom;
-	this.attr = prop.attr;
-
-	this.id = new_feature_id ();
-
-	var p = new vect (prop.geom[0][0], prop.geom[0][1]);
-
-	this.bounds = new Box (p.clone (), p.clone ());
-	var start, count;
-	
-	var total_points = 0;
-
-	/*this.geom = function (new_geom) {
-	  if (this.layer) {
-	  
-	  }
-	  geom = new_geom;
-	  };*/
-
-	var _style = {};
-	copy_value (_style, prop.style, 'fill', hex_to_color);
-	copy_value (_style, prop.style, 'opacity', parseFloat);
-
-	var set_color = function () {
-	    //layer.color_front (_style['fill'], start, count);
-	    var color = _style['fill'];
-	    if (!color)
-		color = layer.style ('fill');
-	    if (!color)
-		color = default_point_color;
-	    buffers.repeat ('color', color.array, start, count);
-	};
-
-	var set_alpha = function () {
-	    //layer.alpha_front (_style['opacity'], start, count);
-	    var opacity = _style['opacity'];
-	    if (!opacity)
-		opacity = layer.style ('opacity');
-	    if (!opacity)
-		opacity = default_point_alpha;
-	    
-	    buffers.repeat ('alpha', [opacity], start, count);
-	};
-
-	this.style = function (key, val) {
-	    if (arguments.length == 1)
-		return _style[key];
-	    _style[key] = val;
-	    if (key == 'fill') {
-		set_color ();
-	    }
-	    if (key == 'opacity') {
-		set_alpha ();
-	    }
-	};
-	total_points = this.geom.length;
-	count = 6 * total_points;
-	start = buffers.alloc (count);
-
-	$.each (this.geom, function (index, point) {
-	    buffers.repeat ('vert', point, start + index * 6, 6);
-	    buffers.write ('unit', unit, start + index * 6, 6);
-	});
-	//count = 6;
-	//start = buffers.alloc (count);
-	
-	//buffers.repeat ('vert', this.geom, start, count);
-	//buffers.write ('unit', unit, start, count);
-	
-	set_color ();
-	set_alpha ();
+    // Update all features with a style property
+    this.update = function (key) {
+        for (var i = 0; i < views.length; i ++) {
+            this.views[i].update (key);
+        }
     };
 
-    var tree = null;
+    this.view_factory = function () {
+        throw "Not Implemented";
+    };
 
-    var num_points = 0;
-    var dirty = false;
+    this.create = function (feature) {
+        var view = this.view_factory (feature);
+        this.views.push (view);
+        return view;
+    };
+};
 
-    var _properties = {};
-    var features = {};
-
-    this.bounds = null
+function FeatureView (feature, layer) {
+    this.style_map = {};
     
-    this.append = function (data) {
-	var p = new Point (data);
-	for (key in p.attr) 
-	    _properties[key] = true;
-	features[p.id] = p;
-
-	num_points ++;
-	dirty = true;	
-	tree = null;
-
-	if (this.bounds)
-	    this.bounds.union (p.bounds);
-	else
-	    this.bounds = p.bounds.clone ();
-
-	return p;
+    // Update the buffers for a specific property
+    this.update = function (key) {
+        var value = derived_style (feature, layer, key);
+        if (value === null)
+            throw "Style property does not exist";
+        this.style_map[key] (value);
     };
-
-    this.features = function () {
-	var elem = [];
-	for (key in features) {
-	    elem.push (features[key]);
-	}
-	return new LayerSelector (elem);
-    };
-
-    this.attr = function () {
-	var prop = [];
-	for (key in _properties)
-	    prop.push (key);
-	return prop;
-    }
-
-    this.search = function (box) {
-	var min = box.min;
-	var max = box.max;
-	var elem = tree.search (min, max);
-	var results = [];
-	$.each (elem, function (i, v) {
-	    results.push (features[v.key]);
-	});
-	return new LayerSelector (results);
-    };
-
-    this.mouseover = function (func) {
-	//engine.manager.bind ('mouseover', this, func);
-    };
-
-    this.mouseout = function (func) {
-	//engine.manager.bind ('mouseout', this, func);
-    };
-
-    this.click = function (func) {
-	//engine.manager.bind ('click', this, func);
-    };
-
-    this.style = function (key, value) {
-	if (arguments.length > 1)
-	    throw "Not Implemented";
-	return null;
-    };
-  
-    this.update_move = function (engine, p) {
-
-    };
-    
-    var count = 0;
-    this.draw = function (engine, dt, select) {
-	buffers.update (dt);
-	if (num_points > 0) {
-	    if (dirty) {
-		if (!tree) {
-		    var r_points = [];
-		    for (var key in features) {
-			$.each (features[key].geom, function (i, point) {
-			    r_points.push ({
-				key: key,
-				x: point[0],
-				y: point[1]
-			    });
-			});
-		    }
-		    tree = new RangeTree (r_points);
-		}
-		dirty = false;
-	    }
-	    gl.useProgram (point_shader);
-
-	    point_shader.data ('screen', engine.camera.mat3);
-	    //point_shader.data ('pos', point_buffer);
-	    point_shader.data ('pos', buffers.get ('vert'));
-	    point_shader.data ('circle_in', buffers.get ('unit'));
-	    if (select) 
-		return;
-		//point_shader.data ('color_in', id_buffer);
-	    else {
-		point_shader.data ('color_in', buffers.get ('color'));  
-		point_shader.data ('alpha_in', buffers.get ('alpha')); 
-		//point_shader.data ('color_in', color_buffer); 
-	    }
-
-	    point_shader.data ('select', select);
-
-	    point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
-	    point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
-	    point_shader.data ('rad', 5);
-
-	    point_shader.data ('glyph', circle_tex);
-
-	    point_shader.data ('zoom', 1.0 / engine.camera.level);
-
-	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
-	}
+        
+    // Update all buffers for all properties
+    this.update_all = function () {
+        for (var key in this.style_map) {
+            this.update (key);
+        }
     };
 };
     var INITIAL_POINTS = 1024;
@@ -3387,6 +3199,8 @@ var point_shader = null;
 var unit = rect (0, 0, 1, 1);
 
 function PointRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
     if (!point_shader) {
 	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
@@ -3406,11 +3220,10 @@ function PointRenderer (engine, layer) {
     buffers.create ('stroke', 1);
     buffers.create ('alpha', 1);
 
-    // A list of views of the object
-    var views = [];
-    
     // Rendering class for an individual point
     var PointView = function (feature) {
+        FeatureView.call (this, feature, layer);
+
         // The start index of the buffer
         var start;
         
@@ -3418,7 +3231,7 @@ function PointRenderer (engine, layer) {
         var count;
         
         // Instructions on how to write to the buffers for specific styles
-        var style_map = {
+        this.style_map = {
             'fill': function (color) {
                 if (color == 'none') {
 	            buffers.repeat ('fill', [-.75], start, count);
@@ -3448,22 +3261,7 @@ function PointRenderer (engine, layer) {
                 buffers.repeat ('stroke_width', [width], start, count);                
             }
         };
-
-        // Update the buffers for a specific property
-        this.update = function (key) {
-            var value = derived_style (feature, layer, key);
-            if (value === null)
-                throw "Style property does not exist";
-            style_map[key] (value);
-        };
         
-        // Update all buffers for all properties
-        this.update_all = function () {
-            for (var key in style_map) {
-                this.update (key);
-            }
-        };
-
         var feature_geom = feature.geom;
 
 	var total_points = feature_geom.length;
@@ -3478,17 +3276,8 @@ function PointRenderer (engine, layer) {
         this.update_all ();
     };
 
-    this.create = function (feature_geom, feature_style) {
-        var view = new PointView (feature_geom, feature_style);
-        views.push (view);
-        return view;
-    };
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            views[i].update (key);
-        }
+    this.view_factory = function (feature) {
+        return new PointView (feature, layer);
     };
 
     this.draw = function () {
@@ -3512,8 +3301,6 @@ function PointRenderer (engine, layer) {
 	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
 	point_shader.data ('rad', buffers.get ('rad'));
 
-        
-
 	point_shader.data ('stroke_width_in', buffers.get ('stroke_width'));
 
 	point_shader.data ('max_rad', max_rad);
@@ -3528,6 +3315,7 @@ function PointRenderer (engine, layer) {
 var line_shader = null;
 
 function LineRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
     if (!line_shader) {
 	line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');        
     }
@@ -3539,34 +3327,18 @@ function LineRenderer (engine, layer) {
     //stroke_buffers.create ('unit', 2);
     stroke_buffers.create ('alpha', 1);
 
-    var views = [];
-
     var LineView = function (feature) {
+        FeatureView.call (this, feature, layer);
         
 	var stroke_start = stroke_buffers.count ();
         var stroke_count = 0;
 
-        var style_map = {
+        this.style_map = {
             'stroke': function (color) {
 	        stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
             },
             'stroke-opacity': function (opacity) {
 	        stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
-            }
-        };
-
-        // Update the buffers for a specific property
-        this.update = function (key) {
-            var value = derived_style (feature, layer, key);
-            if (value === null)
-                throw "Style property does not exist";
-            style_map[key] (value);
-        };
-        
-        // Update all buffers for all properties
-        this.update_all = function () {
-            for (var key in style_map) {
-                this.update (key);
             }
         };
 
@@ -3580,17 +3352,8 @@ function LineRenderer (engine, layer) {
         this.update_all ();
     };
 
-    this.create = function (feature_geom, feature_style) {
-        var view = new LineView (feature_geom, feature_style);
-        views.push (view);
-        return view;
-    };
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            views[i].update (key);
-        }
+    this.view_factory = function (feature) {
+        return new LineView (feature, layer);
     };
 
     this.draw = function () {
@@ -3617,6 +3380,8 @@ function LineRenderer (engine, layer) {
 var poly_shader = null;
 
 function PolygonRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
     if (!poly_shader) {
 	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
@@ -3628,9 +3393,8 @@ function PolygonRenderer (engine, layer) {
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
 
-    var views = [];
-
     var PolygonView = function (feature) {
+        FeatureView.call (this, feature, layer);
 
         var lines = line_renderer.create (feature);
 
@@ -3638,27 +3402,12 @@ function PolygonRenderer (engine, layer) {
 
         var fill_count;
 
-        var style_map = {
+        this.style_map = {
             'fill': function (color) {
 	        fill_buffers.repeat ('color', color.array, fill_start, fill_count);
             },
             'fill-opacity': function (opacity) {
 	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
-            }
-        };
-
-        // Update the buffers for a specific property
-        this.update = function (key) {
-            var value = derived_style (feature, layer, key);
-            if (value === null)
-                throw "Style property does not exist";
-            style_map[key] (value);
-        };
-        
-        // Update all buffers for all properties
-        this.update_all = function () {
-            for (var key in style_map) {
-                this.update (key);
             }
         };
 
@@ -3702,17 +3451,8 @@ function PolygonRenderer (engine, layer) {
         this.update_all ();
     };
 
-    this.create = function (feature_geom, feature_style) {
-        var view = new PolygonView (feature_geom, feature_style);
-        views.push (view);
-        return view;
-    };
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            views[i].update (key);
-        }
+    this.view_factory = function (feature) {
+        return new PolygonView (feature, layer);
     };
 
     this.draw = function () {
@@ -3739,10 +3479,15 @@ function PolygonRenderer (engine, layer) {
         geometry: Polygon,
         renderer: PolygonRenderer,
         collection: PolygonCollection
+    },
+    'Line': {
+        geometry: Line,
+        renderer: LineRenderer,
+        collection: LineCollection
     }
 };
 
-function Layer () {
+function Layer (prop) {
     // The renderers for displaying geometries
     var renderers = {};
 
@@ -3760,6 +3505,12 @@ function Layer () {
 
     // If new geometry collections need to be instantiated
     var dirty = false;
+
+    // Copy over the defined styles
+    if (prop.style) {
+        for (var key in prop.style)
+            layer_style[key] = prop.style[key];
+    }
 
     this.style = function (key, value) {
         // Getter if only one argument passed
@@ -4032,23 +3783,7 @@ var rand_map = (function () {
     function Polygon (prop, layer) {
     Feature.call (this, prop, layer);
     
-    var min = new vect (Infinity, Infinity);
-    var max = new vect (-Infinity, -Infinity);
-    $.each (this.geom, function (i, poly) {
-	$.each (poly, function (k, ring) {
-	    $.each (ring, function (j, pair) {
-		if (pair[0] < min.x)
-		    min.x = pair[0];
-		if (pair[0] > max.x)
-		    max.x = pair[0];
-		if (pair[1] < min.y)
-		    min.y = pair[1];
-		if (pair[1] > max.y)
-		    max.y = pair[1];
-	    });
-	});
-    });
-    this.bounds = new Box (min, max);
+    this.bounds = linestring_bounds (this.geom);
 
     this.map_contains = function (engine, p) {
         return this.contains (engine.camera.project (p));
@@ -4134,424 +3869,25 @@ function PolygonCollection (polygons) {
         return new LayerSelector (results);
     };
 };
-
-var poly_shader = null;
-
-
-//var default_poly_color = new Color (0, 0, 1, 1);
-
-function PolygonLayer (prop) {
-    if (!prop)
-	prop = {};
-    if (!prop.style)
-	prop.style = {};
-    var default_poly_fill, default_poly_stroke, default_poly_fill_alpha, default_poly_stroke_alpha;
-    if ('fill' in prop.style)
-	default_poly_fill = prop.style['fill'];
-    else
-	default_poly_fill = new Color (.02, .44, .69, 1);
-
-    if ('stroke' in prop.style)
-	default_poly_stroke = prop.style['stroke'];
-    else
-	default_poly_stroke = new Color (.02, .44, .69, 1);
-
-    if ('fill-opacity' in prop.style)   
-	default_poly_fill_alpha = prop.style['fill-opacity'];
-    else
-	default_poly_fill_alpha = .5;
-
-    if ('stroke-opacity' in prop.style)   
-	default_poly_stroke_alpha = prop.style['stroke-opacity'];
-    else
-	default_poly_stroke_alpha = 1.0;
-
-    var initialized = false;
-    
-    this.id = new_feature_id ();
-
-    var fill_buffers, stroke_buffers;
-    
-    var layer = this;
-
-    function Polygon (prop) {
-	if (!prop)
-	    prop = {};
-	if (!prop.geom)
-	    prop.geom = [];
-	if (!prop.attr)
-	    prop.attr = {};
-	if (!prop.style)
-	    prop.style = {};
-	
-	this.geom = prop.geom;
-	this.attr = prop.attr;
-	this.id = new_feature_id ();
-	
-	var fill_start, fill_count;
-	var stroke_start, stroke_count = 0;
-
-	var set_color = function () {
-	    var color;
-	    if (('fill' in _style))
-		color = _style['fill'];
-	    else
-		color = layer.style ('fill');
-	    fill_buffers.repeat ('color', color.array, fill_start, fill_count);
-
-	    if (('stroke' in _style))
-		color = _style['stroke'];
-	    else
-		color = layer.style ('stroke');
-	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
-	};
-
-	var set_alpha = function () {
-	    //layer.alpha_front (_style['opacity'], start, count);
-	    var opacity;
-	    if (('fill-opacity' in _style))
-		opacity = _style['fill-opacity'];
-	    else
-		opacity = layer.style ('fill-opacity');
-	    
-	    fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
-
-	    if ('stroke-opacity' in _style)
-		opacity = _style['stroke-opacity'];
-	    else
-		opacity = layer.style ('stroke-opacity');
-	    stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
-	};
-	
-	var min = new vect (Infinity, Infinity);
-	var max = new vect (-Infinity, -Infinity);
-	$.each (this.geom, function (i, poly) {
-	    $.each (poly, function (k, ring) {
-		$.each (ring, function (j, pair) {
-		    if (pair[0] < min.x)
-			min.x = pair[0];
-		    if (pair[0] > max.x)
-			max.x = pair[0];
-		    if (pair[1] < min.y)
-			min.y = pair[1];
-		    if (pair[1] > max.y)
-			max.y = pair[1];
-		});
+    function linestring_bounds (geom) {
+    var min = new vect (Infinity, Infinity);
+    var max = new vect (-Infinity, -Infinity);
+    $.each (geom, function (i, poly) {
+	$.each (poly, function (k, ring) {
+	    $.each (ring, function (j, pair) {
+		if (pair[0] < min.x)
+		    min.x = pair[0];
+		if (pair[0] > max.x)
+		    max.x = pair[0];
+		if (pair[1] < min.y)
+		    min.y = pair[1];
+		if (pair[1] > max.y)
+		    max.y = pair[1];
 	    });
 	});
-	this.bounds = new Box (min, max);
-
-        this.initialize = function () {
-	    var simple = [];
-	    fill_count = 0;
-	    $.each (this.geom, function (i, poly) {
-                // Begin temp error handling code
-                var p;
-	        var count = 0;
-	        while (count < 100) {
-		    try {
-                        p = triangulate_polygon (poly);
-                        break;
-		    } catch (e) {
-		        count ++;
-		    }
-	        }
-	        if (count == 100)
-                    throw "Rendering Polygon Failed";
-                
-                // End temp error handling code
-                
-	        //var p = triangulate_polygon (poly);
-                
-	        fill_count += p.length / 2;
-	        simple.push (p);
-	    });
-
-	    fill_start = fill_buffers.alloc (fill_count);
-	    var current = fill_start;
-            
-	    $.each (simple, function (i, p) {	
-	        var count = p.length / 2;;
-	        fill_buffers.write ('vert', p, current, count);
-	        current += count;
-	    });
-            
-            
-	    stroke_start = stroke_buffers.count ();
-	    $.each (this.geom, function (i, poly) {
-	        for (var i = 0; i < poly.length; i ++) {
-		    stroke_count += poly[i].length * 6;    
-		    draw_lines (stroke_buffers, poly[i]);
-	        }
-	    });
-
-	    set_color ();
-	    set_alpha ();
-        };
-
-	/*stroke_count = this.geom[0].length * 6;
-	stroke_start = draw_lines (stroke_buffers, this.geom[0]);
-	for (var i = 1; i < this.geom.length; i ++) {
-	    stroke_count += this.geom[i].length * 6;    
-	    draw_lines (stroke_buffers, this.geom[i]);
-	}*/
-
-	var _style = {};
-	copy_value (_style, prop.style, 'fill', hex_to_color);
-	copy_value (_style, prop.style, 'stroke', hex_to_color);
-	copy_value (_style, prop.style, 'fill-opacity', parseFloat);
-	copy_value (_style, prop.style, 'stroke-opacity', parseFloat);
-
-	this.style = function (key, val) {
-	    if (arguments.length == 1)
-		return _style[key];
-	    _style[key] = val;
-	    if (key == 'fill') {
-		set_color ();
-	    }
-	    if (key == 'stroke') {
-		set_color ();
-	    }	    
-	    if (key == 'fill-opacity') {
-		set_alpha ();
-	    }
-	    if (key == 'stroke-opacity') {
-		set_alpha ();
-	    }
-	};
-    };	
-
-    var features = {};
-    var num_polys = 0;
-    var tree = null;
-    
-    this.features = function () {
-	var elem = [];
-	for (key in features) {
-	    elem.push (features[key]);
-	}
-	return new LayerSelector (elem);
-    };
-
-    this.search = function (box) {
-	var min = box.min;
-	var max = box.max;
-	var elem = tree.search (min, max);
-	var keys = {};
-	$.each (elem, function (i, p) {
-	    keys[p.key] = true;
-	});
-	var results = [];
-	for (var k in keys) {
-	    results.push (features[k]);
-	}
-	return new LayerSelector (results);
-    };
-
-    this.contains = function (p) {
-	var s = 0;
-	var results = [];
-	for (var i in features) {
-	    var feature = features[i];
-	    if (feature.bounds.contains (p)) {
-		s ++;
-		for (var j = 0; j < feature.geom.length; j ++) {
-		    var poly = feature.geom[j];
-		    var count = 0;
-		    $.each (poly, function (k, ring) {
-			for (var l = 0; l < ring.length; l ++) {
-			    var m = (l + 1) % ring.length;
-			    if ((p.y - ring[l][1]) / (p.y - ring[m][1]) < 0) {
-				var inf = new vect (720, p.y);
-				var v1 = new vect (ring[l][0], ring[l][1]);
-				var v2 = new vect (ring[m][0], ring[m][1]);
-				if (vect.intersects (p, inf, v1, v2))
-				    count ++
-			    }
-			}
-		    });
-		    if ((count % 2) == 1) {
-			results.push (feature);
-		    }
-		}
-	    }
-	}
-	return new LayerSelector (results);
-    };
-
-    this.aggregate = function (points, callback) {
-	points.features ().each (function (i, f) {
-	    $.each (f.geom, function (j, point) {
-		var poly = layer.contains (new vect (point[0], point[1]));
-		if (poly) {
-		    callback (poly, f);
-		}
-
-	    });
-	});
-    };
-
-    this.bounds = null;
-
-    var dirty = false;
-
-    this.append = function (data) {
-	var p = new Polygon (data);
-	if (this.bounds)
-	    this.bounds.union (p.bounds);
-	else
-	    this.bounds = p.bounds.clone ();
-	features[p.id] = p;
-	num_polys ++;
-	dirty = true;
-	tree = null;
-        
-        if (initialized)
-            p.initialize ();
-    };
-    
-    this.style = function (key, value) {
-	if (arguments.length > 1)
-	    throw "Not Implemented";
-	if (key == 'fill')
-	    return default_poly_fill;
-	if (key == 'stroke')
-	    return default_poly_stroke;
-	if (key == 'fill-opacity')
-	    return default_poly_fill_alpha;
-	if (key == 'stroke-opacity')
-	    return default_poly_stroke_alpha;
-	return null;
-    };
-
-    var over_func = null, out_func = null;
-    this.mouseover = function (func) {
-	over_func = func;
-    }
-
-    this.mouseout = function (func) {
-	out_func = func;
-    }
-
-    var current_over = {};
-    this.update_move = function (engine, p) {
-	if (over_func || out_func) {
-	    var c = this.contains (p);
-	    var new_over = {};
-	    if (c) {
-		c.each (function (i, f) {
-		    new_over[f.id] = f;
-		});
-	    }
-	    for (var key in current_over) {
-		if (!(key in new_over) && out_func) 
-		    out_func (current_over[key]);
-	    }
-	    for (var key in new_over) {
-		if (!(key in current_over) && over_func) 
-		    over_func (new_over[key]);
-	    }
-	    current_over = new_over;
-	    /*if (c != null && c.get (0) != current_over.get (0)) {
-		if (out_func && current_over)
-		    out_func (current_over);
-		if (over_func && c)
-		    over_func (c);
-		current_over = c;
-	    }*/
-	}
-    };
-    this.force_out = function (engine) {
-	for (var key in current_over) {
-	    if (out_func)
-		out_func (current_over[key]);
-	}
-	current_over = {};
-	/*if (out_func && current_over) 
-	    out_func (current_over);
-	current_over = null;*/
-    };
-
-    this.initialize = function (engine) {
-        if (!poly_shader) {
-	    poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
-        }
-        if (!line_shader) {
-	    line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
-        }
-
-        fill_buffers = new Buffers (engine.gl, 1024);
-        fill_buffers.create ('vert', 2);
-        fill_buffers.create ('color', 3);
-        fill_buffers.create ('alpha', 1);
-        
-        stroke_buffers = new Buffers (engine.gl, 1024);
-        stroke_buffers.create ('vert', 2);
-        stroke_buffers.create ('norm', 2);
-        stroke_buffers.create ('color', 3);
-        //stroke_buffers.create ('unit', 2);
-        stroke_buffers.create ('alpha', 1);
-
-        //for (var i = 0; i < features.length; i ++) {
-        for (var key in features) {
-            features[key].initialize ();
-        }
-        initialized = true;
-    };
-
-    this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
-
-        var gl = engine.gl;
-
-	fill_buffers.update (dt);	
-	stroke_buffers.update (dt);	
-	if (dirty) {
-	    var r_points = [];
-	    for (var key in features) {
-		$.each (features[key].geom, function (i, poly) {
-		    $.each (poly, function (j, ring) {
-			$.each (ring, function (k, pair) {
-			    r_points.push ({
-				key: key,
-				x: pair[0],
-				y: pair[1]
-			    });			
-			});
-		    });
-		});
-	    }
-	    tree = new RangeTree (r_points);
-	    dirty = false;
-	}
-
-	gl.useProgram (poly_shader);
-
-	poly_shader.data ('screen', engine.camera.mat3);
-	poly_shader.data ('pos', fill_buffers.get ('vert'));
-	poly_shader.data ('color_in', fill_buffers.get ('color'));  
-	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
-	
-	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
-
-
-	gl.useProgram (line_shader);
-	
-	line_shader.data ('screen', engine.camera.mat3);
-	line_shader.data ('pos', stroke_buffers.get ('vert'));
-	line_shader.data ('norm', stroke_buffers.get ('norm'));
-	line_shader.data ('color_in', stroke_buffers.get ('color'));
-	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
-	//line_shader.data ('circle_in', stroke_buffers.get ('unit'));
-	
-	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
-	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
-	
-	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
-    };
+    });
+    return new Box (min, max);
 };
-    var line_shader;
 
 function draw_lines (stroke_buffers, geom) {
     var count = 6 * geom.length;
@@ -4621,151 +3957,34 @@ function draw_lines (stroke_buffers, geom) {
     return start;
 };
 
-function LineLayer () {
-    var default_stroke = new Color (.02, .44, .69, 1);
-    var default_stroke_alpha = 1.0;
-    
-    if (!line_shader) {
-	line_shader = makeProgram (BASE_DIR + 'shaders/line');
+function Line (prop, layer) {
+    Feature.call (this, prop, layer);
+
+    this.bounds = linestring_bounds (this.geom);
+
+    this.map_contains = function (engine, p) {
+        return false;
     }
-    this.id = new_feature_id ();
-    var stroke_buffers = new Buffers (1024);
-    stroke_buffers.create ('vert', 2);
-    stroke_buffers.create ('norm', 2);
-    stroke_buffers.create ('unit', 2);
-    stroke_buffers.create ('color', 3);
-    stroke_buffers.create ('alpha', 1);
+};
 
-    var layer = this;
-
-    function Line (prop) {
-	if (!prop)
-	    prop = {};
-	if (!prop.geom)
-	    prop.geom = [];
-	if (!prop.attr)
-	    prop.attr = {};
-	if (!prop.style)
-	    prop.style = {};
-	
-	this.geom = prop.geom;
-	this.attr = prop.attr;
-	this.id = new_feature_id ();
-
-	/*var set_color = function () {
-	    var color = _style['stroke'];
-	    if (!color)
-		color = layer.style ('stroke');
-	    if (!color)
-		color = default_poly_stroke;
-	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
-	};*/
-
-	var stroke_start, stroke_count = 0;
-
-	var set_color = function () {
-	    var color;
-
-	    if (('stroke' in _style))
-		color = _style['stroke'];
-	    else
-		color = layer.style ('stroke');
-	    stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
-	};
-
-	var set_alpha = function () {
-	    //layer.alpha_front (_style['opacity'], start, count);
-	    var opacity;
-
-	    if ('stroke-opacity' in _style)
-		opacity = _style['stroke-opacity'];
-	    else
-		opacity = layer.style ('stroke-opacity');
-	    stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
-	};
-
-	stroke_start = stroke_buffers.count ();
-	draw_lines (stroke_buffers, this.geom);
-	stroke_count = this.geom.length * 6;
-
-	var _style = {};
-	copy_value (_style, prop.style, 'fill', hex_to_color);
-	copy_value (_style, prop.style, 'stroke', hex_to_color);
-	copy_value (_style, prop.style, 'fill-opacity', parseFloat);
-	copy_value (_style, prop.style, 'stroke-opacity', parseFloat);
-
-	this.style = function (key, val) {
-	    if (arguments.length == 1)
-		return _style[key];
-	    _style[key] = val;
-	    if (key == 'fill') {
-		set_color ();
-	    }
-	    if (key == 'stroke') {
-		set_color ();
-	    }	    
-	    if (key == 'fill-opacity') {
-		set_alpha ();
-	    }
-	    if (key == 'stroke-opacity') {
-		set_alpha ();
-	    }
-	};
-
-	set_color ();
-	set_alpha ();
+function LineCollection (lines) {
+    this.search = function (box) {
+        return new LayerSelector ([]);
     };
 
-    var num_lines = 0;
-    var dirty = false;
-
-    var _properties = {};
-    var features = {};    
-
-    this.append = function (data) {
-	var l = new Line (data);
-	for (key in l.attr) 
-	    _properties[key] = true;
-	features[l.id] = l;
-
-	num_lines ++;
-	dirty = true;	
-
-	return l;
-    }
-
-    this.style = function (key, value) {
-	if (arguments.length > 1)
-	    throw "Not Implemented";
-	if (key == 'stroke')
-	    return default_stroke;
-	if (key == 'stroke-opacity')
-	    return default_stroke_alpha;
-	return null;
+    this.map_contains = function (engine, p) {
+        return new LayerSelector ([]);
     };
 
-    this.draw = function (engine, dt) {
-	stroke_buffers.update (dt);
-	if (num_lines > 0) {
-	    gl.useProgram (line_shader);
-
-	    line_shader.data ('screen', engine.camera.mat3);
-	    line_shader.data ('pos', stroke_buffers.get ('vert'));
-	    line_shader.data ('norm', stroke_buffers.get ('norm'));
-	    line_shader.data ('color_in', stroke_buffers.get ('color'));
-	    line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
-
-	    line_shader.data ('px_w', 2.0 / engine.canvas.width ());
-	    line_shader.data ('px_h', 2.0 / engine.canvas.height ());
-
-	    gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
-	}
-    }
-};    var grid_shader = null;
+    this.contains = function (p) {
+        return new LayerSelector ([]);
+    };
+};
+    var grid_shader = null;
 
 function Grid (options) {
     if (!grid_shader) {
-	grid_shader = makeProgram (BASE_DIR + 'shaders/grid');
+	grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
     }
     if (!options)
 	options = {};
@@ -4792,7 +4011,7 @@ function Grid (options) {
 	tex_data[i * 4 + 3] = parseInt (c.a * 255);
     };
 
-    var buffers = new Buffers (6);
+    var buffers = new Buffers (engine.gl, 6);
     buffers.create ('vert', 2);
     buffers.create ('screen', 2);
     buffers.create ('tex', 2);
@@ -4903,6 +4122,10 @@ function Grid (options) {
 	}
     };
 
+    this.initialize = function () {
+
+    };
+
     var framebuffer = null;
 
     this.draw = function (engine, dt) {
@@ -5001,7 +4224,8 @@ function Grid (options) {
 	    //do_draw (tex);
 	}*/
     };
-};    function AsciiGrid (data, options) {
+};
+    function AsciiGrid (data, options) {
     var vals = data.split ('\n');
     var meta = vals.splice (0, 6);
     var cols = parseInt (meta[0].slice (14));
@@ -5818,7 +5042,9 @@ function TileLayer (options) {
     var layer = new MultiTileLayer (settings);
     return layer;
 };    var GeoJSON = function (data, options) {
-    var layer = new Layer ();
+    if (options === undefined)
+        options = {};
+    var layer = new Layer (options);
     for (var i = 0; i < data.features.length; i ++) {
 	var feature = data.features[i];
 	if (feature.type == 'Feature') {
@@ -5875,7 +5101,7 @@ function TileLayer (options) {
 		$.each (feature.geometry.coordinates, function (i, line) {
 		    layer.append ({
                         type: 'Line',
-			geom: line,
+			geom: [[line]],
 			attr: feature.properties
 		    });
 		});
@@ -6820,9 +6046,7 @@ function Slider (pos, size, units) {
     window.wiggle = {
 	Map: Map,
 	layer: {
-	    PointLayer: PointLayer,
-	    LineLayer: LineLayer,
-	    PolygonLayer: PolygonLayer,
+            Layer: Layer,
 	    Grid: Grid,
 	    Hillshade: Hillshade,
 	    Elevation: Elevation

@@ -2,7 +2,7 @@ var grid_shader = null;
 
 function Grid (options) {
     if (!grid_shader) {
-	grid_shader = makeProgram (BASE_DIR + 'shaders/grid');
+	grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
     }
     if (!options)
 	options = {};
@@ -29,7 +29,7 @@ function Grid (options) {
 	tex_data[i * 4 + 3] = parseInt (c.a * 255);
     };
 
-    var buffers = new Buffers (6);
+    var buffers = new Buffers (engine.gl, 6);
     buffers.create ('vert', 2);
     buffers.create ('screen', 2);
     buffers.create ('tex', 2);
@@ -138,6 +138,10 @@ function Grid (options) {
 	for (var i = 0; i < rows * cols; i ++) {
 	    data[i] = val;
 	}
+    };
+
+    this.initialize = function () {
+
     };
 
     var framebuffer = null;

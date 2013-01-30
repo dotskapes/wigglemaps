@@ -4,6 +4,8 @@ var point_shader = null;
 var unit = rect (0, 0, 1, 1);
 
 function PointRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
     if (!point_shader) {
 	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
@@ -23,11 +25,10 @@ function PointRenderer (engine, layer) {
     buffers.create ('stroke', 1);
     buffers.create ('alpha', 1);
 
-    // A list of views of the object
-    var views = [];
-    
     // Rendering class for an individual point
     var PointView = function (feature) {
+        FeatureView.call (this, feature, layer);
+
         // The start index of the buffer
         var start;
         
@@ -35,7 +36,7 @@ function PointRenderer (engine, layer) {
         var count;
         
         // Instructions on how to write to the buffers for specific styles
-        var style_map = {
+        this.style_map = {
             'fill': function (color) {
                 if (color == 'none') {
 	            buffers.repeat ('fill', [-.75], start, count);
@@ -65,22 +66,7 @@ function PointRenderer (engine, layer) {
                 buffers.repeat ('stroke_width', [width], start, count);                
             }
         };
-
-        // Update the buffers for a specific property
-        this.update = function (key) {
-            var value = derived_style (feature, layer, key);
-            if (value === null)
-                throw "Style property does not exist";
-            style_map[key] (value);
-        };
         
-        // Update all buffers for all properties
-        this.update_all = function () {
-            for (var key in style_map) {
-                this.update (key);
-            }
-        };
-
         var feature_geom = feature.geom;
 
 	var total_points = feature_geom.length;
@@ -95,17 +81,8 @@ function PointRenderer (engine, layer) {
         this.update_all ();
     };
 
-    this.create = function (feature_geom, feature_style) {
-        var view = new PointView (feature_geom, feature_style);
-        views.push (view);
-        return view;
-    };
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            views[i].update (key);
-        }
+    this.view_factory = function (feature) {
+        return new PointView (feature, layer);
     };
 
     this.draw = function () {
@@ -128,8 +105,6 @@ function PointRenderer (engine, layer) {
 	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
 	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
 	point_shader.data ('rad', buffers.get ('rad'));
-
-        
 
 	point_shader.data ('stroke_width_in', buffers.get ('stroke_width'));
 

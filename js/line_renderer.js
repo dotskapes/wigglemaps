@@ -3,6 +3,7 @@ var INITIAL_LINES = 1024;
 var line_shader = null;
 
 function LineRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
     if (!line_shader) {
 	line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');        
     }
@@ -14,34 +15,18 @@ function LineRenderer (engine, layer) {
     //stroke_buffers.create ('unit', 2);
     stroke_buffers.create ('alpha', 1);
 
-    var views = [];
-
     var LineView = function (feature) {
+        FeatureView.call (this, feature, layer);
         
 	var stroke_start = stroke_buffers.count ();
         var stroke_count = 0;
 
-        var style_map = {
+        this.style_map = {
             'stroke': function (color) {
 	        stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
             },
             'stroke-opacity': function (opacity) {
 	        stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
-            }
-        };
-
-        // Update the buffers for a specific property
-        this.update = function (key) {
-            var value = derived_style (feature, layer, key);
-            if (value === null)
-                throw "Style property does not exist";
-            style_map[key] (value);
-        };
-        
-        // Update all buffers for all properties
-        this.update_all = function () {
-            for (var key in style_map) {
-                this.update (key);
             }
         };
 
@@ -55,17 +40,8 @@ function LineRenderer (engine, layer) {
         this.update_all ();
     };
 
-    this.create = function (feature_geom, feature_style) {
-        var view = new LineView (feature_geom, feature_style);
-        views.push (view);
-        return view;
-    };
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            views[i].update (key);
-        }
+    this.view_factory = function (feature) {
+        return new LineView (feature, layer);
     };
 
     this.draw = function () {
