@@ -6099,7 +6099,9 @@ function Slider (pos, size, units) {
 	},
 	util: {
 	    fcolor: fcolor,
-	    icolor: icolor
+	    icolor: icolor,
+            Box: Box,
+            RangeTree: RangeTree
 	},
 	widget: {
 	    Slider: Slider
