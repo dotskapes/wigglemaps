@@ -157,29 +157,40 @@ var LayerSelector = function (elem) {
 	};
     };
 
-    this.style = function (key, value) {
-	if (arguments.length == 1) {
+    this.style3 = function (view_name, key, value) {
+	if (arguments.length == 2) {
 	    var result = [];
 	    $.each (elem, function (i, v) {
-		result.push (v.style (key));
+		result.push (v.style (view_name, key));
 	    });
 	    return result;
 	}
-	if ((typeof value) == 'function') {
-	    $.each (elem, function (i, v) {
-		v.style (key, value (v));
-	    });
-	}
-	else if (is_list (value)) {
-	    $.each (elem, function (i, v) {
-		v.style (key, value[i]);
-	    });	    
-	}
-	else {
-	    $.each (elem, function (i, v) {
-		v.style (key, value);
-	    });
-	}
-	return this;
+        else {
+	    if ((typeof value) == 'function') {
+	        $.each (elem, function (i, v) {
+		    v.style3 (view_name, key, value (v));
+	        });
+	    }
+	    else if (is_list (value)) {
+	        $.each (elem, function (i, v) {
+		    v.style3 (view_name, key, value[i]);
+	        });	    
+	    }
+	    else {
+	        $.each (elem, function (i, v) {
+		    v.style3 (view_name, key, value);
+	        });
+	    }
+	    return this;
+        }
+    };
+
+    this.style = function (arg0, arg1, arg2) {
+        if (arg0.type == 'Engine') {
+            return this.style3 (arg0.id, arg1, arg2);
+        }
+        else {
+            return this.style3 ('*', arg0, arg1);
+        }
     };
 };

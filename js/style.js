@@ -11,19 +11,21 @@ var default_style = {
         'fill': new Color (.02, .44, .69, 1.0),
         'fill-opacity': .5,
         'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0
+        'stroke-opacity': 1.0,
+        'stroke-width': 2.0
     },
     'Line': {
         'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0
+        'stroke-opacity': 1.0,
+        'stroke-width': 2.0
     }
 };
 
 // Cascading style lookup
-function derived_style (feature, layer, key) {
-    var value = feature.style (key); 
+function derived_style (engine, feature, layer, key) {
+    var value = feature.style (engine, key); 
     if (value === null) {
-        value = layer.style (key);
+        value = layer.style (engine, key);
         if (value === null) {
             value = default_style[feature.type][key];
         }

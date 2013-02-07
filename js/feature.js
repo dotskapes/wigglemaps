@@ -1,10 +1,12 @@
 // Constructor for the basic geometry types that can be rendered
 var Feature = function (prop, layer) {
     // The set of features styles
-    var feature_style = {};
+    var feature_style = {
+        '*': {}
+    };
 
-    // A view for a specific point. Provides callbacks to update the renderer
-    var view = null;
+    // The views for a specific feature. Provides callbacks to update the renderer
+    var views = {};
 
     // Unique feature ID
     this.id = new_feature_id ();
@@ -29,33 +31,45 @@ var Feature = function (prop, layer) {
 
     };
 
-    // Set the properties for the renderer
+    // Initializes a view for a given renderer
     this.initialize = function (renderer) {
         // Create a location in the renderer for the feature
         view = renderer.create (this);
+
         // Update all styles in the renderer
         view.update_all ();
+
+        views[renderer.engine.id] = view; 
     };
 
-    this.compute = function (key) {
-        return derived_style (this, layer, key);
+    this.compute = function (engine, key) {
+        return derived_style (engine, this, layer, key);
     };
-    
-    this.style = function (key, value, derived) {
-        // Getter if only one argument passed
-        if (arguments.length < 2) {
-            if (feature_style[key] !== undefined)
-                return feature_style[key];
+
+    this.style3 = function (view_name, key, value) {
+        if (feature_style[view_name] === undefined)
+            feature_style[view_name] = {};
+        if (value === undefined) {
+            if (feature_style[view_name][key] !== undefined)
+                return feature_style[view_name][key];
             else
                 return null;
         }
-        // Otherwise, set property
         else {
-            feature_style[key] = value;
+            feature_style[view_name][key] = value;
 
             // If initialized, update rendering property
-            if (view)
-                view.update (key);
+            if (views[view_name])
+                views[view_name].update (key);
+        }
+    };
+    
+    this.style = function (arg0, arg1, arg2) {
+        if (arg0.type == 'Engine') {
+            return this.style3 (arg0.id, arg1, arg2);
+        }
+        else {
+            return this.style3 ('*', arg0, arg1);
         }
     };
 };

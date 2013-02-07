@@ -1,17 +1,21 @@
 function Camera (canvas, options) {
+    var ratio = canvas.width () / canvas.height (); 
+
     if (!options)
 	options = {};
     if (!('center' in options))
 	options.center = new vect (0, 0);
     if (!('extents' in options))
 	options.extents = 180.0;
+    if (!('v_extents' in options))
+	options.v_extents = options.extents / ratio;
 
     this.mat3 = new Float32Array (9);
     //this.mat3[0] = 2.0 / canvas.width ();
     //this.mat3[5] = 2.0 / canvas.height ();
-    var ratio = canvas.width () / canvas.height (); 
+
     this.mat3[0] = 2.0 / options.extents;
-    this.mat3[4] = ratio * 2.0 / options.extents;
+    this.mat3[4] = 2.0 / options.v_extents;
     this.mat3[8] = 1.0;
     
     this.mat3[6] = 0.0;
@@ -62,14 +66,18 @@ function Camera (canvas, options) {
     };
     this.position (options.center);
 
-    this.extents = function (width) {
+    this.extents = function (width, height) {
 	options.extents = width;
+        if (!height)
+            options.v_extents = options.extents / ratio;
+        else
+            options.v_extents = height;
 
 	var pos = this.position ();
 	this.level = 1.0;
 
 	this.mat3[0] = 2.0 / options.extents;
-	this.mat3[4] = ratio * 2.0 / options.extents;
+	this.mat3[4] = 2.0 / options.v_extents;
 
 	this.position (pos);
     };

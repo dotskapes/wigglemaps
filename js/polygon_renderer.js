@@ -1,13 +1,12 @@
 var INITIAL_POLYGONS = 1024;
 
-var poly_shader = null;
-
 function PolygonRenderer (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
-    if (!poly_shader) {
-	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+    if (!(engine.shaders['polygon'])) {
+        engine.shaders['polygon'] = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
+    var poly_shader = engine.shaders['polygon'];
 
     var line_renderer = new LineRenderer (engine, layer);
 
@@ -17,7 +16,7 @@ function PolygonRenderer (engine, layer) {
     fill_buffers.create ('alpha', 1);
 
     var PolygonView = function (feature) {
-        FeatureView.call (this, feature, layer);
+        FeatureView.call (this, feature, layer, engine);
 
         var lines = line_renderer.create (feature);
 
@@ -75,10 +74,12 @@ function PolygonRenderer (engine, layer) {
     };
 
     this.view_factory = function (feature) {
-        return new PolygonView (feature, layer);
+        return new PolygonView (feature);
     };
 
     this.draw = function () {
+        var gl = engine.gl;
+
 	fill_buffers.update ();
 	gl.useProgram (poly_shader);
         

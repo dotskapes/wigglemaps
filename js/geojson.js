@@ -34,6 +34,7 @@ var GeoJSON = function (data, options) {
 		    geom: [oriented],
 		    attr: feature.properties
 		});
+                //return layer;
 	    }
 	    if (feature.geometry.type == 'MultiPolygon') {
 		var rings = [];

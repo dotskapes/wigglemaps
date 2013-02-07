@@ -19,6 +19,7 @@ function vect (x, y, z) {
 	this.x *= s;
 	this.y *= s;
 	this.z *= s;
+        return this;
     };
     this.length = function () {
 	return Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
@@ -26,10 +27,11 @@ function vect (x, y, z) {
     this.normalize = function () {
 	var scale = Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
 	if (scale == 0)
-	    return;
+	    return this;
 	this.x /= scale;
 	this.y /= scale;
 	this.z /= scale;
+        return this;
     };
     this.div = function (v) {
 	this.x /= v.x;
@@ -168,6 +170,17 @@ vect.rotate = function (v, omega) {
     xp = cos * v.x - sin * v.y;
     yp = sin * v.x + cos * v.y;
     var v = new vect (xp, yp, v.z);
+    return v;
+};
+
+vect.normalize = function (c) {
+    var v = c.clone ();
+    var scale = Math.sqrt (v.x * v.x + v.y * v.y + v.z * v.z);
+    if (scale == 0)
+	return v;
+    v.x /= scale;
+    v.y /= scale;
+    v.z /= scale;
     return v;
 };
 
@@ -568,7 +581,8 @@ function parseRGB (value) {
 
 function str_contains (string, c) {
     return string.indexOf (c) != -1;
-};    function bint32 (data, offset) {
+};
+    function bint32 (data, offset) {
     //console.log (data.charCodeAt (offset) & 0xff, data.charCodeAt (offset + 1) & 0xff, data.charCodeAt (offset + 2) & 0xff, data.charCodeAt (offset + 3) & 0xff);
     return (
 	((data.charCodeAt (offset) & 0xff) << 24) +
@@ -1001,19 +1015,21 @@ var default_style = {
         'fill': new Color (.02, .44, .69, 1.0),
         'fill-opacity': .5,
         'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0
+        'stroke-opacity': 1.0,
+        'stroke-width': 2.0
     },
     'Line': {
         'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0
+        'stroke-opacity': 1.0,
+        'stroke-width': 2.0
     }
 };
 
 // Cascading style lookup
-function derived_style (feature, layer, key) {
-    var value = feature.style (key); 
+function derived_style (engine, feature, layer, key) {
+    var value = feature.style (engine, key); 
     if (value === null) {
-        value = layer.style (key);
+        value = layer.style (engine, key);
         if (value === null) {
             value = default_style[feature.type][key];
         }
@@ -1135,19 +1151,23 @@ function derived_style (feature, layer, key) {
 //     };
 // };
     function Camera (canvas, options) {
+    var ratio = canvas.width () / canvas.height (); 
+
     if (!options)
 	options = {};
     if (!('center' in options))
 	options.center = new vect (0, 0);
     if (!('extents' in options))
 	options.extents = 180.0;
+    if (!('v_extents' in options))
+	options.v_extents = options.extents / ratio;
 
     this.mat3 = new Float32Array (9);
     //this.mat3[0] = 2.0 / canvas.width ();
     //this.mat3[5] = 2.0 / canvas.height ();
-    var ratio = canvas.width () / canvas.height (); 
+
     this.mat3[0] = 2.0 / options.extents;
-    this.mat3[4] = ratio * 2.0 / options.extents;
+    this.mat3[4] = 2.0 / options.v_extents;
     this.mat3[8] = 1.0;
     
     this.mat3[6] = 0.0;
@@ -1198,14 +1218,18 @@ function derived_style (feature, layer, key) {
     };
     this.position (options.center);
 
-    this.extents = function (width) {
+    this.extents = function (width, height) {
 	options.extents = width;
+        if (!height)
+            options.v_extents = options.extents / ratio;
+        else
+            options.v_extents = height;
 
 	var pos = this.position ();
 	this.level = 1.0;
 
 	this.mat3[0] = 2.0 / options.extents;
-	this.mat3[4] = ratio * 2.0 / options.extents;
+	this.mat3[4] = 2.0 / options.v_extents;
 
 	this.position (pos);
     };
@@ -1230,7 +1254,8 @@ function derived_style (feature, layer, key) {
 	this.mat3[4] *= ratio;
 	this.position (p);
     };
-};    function Scroller (engine) {
+};
+    function Scroller (engine) {
     var drag = false;
     var start = new vect (0, 0);
     var pos = new vect (0, 0);
@@ -1427,7 +1452,380 @@ function derived_style (feature, layer, key) {
 	    }
 	}
     };
-};    //var set_id_color, bind_event;
+};    function FeatureRenderer (engine, layer) {
+    this.engine = engine;
+
+    // A list of views of the object
+    this.views = [];
+
+    // Update all features with a style property
+    this.update = function (key) {
+        for (var i = 0; i < views.length; i ++) {
+            this.views[i].update (key);
+        }
+    };
+
+    this.view_factory = function () {
+        throw "Not Implemented";
+    };
+
+    this.create = function (feature, feature_geom) {
+        var view = this.view_factory (feature, feature_geom, engine);
+        this.views.push (view);
+        return view;
+    };
+};
+
+function FeatureView (feature, layer, engine) {
+    this.style_map = {};
+    
+    // Update the buffers for a specific property
+    this.update = function (key) {
+        var value = derived_style (engine, feature, layer, key);
+        if (value === null)
+            throw "Style property does not exist";
+        this.style_map[key] (value);
+    };
+        
+    // Update all buffers for all properties
+    this.update_all = function () {
+        for (var key in this.style_map) {
+            this.update (key);
+        }
+    };
+};
+    var INITIAL_POINTS = 1024;
+
+var unit = rect (0, 0, 1, 1);
+
+function PointRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
+    if (!(engine.shaders['point'])) {
+        engine.shaders['point'] = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
+    }
+    var point_shader = engine.shaders['point'];
+    
+    // A value greater than or equal to the maximum radius of each point
+    var max_rad = 10.0;
+
+    // The required buffers for rendering
+    var buffers = new Buffers (engine.gl, INITIAL_POINTS);
+    buffers.create ('vert', 2);
+    buffers.create ('unit', 2);
+    buffers.create ('stroke_width', 1);
+    buffers.create ('rad', 1);
+    buffers.create ('fill_color', 3);
+    buffers.create ('fill', 1);
+    buffers.create ('stroke_color', 3);
+    buffers.create ('stroke', 1);
+    buffers.create ('alpha', 1);
+
+    // Rendering class for an individual point
+    var PointView = function (feature) {
+        FeatureView.call (this, feature, layer, engine);
+
+        // The start index of the buffer
+        var start;
+        
+        // The number of vertices in the buffer for this feature
+        var count;
+        
+        // Instructions on how to write to the buffers for specific styles
+        this.style_map = {
+            'fill': function (color) {
+                if (color == 'none') {
+	            buffers.repeat ('fill', [-.75], start, count);
+                }
+                else {
+	            buffers.repeat ('fill', [.75], start, count);
+	            buffers.repeat ('fill_color', color.array, start, count);                                }
+            },
+            'opacity': function (opacity) {
+	        buffers.repeat ('alpha', [opacity], start, count);
+            },
+            'radius': function (rad) {
+                if (rad > max_rad)
+                    max_rad = rad;
+                buffers.repeat ('rad', [rad], start, count);
+            },
+            'stroke': function (color) {
+                if (color == 'none') {
+	            buffers.repeat ('stroke', [-.75], start, count);
+                }
+                else {
+	            buffers.repeat ('stroke', [.75], start, count);
+	            buffers.repeat ('stroke_color', color.array, start, count);
+                }
+            },
+            'stroke-width': function (width) {
+                buffers.repeat ('stroke_width', [width], start, count);                
+            }
+        };
+        
+        var feature_geom = feature.geom;
+
+	var total_points = feature_geom.length;
+	count = 6 * total_points;
+	start = buffers.alloc (count);
+
+	$.each (feature_geom, function (index, point) {
+	    buffers.repeat ('vert', point, start + index * 6, 6);
+	    buffers.write ('unit', unit, start + index * 6, 6);
+	});
+
+        this.update_all ();
+    };
+
+    this.view_factory = function (feature) {
+        return new PointView (feature);
+    };
+
+    this.draw = function () {
+        var gl = engine.gl;
+
+	buffers.update ();
+
+	gl.useProgram (point_shader);
+        
+	point_shader.data ('screen', engine.camera.mat3);
+
+	point_shader.data ('pos', buffers.get ('vert'));
+	point_shader.data ('circle_in', buffers.get ('unit'));
+
+	point_shader.data ('color_in', buffers.get ('fill_color'));  
+	point_shader.data ('stroke_color_in', buffers.get ('stroke_color'));  
+	point_shader.data ('alpha_in', buffers.get ('alpha')); 
+
+        point_shader.data ('fill_in', buffers.get ('fill'));
+        point_shader.data ('stroke_in', buffers.get ('stroke'));
+
+	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
+	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
+	point_shader.data ('rad', buffers.get ('rad'));
+
+	point_shader.data ('stroke_width_in', buffers.get ('stroke_width'));
+
+	point_shader.data ('max_rad', max_rad);
+        
+	//point_shader.data ('glyph', circle_tex);
+        
+	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
+    };
+};
+    var INITIAL_LINES = 1024;
+
+function LineRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
+    if (!(engine.shaders['line'])) {
+        engine.shaders['line'] = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
+    }
+    var line_shader = engine.shaders['line'];
+
+    var stroke_buffers = new Buffers (engine.gl, 1024);
+    stroke_buffers.create ('vert', 2);
+    stroke_buffers.create ('norm', 2);
+    stroke_buffers.create ('width', 2);
+    stroke_buffers.create ('color', 3);
+    stroke_buffers.create ('unit', 2);
+    stroke_buffers.create ('alpha', 1);
+
+    var LineView = function (feature, feature_geom) {
+        FeatureView.call (this, feature, layer, engine);
+
+	var stroke_start = stroke_buffers.count ();
+        var stroke_count = 0;
+
+        this.style_map = {
+            'stroke': function (color) {
+	        stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
+            },
+            'stroke-opacity': function (opacity) {
+	        stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
+            },
+            'stroke-width': function (width) {
+	        stroke_buffers.repeat ('width', [width], stroke_start, stroke_count);
+            }
+        };
+
+        var point_cmp = function (p1, p2) {
+            return ((p1[0] == p2[0]) && (p1[1] == p2[1]));
+        };
+
+        if (!feature_geom)
+            feature_geom = feature.geom;
+
+	$.each (feature_geom, function (i, poly) {
+	    for (var i = 0; i < poly.length; i ++) {
+		stroke_count += poly[i].length * 6;
+                if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
+                    draw_map_lines (stroke_buffers, poly[i]);
+                else
+		    draw_graph_lines (stroke_buffers, poly[i]);
+	    }
+	});
+
+        this.update_all ();
+    };
+
+    this.view_factory = function (feature, feature_geom, draw_func) {
+        return new LineView (feature, feature_geom, draw_func);
+    };
+
+    this.draw = function () {
+        var gl = engine.gl;
+	stroke_buffers.update ();	
+
+	gl.useProgram (line_shader);
+	
+	line_shader.data ('screen', engine.camera.mat3);
+	line_shader.data ('pos', stroke_buffers.get ('vert'));
+	line_shader.data ('norm', stroke_buffers.get ('norm'));
+	line_shader.data ('color_in', stroke_buffers.get ('color'));
+	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
+	line_shader.data ('circle_in', stroke_buffers.get ('unit'));
+	line_shader.data ('width_in', stroke_buffers.get ('width'));
+	
+	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
+	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
+	
+	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
+    }
+
+};
+    var INITIAL_POLYGONS = 1024;
+
+function PolygonRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+
+    if (!(engine.shaders['polygon'])) {
+        engine.shaders['polygon'] = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+    }
+    var poly_shader = engine.shaders['polygon'];
+
+    var line_renderer = new LineRenderer (engine, layer);
+
+    var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
+    fill_buffers.create ('vert', 2);
+    fill_buffers.create ('color', 3);
+    fill_buffers.create ('alpha', 1);
+
+    var PolygonView = function (feature) {
+        FeatureView.call (this, feature, layer, engine);
+
+        var lines = line_renderer.create (feature);
+
+        var fill_start;
+
+        var fill_count;
+
+        this.style_map = {
+            'fill': function (color) {
+	        fill_buffers.repeat ('color', color.array, fill_start, fill_count);
+            },
+            'fill-opacity': function (opacity) {
+	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
+            }
+        };
+
+        var feature_geom = feature.geom;
+
+	var simple = [];
+	fill_count = 0;
+
+	$.each (feature_geom, function (i, poly) {
+            // Begin temp error handling code
+            var p;
+	    var count = 0;
+	    while (count < 100) {
+		try {
+                    p = triangulate_polygon (poly);
+                    break;
+		} catch (e) {
+		    count ++;
+		}
+	    }
+	    if (count == 100)
+                throw "Rendering Polygon Failed";
+            
+            // End temp error handling code
+            
+	    //var p = triangulate_polygon (poly);
+            
+	    fill_count += p.length / 2;
+	    simple.push (p);
+	});
+        
+	fill_start = fill_buffers.alloc (fill_count);
+	var current = fill_start;
+        
+	$.each (simple, function (i, p) {	
+	    var count = p.length / 2;
+	    fill_buffers.write ('vert', p, current, count);
+	    current += count;
+	});
+
+        this.update_all ();
+    };
+
+    this.view_factory = function (feature) {
+        return new PolygonView (feature);
+    };
+
+    this.draw = function () {
+        var gl = engine.gl;
+
+	fill_buffers.update ();
+	gl.useProgram (poly_shader);
+        
+	poly_shader.data ('screen', engine.camera.mat3);
+	poly_shader.data ('pos', fill_buffers.get ('vert'));
+	poly_shader.data ('color_in', fill_buffers.get ('color'));  
+	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
+	
+	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
+
+        line_renderer.draw ();
+    };
+};
+    function TimeSeriesRenderer (engine, layer) {
+    FeatureRenderer.call (this, engine, layer);
+    
+    var line_renderer = new LineRenderer (engine, layer);
+
+    this.view_factory = function (feature) {
+        var linestrings = [];
+        var linestring = [];
+        var order = layer.attr ('order');
+        for (var i = 0; i < order.length; i ++) {
+            var y = feature.attr (order[i]);
+
+            // End this linestring and start a new one if the point is undefined
+            if (isNaN (y)) {
+                if (linestring.length > 0) {
+                    linestrings.push (linestring);
+                    linestring = [];
+                }
+            }
+            else
+                linestring.push ([i / 52, y / 6500]);
+        }
+        if (linestring.length > 0)
+            linestrings.push (linestring);
+        //linestring = [[.25, .75], [.3,0], [.35, .75], [1.5, .5]];
+        //linestring = linestring.slice (20, 25);
+        var feature_geom = [linestrings];
+
+        return line_renderer.create (feature, feature_geom);
+    };
+
+    this.draw = function () {
+        line_renderer.draw ();
+    };
+
+};
+    //var set_id_color, bind_event;
 
 var TILE_SERVER = 'http://eland.ecohealthalliance.org/wigglemaps';
 
@@ -1448,6 +1846,9 @@ function Engine (selector, map, options) {
 	background: new Color (0, 0, 0, 1),
 	antialias: true
     });
+
+    this.type = 'Engine';
+    this.id = new_feature_id ();
 
     var that = this;
     this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
@@ -1502,12 +1903,20 @@ function Engine (selector, map, options) {
 
     this.scene = [];
 
+    this.shaders = {};
+
     //this.styler = new StyleManager ();
     this.camera = new Camera (this.canvas, options);
     this.scroller = new Scroller (this);
 
     this.pxW = 1 / this.canvas.attr ('width');
     this.pxH = 1 / this.canvas.attr ('height');
+
+    this.Renderer = {
+        'Point': PointRenderer,
+        'Polygon': PolygonRenderer,
+        'Line': LineRenderer,
+    };
 
     this.sel = new SelectionBox (this);
 
@@ -1783,86 +2192,6 @@ function Engine (selector, map, options) {
 	return frame;
     };
 
-
-    /*var framebuffer = gl.createFramebuffer ();
-    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
-    framebuffer.width = this.canvas.width ();
-    framebuffer.height = this.canvas.height ();
-    
-    var tex_canvas = gl.createTexture ();
-    gl.bindTexture (gl.TEXTURE_2D, tex_canvas);
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);  
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-    renderbuffer = gl.createRenderbuffer();
-    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, framebuffer.width, framebuffer.height);
-
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex_canvas, 0);
-    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    var framebuffer2 = gl.createFramebuffer ();
-    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer2);
-    framebuffer2.width = this.canvas.width ();
-    framebuffer2.height = this.canvas.height ();
-    
-    var tex_canvas2 = gl.createTexture ();
-    gl.bindTexture (gl.TEXTURE_2D, tex_canvas2);
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);  
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer2.width, framebuffer2.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-    var renderbuffer2 = gl.createRenderbuffer();
-    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer2);
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, framebuffer2.width, framebuffer2.height);
-
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex_canvas2, 0);
-    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer2);
-
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    var current_framebuffer = true;
-
-    this.activate_framebuffer = function (options) {
-	if (!options)
-	    opitons = {}
-	if (!('blend' in options))
-	    options.blend = true;
-	
-	if (!options.blend)
-	    gl.disable (gl.BLEND);
-	if (current_framebuffer)
-	    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
-	else
-	    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer2);
-	    gl.clearColor (0, 0, 0, 0);
-	    gl.clear(gl.COLOR_BUFFER_BIT);
-	    gl.clearDepth (0.0);
-    };
-
-    var canvas_tex;
-    this.deactivate_framebuffer = function () {
-	gl.bindFramebuffer (gl.FRAMEBUFFER, null);
-	if (current_framebuffer)
-	    canvas_tex = tex_canvas;
-	else
-	    canvas_tex = tex_canvas2;
-	current_framebuffer = !current_framebuffer;
-	gl.enable (gl.BLEND);
-	return canvas_tex;
-    };*/
-
     var screen_buffer = this.framebuffer ();
     var blur_hor = this.framebuffer ();
 
@@ -1896,67 +2225,6 @@ function Engine (selector, map, options) {
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
     };
 
-    //this.shade = null;
-
-    //var shade_buffer = this.framebuffer ();
-
-    /*var draw_shade = function (dt, screen_tex) {
-	if (that.shade) {
-	    shade_buffer.activate ();
-
-	    gl.clearColor (.5, .5, 1.0, 1.0);
-	    gl.clear (gl.COLOR_BUFFER_BIT);
-	    var azimuth = that.shade.draw (that, dt);
-	    shade_buffer.deactivate ();
-
-	    gl.useProgram (light_shader);
-
-	    light_shader.data ('pos', buffers.get ('vert'));
-	    light_shader.data ('tex_in', buffers.get ('tex'));
-	    light_shader.data ('base', screen_tex);
-	    light_shader.data ('normal', shade_buffer.tex);
-	    light_shader.data ('azimuth', azimuth);
-
-	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
-	    
-	}
-    };*/
-
-    /*this.post_draw = function (options) {
-	buffers.update ();
-
-	if (options.antialias) {
-
-	    gl.useProgram (blur_shader);
-
-	    this.activate_framebuffer ({
-		blend: false
-	    });
-
-	    blur_shader.data ('pos', buffers.get ('vert'))
-	    blur_shader.data ('tex_in', buffers.get ('tex'))
-	    blur_shader.data ('sampler', canvas_tex)
-	    blur_shader.data ('width', that.canvas.width  ());
-	    blur_shader.data ('height', that.canvas.height ())
-	    blur_shader.data ('hor', true);
-	    
-	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
-
-	    this.deactivate_framebuffer ();
-	    
-	    blur_shader.data ('pos', buffers.get ('vert'))
-	    blur_shader.data ('tex_in', buffers.get ('tex'))
-	    blur_shader.data ('sampler', canvas_tex)
-	    blur_shader.data ('width', that.canvas.width  ());
-	    blur_shader.data ('height', that.canvas.height ())
-	    blur_shader.data ('hor', false);
-
-	    gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
-
-	}
-	
-    };*/
-
     this.dirty = true;
 
     var draw = function () {
@@ -1973,19 +2241,6 @@ function Engine (selector, map, options) {
 	fps /= fps_window.length;
 	$ ('#fps').text (Math.floor (1 / fps));
 	old_time = current_time;
-
-	/*if (that.dirty) {
-
-	    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
-	    gl.clearColor(0, 0, 0, 1);
-	    gl.clear(gl.COLOR_BUFFER_BIT);
-	    gl.clearDepth (0.0);
-	    for (var i = 0; i < that.scene.length; i ++) {
-		that.scene[i].draw (that, dt, true);
-	    }
-	    gl.bindFramebuffer (gl.FRAMEBUFFER, null);
-	    //that.dirty = false;
-	}*/
 	    
 	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 	gl.clear(gl.COLOR_BUFFER_BIT);
@@ -2002,113 +2257,17 @@ function Engine (selector, map, options) {
 	if (base) {
 	    base.draw (that, dt);
 	}
-	//if (options.antialias) {
-	//    screen_buffer.activate ();
-	//}
+
 	for (var i = 0; i < that.scene.length; i ++) {
 	    that.scene[i].draw (that, dt, false);
 	}
-	//if (options.antialias) {
-	//    screen_buffer.deactivate ();
-	//    draw_blur (screen_buffer.tex ());
-	//}
-
-	/*if (shade_ready) {
-	    screen_buffer.deactivate ();
-	    draw_shade (dt, screen_buffer.tex);
-	}*/
 
 	that.sel.draw (that, dt);
-	//if (!dragging)
-	//    that.manager.update (dt);
+
 	
 	requestAnimationFrame (draw);
     };
 
-    /*var trigger_event;
-    (function () {
-	var r = 0;
-	var g = 0;
-	var b = 0;
-	var features = {};
-	var layers = {};
-	var events = {};
-	set_id_color = function (layer, feature, array) {
-	    b ++;
-	    if (b > 255) {
-		b = 0;
-		g ++;
-	    }
-	    if (g > 255) {
-		g = 0;
-		r ++;
-	    }
-	    if (r > 255)
-		throw "Too many elements to assign unique id";
-	    for (var i = feature.start; i < feature.start + feature.count; i ++) {
-		array[i * 4] = r / 255;
-		array[i * 4 + 1] = g / 255;
-		array[i * 4 + 2] = b / 255;
-		array[i * 4 + 3] = 1.0;
-	    }
-	    var key = r + ',' + g + ',' + b;
-	    layers[key] = layer; 
-	    features[key] = feature; 
-	    return key;
-	};
-
-	var is_zero = function (pixel) {
-	    return (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0);
-	}
-	
-	var current = new Uint8Array (4);
-	trigger_event = function (pixel) {
-	    var same = true;
-	    for (var i = 0; i < 4; i ++) {
-		if (current[i] != pixel[i])
-		    same = false;
-	    }
-	    if (same) {
-		return;
-	    }
-	    if (!is_zero (current)) {
-		var key = current[0] + ',' + current[1] + ',' + current[2];
-		var layer = layers[key];
-		var feature = features[key];
-		if (!('mouseout' in events))
-		    return;
-		if (!(layer.id in events['mouseout']))
-		    return;
-		for (var i = 0; i < events['mouseout'][layer.id].length; i ++) {
-		    events['mouseout'][layer.id][i] (new LayerSelector ([feature]));
-		}
-	    }
-	    for (var i = 0; i < 4; i ++) {
-		current[i] = pixel[i];
-	    }
-	    if (is_zero (pixel))
-		return null;
-	    var key = pixel[0] + ',' + pixel[1] + ',' + pixel[2];
-	    var layer = layers[key];
-	    var feature = features[key];
-	    if (!('mouseover' in events))
-		return;
-	    if (!(layer.id in events['mouseover']))
-		return;
-	    for (var i = 0; i < events['mouseover'][layer.id].length; i ++) {
-		events['mouseover'][layer.id][i] (new LayerSelector ([feature]));
-	    }
-	};
-
-	bind_event = function (type, layer, func)  {
-	    if (!(type in events))
-		events[type] = {};
-	    if (!(layer in events[type]))
-		events[type][layer.id] = [];
-	    events[type][layer.id].push (func);
-	};
-    }) ();*/
-    
     this.read_pixel = function (x, y) {
 	gl.bindFramebuffer (gl.FRAMEBUFFER, that.framebuffer);
 	var pixel = new Uint8Array (4);
@@ -2122,12 +2281,9 @@ function Engine (selector, map, options) {
     $ (document).mousemove (function (event) {
 	Mouse.x = event.clientX;
 	Mouse.y = event.clientY;
-	//console.log ('move', Mouse.x, Mouse.y);
     });
 
     this.canvas.click (function (event) {
-	//that.manager.click (Mouse.x, Mouse.y);
-	//that.read_pixel (event.pageX, event.pageY);
     });
     
     this.canvas.dblclick (function (event) {
@@ -2142,21 +2298,16 @@ function Engine (selector, map, options) {
 	dragging = false;
     });
 
-    //var popup = $ ('<div class="popup overlay"></div>');
     this.canvas.mousemove(function (event) {
 	if (dragging) {
-	    //popup.remove ();
-	    //var pos = that.camera.project (new vect (event.clientX, event.clientY));
+
 	}
 	else {
-	    //var p = that.camera.project (new vect (Mouse.x, Mouse.y));
             var p = new vect (Mouse.x, Mouse.y);
 	    $.each (that.scene, function (i, layer) {
 		if (layer.update_move)
 		    layer.update_move (that, p);
 	    });
-	    //var pixel = readPixel (event.clientX, event.clientY);
-	    //trigger_event (pixel);
 	}
     });
 
@@ -2169,6 +2320,139 @@ function Engine (selector, map, options) {
 
     requestAnimationFrame (draw);
     
+};
+    function BaseEngine (selector, options) {
+    default_model (options, {
+	background: new Color (0, 0, 0, 1),
+    });
+
+    this.type = 'Engine';
+    this.id = new_feature_id ();
+
+    this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
+    var gl = null;
+
+    if (selector) {
+	$ (selector).append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+    }
+    else {
+	selector = window;
+	$ ('body').append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+	$ (window).resize ((function (engine) {
+            return function (event) {
+	        this.resize.call (engine);
+            };
+        }) (this));
+    }
+
+    this.resize = function () {
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());	
+	gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+	this.camera.reconfigure ();
+	for (var i = 0; i < framebuffers.length; i ++) {
+	    framebuffers[i].resize ();
+	}
+    };
+
+    gl = setContext (this.canvas, DEBUG);
+    this.gl = gl;
+    gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+
+    gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable (gl.BLEND);
+
+    this.camera = new Camera (this.canvas, options);
+    this.scroller = new Scroller (this);
+
+    this.pxW = 1 / this.canvas.attr ('width');
+    this.pxH = 1 / this.canvas.attr ('height');
+
+    this.Renderer = {
+        '*': TimeSeriesRenderer
+    };
+
+    this.sel = new SelectionBox (this);
+
+    var old_time =  new Date ().getTime ();
+    var fps_window = [];
+
+    // Ensures that the main drawing function is called in the scope of the engine
+    var draw = (function (engine) {
+        return function () {
+            engine.draw ();
+        };
+    }) (this);
+
+    this.shaders = {};
+
+    this.scene = [];
+
+    this.draw = function () {
+
+        // Update the FPS counter
+	var current_time = new Date ().getTime ();
+	var dt = (current_time - old_time) / 1000;
+	this.scroller.update (dt);
+	if (fps_window.length >= 60)
+	    fps_window.splice (0, 1);
+	fps_window.push (dt);
+	var fps = 0;
+	for (var i = 0; i < fps_window.length; i ++) {
+	    fps += fps_window[i];
+	}
+	fps /= fps_window.length;
+	$ ('#fps').text (Math.floor (1 / fps));
+	old_time = current_time;
+
+
+        // Clear the old color buffer
+	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.clearDepth (0.0);
+
+	for (var i = 0; i < this.scene.length; i ++) {
+	    this.scene[i].draw (this, dt, false);
+	}
+
+	requestAnimationFrame (draw);
+
+	this.sel.draw (this, dt);
+
+    };
+
+    $ (document).mousemove (function (event) {
+	Mouse.x = event.clientX;
+	Mouse.y = event.clientY;
+    });
+
+    // Start the animation loop
+    requestAnimationFrame (draw);
+};
+
+function TimeSeries (selector, options) {
+    BaseEngine.call (this, selector, options);
+
+    this.append = function (layer) {
+        layer.initialize (this);
+        this.scene.push (layer);
+    };
+
+    this.extents = function (width, height) {
+	this.camera.extents (width, height);
+    };
+
+    this.center = function (x, y) {
+	this.camera.position (new vect (x, y));
+    };
+
+    this.vcenter = function (v) {
+	this.center (v.x, v.y);
+    };
 };
     function Buffers (gl, initial_size) {
     var data = {};
@@ -3153,336 +3437,17 @@ var PointCollection = function (points) {
         return new LayerSelector ([]);
     };
 };
-    function FeatureRenderer (engine, layer) {
-    // A list of views of the object
-    this.views = [];
-
-    // Update all features with a style property
-    this.update = function (key) {
-        for (var i = 0; i < views.length; i ++) {
-            this.views[i].update (key);
-        }
-    };
-
-    this.view_factory = function () {
-        throw "Not Implemented";
-    };
-
-    this.create = function (feature) {
-        var view = this.view_factory (feature);
-        this.views.push (view);
-        return view;
-    };
-};
-
-function FeatureView (feature, layer) {
-    this.style_map = {};
-    
-    // Update the buffers for a specific property
-    this.update = function (key) {
-        var value = derived_style (feature, layer, key);
-        if (value === null)
-            throw "Style property does not exist";
-        this.style_map[key] (value);
-    };
-        
-    // Update all buffers for all properties
-    this.update_all = function () {
-        for (var key in this.style_map) {
-            this.update (key);
-        }
-    };
-};
-    var INITIAL_POINTS = 1024;
-
-var point_shader = null;
-var unit = rect (0, 0, 1, 1);
-
-function PointRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
-
-    if (!point_shader) {
-	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
-    }
-    
-    // A value greater than or equal to the maximum radius of each point
-    var max_rad = 10.0;
-
-    // The required buffers for rendering
-    var buffers = new Buffers (engine.gl, INITIAL_POINTS);
-    buffers.create ('vert', 2);
-    buffers.create ('unit', 2);
-    buffers.create ('stroke_width', 1);
-    buffers.create ('rad', 1);
-    buffers.create ('fill_color', 3);
-    buffers.create ('fill', 1);
-    buffers.create ('stroke_color', 3);
-    buffers.create ('stroke', 1);
-    buffers.create ('alpha', 1);
-
-    // Rendering class for an individual point
-    var PointView = function (feature) {
-        FeatureView.call (this, feature, layer);
-
-        // The start index of the buffer
-        var start;
-        
-        // The number of vertices in the buffer for this feature
-        var count;
-        
-        // Instructions on how to write to the buffers for specific styles
-        this.style_map = {
-            'fill': function (color) {
-                if (color == 'none') {
-	            buffers.repeat ('fill', [-.75], start, count);
-                }
-                else {
-	            buffers.repeat ('fill', [.75], start, count);
-	            buffers.repeat ('fill_color', color.array, start, count);                                }
-            },
-            'opacity': function (opacity) {
-	        buffers.repeat ('alpha', [opacity], start, count);
-            },
-            'radius': function (rad) {
-                if (rad > max_rad)
-                    max_rad = rad;
-                buffers.repeat ('rad', [rad], start, count);
-            },
-            'stroke': function (color) {
-                if (color == 'none') {
-	            buffers.repeat ('stroke', [-.75], start, count);
-                }
-                else {
-	            buffers.repeat ('stroke', [.75], start, count);
-	            buffers.repeat ('stroke_color', color.array, start, count);
-                }
-            },
-            'stroke-width': function (width) {
-                buffers.repeat ('stroke_width', [width], start, count);                
-            }
-        };
-        
-        var feature_geom = feature.geom;
-
-	var total_points = feature_geom.length;
-	count = 6 * total_points;
-	start = buffers.alloc (count);
-
-	$.each (feature_geom, function (index, point) {
-	    buffers.repeat ('vert', point, start + index * 6, 6);
-	    buffers.write ('unit', unit, start + index * 6, 6);
-	});
-
-        this.update_all ();
-    };
-
-    this.view_factory = function (feature) {
-        return new PointView (feature, layer);
-    };
-
-    this.draw = function () {
-	buffers.update ();
-
-	gl.useProgram (point_shader);
-        
-	point_shader.data ('screen', engine.camera.mat3);
-
-	point_shader.data ('pos', buffers.get ('vert'));
-	point_shader.data ('circle_in', buffers.get ('unit'));
-
-	point_shader.data ('color_in', buffers.get ('fill_color'));  
-	point_shader.data ('stroke_color_in', buffers.get ('stroke_color'));  
-	point_shader.data ('alpha_in', buffers.get ('alpha')); 
-
-        point_shader.data ('fill_in', buffers.get ('fill'));
-        point_shader.data ('stroke_in', buffers.get ('stroke'));
-
-	point_shader.data ('aspect', engine.canvas.width () / engine.canvas.height ());
-	point_shader.data ('pix_w', 2.0 / engine.canvas.width ());
-	point_shader.data ('rad', buffers.get ('rad'));
-
-	point_shader.data ('stroke_width_in', buffers.get ('stroke_width'));
-
-	point_shader.data ('max_rad', max_rad);
-        
-	//point_shader.data ('glyph', circle_tex);
-        
-	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
-    };
-};
-    var INITIAL_LINES = 1024;
-
-var line_shader = null;
-
-function LineRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
-    if (!line_shader) {
-	line_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/line');        
-    }
-
-    var stroke_buffers = new Buffers (engine.gl, 1024);
-    stroke_buffers.create ('vert', 2);
-    stroke_buffers.create ('norm', 2);
-    stroke_buffers.create ('color', 3);
-    //stroke_buffers.create ('unit', 2);
-    stroke_buffers.create ('alpha', 1);
-
-    var LineView = function (feature) {
-        FeatureView.call (this, feature, layer);
-        
-	var stroke_start = stroke_buffers.count ();
-        var stroke_count = 0;
-
-        this.style_map = {
-            'stroke': function (color) {
-	        stroke_buffers.repeat ('color', color.array, stroke_start, stroke_count);
-            },
-            'stroke-opacity': function (opacity) {
-	        stroke_buffers.repeat ('alpha', [opacity], stroke_start, stroke_count);
-            }
-        };
-
-	$.each (feature.geom, function (i, poly) {
-	    for (var i = 0; i < poly.length; i ++) {
-		stroke_count += poly[i].length * 6;    
-		draw_lines (stroke_buffers, poly[i]);
-	    }
-	});
-
-        this.update_all ();
-    };
-
-    this.view_factory = function (feature) {
-        return new LineView (feature, layer);
-    };
-
-    this.draw = function () {
-	stroke_buffers.update ();	
-
-	gl.useProgram (line_shader);
-	
-	line_shader.data ('screen', engine.camera.mat3);
-	line_shader.data ('pos', stroke_buffers.get ('vert'));
-	line_shader.data ('norm', stroke_buffers.get ('norm'));
-	line_shader.data ('color_in', stroke_buffers.get ('color'));
-	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
-	//line_shader.data ('circle_in', stroke_buffers.get ('unit'));
-	
-	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
-	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
-	
-	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
-    }
-
-};
-    var INITIAL_POLYGONS = 1024;
-
-var poly_shader = null;
-
-function PolygonRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
-
-    if (!poly_shader) {
-	poly_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
-    }
-
-    var line_renderer = new LineRenderer (engine, layer);
-
-    var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
-    fill_buffers.create ('vert', 2);
-    fill_buffers.create ('color', 3);
-    fill_buffers.create ('alpha', 1);
-
-    var PolygonView = function (feature) {
-        FeatureView.call (this, feature, layer);
-
-        var lines = line_renderer.create (feature);
-
-        var fill_start;
-
-        var fill_count;
-
-        this.style_map = {
-            'fill': function (color) {
-	        fill_buffers.repeat ('color', color.array, fill_start, fill_count);
-            },
-            'fill-opacity': function (opacity) {
-	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
-            }
-        };
-
-        var feature_geom = feature.geom;
-
-	var simple = [];
-	fill_count = 0;
-
-	$.each (feature_geom, function (i, poly) {
-            // Begin temp error handling code
-            var p;
-	    var count = 0;
-	    while (count < 100) {
-		try {
-                    p = triangulate_polygon (poly);
-                    break;
-		} catch (e) {
-		    count ++;
-		}
-	    }
-	    if (count == 100)
-                throw "Rendering Polygon Failed";
-            
-            // End temp error handling code
-            
-	    //var p = triangulate_polygon (poly);
-            
-	    fill_count += p.length / 2;
-	    simple.push (p);
-	});
-        
-	fill_start = fill_buffers.alloc (fill_count);
-	var current = fill_start;
-        
-	$.each (simple, function (i, p) {	
-	    var count = p.length / 2;
-	    fill_buffers.write ('vert', p, current, count);
-	    current += count;
-	});
-
-        this.update_all ();
-    };
-
-    this.view_factory = function (feature) {
-        return new PolygonView (feature, layer);
-    };
-
-    this.draw = function () {
-	fill_buffers.update ();
-	gl.useProgram (poly_shader);
-        
-	poly_shader.data ('screen', engine.camera.mat3);
-	poly_shader.data ('pos', fill_buffers.get ('vert'));
-	poly_shader.data ('color_in', fill_buffers.get ('color'));  
-	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
-	
-	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
-
-        line_renderer.draw ();
-    };
-};
     var geom_types = {
     'Point': {
         geometry: Point,
-        renderer: PointRenderer,
         collection: PointCollection
     },
     'Polygon': {
         geometry: Polygon,
-        renderer: PolygonRenderer,
         collection: PolygonCollection
     },
     'Line': {
         geometry: Line,
-        renderer: LineRenderer,
         collection: LineCollection
     }
 };
@@ -3512,24 +3477,26 @@ function Layer (prop) {
             layer_style[key] = prop.style[key];
     }
 
-    this.style = function (key, value) {
-        // Getter if only one argument passed
-        if (arguments.length < 2) {
-            if (layer_style[key] !== undefined)
-                return layer_style[key];
+    this.style3 = function (view_name, key, value) {
+        if (layer_style[view_name] === undefined)
+            layer_style[view_name] = {};
+        if (value === undefined) {
+            if (layer_style[view_name][key] !== undefined)
+                return layer_style[view_name][key];
             else
                 return null;
         }
-        // Otherwise, set property
         else {
-            layer_style[key] = value;
-            // If initialized, update rendering property
-            if (layer_initialized) {
-                for (var id in renderers) {
-                    renderers[id].update (key);
-                }
-            }
-            return this;
+            throw "Not Implemeneted";
+        }
+    };
+
+    this.style = function (arg0, arg1, arg2) {
+        if (arg0.type == 'Engine') {
+            return this.style3 (arg0.id, arg1, arg2);
+        }
+        else {
+            return this.style3 ('*', arg0, arg1);
         }
     };
 
@@ -3584,6 +3551,26 @@ function Layer (prop) {
         }
         return new LayerSelector (results);*/
     };
+
+    var layer_attr = {};
+    this.attr = function (key, value) {
+        // Getter if only one argument passed
+        if (arguments.length < 2) {
+            if (layer_attr[key] !== undefined)
+                return layer_attr[key];
+            else
+                return null;
+        }
+        // Otherwise, set property
+        else {
+            layer_attr[key] = value;
+
+            // If initialized, update rendering property
+            if (layer_initialized) {
+                throw "Not Implemented";
+            }
+        }
+    };
     
     this.append = function (feature) {
         var f = new geom_types[feature.type]['geometry'] (feature, this);
@@ -3612,7 +3599,8 @@ function Layer (prop) {
 
         // If the layer has already been initialized, initialize the feature
         if (layer_initialized) {
-            f.initialize (renderers[f.type]);
+            throw "Not Implemeneted";
+            //f.initialize (renderers[f.type]);
         }
         dirty = true;
     };
@@ -3659,18 +3647,32 @@ function Layer (prop) {
 
     // Sets up the renderers for each geometry
     this.initialize = function (engine) {
-        //Setup the renderers for the layer
-        for (var key in geom_types) {
-            renderers[key] = new geom_types[key]['renderer'] (engine, this);
+        var new_renderers = {};
+        for (var key in engine.Renderer) {
+            new_renderers[key] = new engine.Renderer[key] (engine, this);
         }
+        /* //Setup the renderers for the layer
+        for (var key in geom_types) {
+            var Renderer = engine.Renderer[key];
+            if (!Renderer)
+                Renderer = engine.Renderer['*'];
+            new_renderers[key] = new Renderer (engine, this);
+        }*/
 
         layer_initialized = true;
 
         // Initialize all existing geometry for rendering
         for (var id in features) {
             var f = features[id];
-            features[id].initialize (renderers[f.type]);
+            var renderer;
+            if (new_renderers[f.type])
+                renderer = new_renderers[f.type]
+            else
+                renderer = new_renderers['*'];
+            if (renderer)
+                features[id].initialize (renderer);
         }
+        renderers[engine.id] = new_renderers;
     };
 
     // Update the data structures
@@ -3692,7 +3694,8 @@ function Layer (prop) {
             throw "Layer has not yet been initialized";
         }
         for (var key in renderers) {
-            renderers[key].draw ();
+            for (var geom in renderers[key])
+                renderers[key][geom].draw ();
         }
         //polygon_renderer.draw ();
         //line_renderer.draw ();
@@ -3701,10 +3704,12 @@ function Layer (prop) {
     // Constructor for the basic geometry types that can be rendered
 var Feature = function (prop, layer) {
     // The set of features styles
-    var feature_style = {};
+    var feature_style = {
+        '*': {}
+    };
 
-    // A view for a specific point. Provides callbacks to update the renderer
-    var view = null;
+    // The views for a specific feature. Provides callbacks to update the renderer
+    var views = {};
 
     // Unique feature ID
     this.id = new_feature_id ();
@@ -3729,33 +3734,45 @@ var Feature = function (prop, layer) {
 
     };
 
-    // Set the properties for the renderer
+    // Initializes a view for a given renderer
     this.initialize = function (renderer) {
         // Create a location in the renderer for the feature
         view = renderer.create (this);
+
         // Update all styles in the renderer
         view.update_all ();
+
+        views[renderer.engine.id] = view; 
     };
 
-    this.compute = function (key) {
-        return derived_style (this, layer, key);
+    this.compute = function (engine, key) {
+        return derived_style (engine, this, layer, key);
     };
-    
-    this.style = function (key, value, derived) {
-        // Getter if only one argument passed
-        if (arguments.length < 2) {
-            if (feature_style[key] !== undefined)
-                return feature_style[key];
+
+    this.style3 = function (view_name, key, value) {
+        if (feature_style[view_name] === undefined)
+            feature_style[view_name] = {};
+        if (value === undefined) {
+            if (feature_style[view_name][key] !== undefined)
+                return feature_style[view_name][key];
             else
                 return null;
         }
-        // Otherwise, set property
         else {
-            feature_style[key] = value;
+            feature_style[view_name][key] = value;
 
             // If initialized, update rendering property
-            if (view)
-                view.update (key);
+            if (views[view_name])
+                views[view_name].update (key);
+        }
+    };
+    
+    this.style = function (arg0, arg1, arg2) {
+        if (arg0.type == 'Engine') {
+            return this.style3 (arg0.id, arg1, arg2);
+        }
+        else {
+            return this.style3 ('*', arg0, arg1);
         }
     };
 };
@@ -3915,7 +3932,113 @@ function PolygonCollection (polygons) {
     return new Box (min, max);
 };
 
-function draw_lines (stroke_buffers, geom) {
+
+function draw_graph_lines (stroke_buffers, geom) {
+    var count = 6 * geom.length;
+    var start = stroke_buffers.alloc (count);
+    
+    var unit = [
+        new vect (1, 1),
+        new vect (1, -1),
+        new vect (-1, -1),
+        new vect (-1, 1)
+    ];
+
+    var index = 0;
+    var next_vert = function () {
+	if (geom[index]) {
+	    var v = new vect (geom[index][0], geom[index][1]);
+	    index ++;
+	    return v;
+	}
+	else
+	    return null;
+    };
+
+    var prev = next_vert ();
+    var current = next_vert ();
+    var next = next_vert ();
+
+    var get_norm_dir = function (u1, u2) {
+        var dir = vect.dir (u1, u2);
+        return dir.rotate (PI / 2);
+    };
+
+    var intersect_parallel_lines = function (p1, p2, p3) {
+        //var norm1 = vect.sub (get_norm_dir (p1, p2), current);
+        //var norm2 = vect.sub (get_norm_dir (p2, p3), current);
+        var norm1 = get_norm_dir (p1, p2);
+        var norm2 = get_norm_dir (p2, p3);
+
+        var x1 = vect.add (p1, norm1);
+        var x2 = vect.add (p2, norm1);
+        var x3 = vect.add (p2, norm2);
+        var x4 = vect.add (p3, norm2);
+        
+        return vect.intersect2dpos (x1, x2, x3, x4);
+    };
+
+    var p_norm1 = vect.dir (prev, current).rotate (-PI / 2);
+    var p_norm2 = vect.dir (prev, current).rotate (PI / 2);
+
+    var c_norm1, c_norm2;
+
+    var write_quad = function (buffer, v1, v2, v3, v4) {
+        buffer.push (v1.x);
+        buffer.push (v1.y);
+
+        buffer.push (v2.x);
+        buffer.push (v2.y);
+
+        buffer.push (v3.x);
+        buffer.push (v3.y);
+
+        buffer.push (v1.x);
+        buffer.push (v1.y);
+
+        buffer.push (v3.x);
+        buffer.push (v3.y);
+
+        buffer.push (v4.x);
+        buffer.push (v4.y);
+    };
+
+    var vert_buffer = [];
+    var norm_buffer = [];
+    var unit_buffer = [];
+
+    while (current) {
+        if (next) {
+            c_norm1 = vect.sub (intersect_parallel_lines (prev, current, next), current);
+            c_norm2 = vect.sub (intersect_parallel_lines (next, current, prev), current);
+        }
+        else {
+            c_norm1 = vect.dir (prev, current).rotate (PI / 2);
+            c_norm2 = vect.dir (prev, current).rotate (-PI / 2);
+            // TODO: if first == last, connect them together
+        }
+        
+        write_quad (vert_buffer, prev, prev, current, current);
+        write_quad (norm_buffer, p_norm1, p_norm2, c_norm1, c_norm2);
+        write_quad (unit_buffer, unit[0], unit[1], unit[2], unit[3]);
+
+        p_norm1 = c_norm2;
+        p_norm2 = c_norm1;
+
+	prev = current;
+	current = next;
+	next = next_vert ();
+    };
+
+    stroke_buffers.write ('vert', vert_buffer, start, count);
+    stroke_buffers.write ('norm', norm_buffer, start, count);
+    stroke_buffers.write ('unit', unit_buffer, start, count);
+
+    return start;
+
+};
+
+function draw_map_lines (stroke_buffers, geom) {
     var count = 6 * geom.length;
     var start = stroke_buffers.alloc (count);
 
@@ -3929,10 +4052,20 @@ function draw_lines (stroke_buffers, geom) {
 	else
 	    return null;
     };
+
+    var unit = [
+        new vect (1, 1),
+        new vect (1, -1),
+        new vect (-1, -1),
+        new vect (-1, 1)
+    ];
     
     var vert_buffer = [];
     var norm_buffer = [];
-    //var unit_buffer = [1, 1, -1, 1, 1, -1, 0, 0, 0, 0, 0, 0];
+    var unit_buffer = []
+    var unit_buffer = [-1, 0, 1, 0, -1, -1, 1, -1, -1, -1, 1, 0];
+    //var unit_buffer = [, 0, 0, 0, 0, 0, 0];
+    //var unit_buffer = [-1, 1, -1, -1, 1, -1, -1, 1, 1, -1, 1, 1];
     var write_vert = function (buffer, v, index, invert) {
 	if (!invert) {
 	    buffer[index] = v.x;
@@ -3956,23 +4089,27 @@ function draw_lines (stroke_buffers, geom) {
     var prev = next_vert ();
     var current = next_vert ();
     var next = next_vert ();
-    var p_norm = vect.dir (current, prev).rotate (PI / 2);
+    var p_norm = vect.dir (prev, current).rotate (PI / 2);
     var c_norm;
     var write_index = start;
     
     while (current) {
 	if (next) {
-	    c_norm = vect.dir (next, prev).rotate (PI / 2);
+            var p1 = vect.dir (next, current);
+            var p2 = vect.dir (current, prev);
+            c_norm = vect.sub (p1, p2).scale (.5).normalize ();
 	}
 	else {
-	    c_norm = vect.dir (current, prev).rotate (PI /2);
+	    c_norm = vect.dir (prev, current).rotate (PI / 2);
 	}
+        //c_norm = new vect (0.0, 1.0);
+        //p_norm = new vect (0.0, 1.0);
 	cp_vert (vert_buffer, prev, current, false);
 	cp_vert (norm_buffer, p_norm, c_norm, true);
 	//cp_vert (unit_buffer, new vect (0, 1), new vect (0, 1), true);
 	stroke_buffers.write ('vert', vert_buffer, write_index, 6);
 	stroke_buffers.write ('norm', norm_buffer, write_index, 6);
-	//stroke_buffers.write ('unit', unit_buffer, write_index, 6);
+	stroke_buffers.write ('unit', unit_buffer, write_index, 6);
 	write_index += 6;
 	
 	prev = current;
@@ -4484,30 +4621,41 @@ function Grid (options) {
 	};
     };
 
-    this.style = function (key, value) {
-	if (arguments.length == 1) {
+    this.style3 = function (view_name, key, value) {
+	if (arguments.length == 2) {
 	    var result = [];
 	    $.each (elem, function (i, v) {
-		result.push (v.style (key));
+		result.push (v.style (view_name, key));
 	    });
 	    return result;
 	}
-	if ((typeof value) == 'function') {
-	    $.each (elem, function (i, v) {
-		v.style (key, value (v));
-	    });
-	}
-	else if (is_list (value)) {
-	    $.each (elem, function (i, v) {
-		v.style (key, value[i]);
-	    });	    
-	}
-	else {
-	    $.each (elem, function (i, v) {
-		v.style (key, value);
-	    });
-	}
-	return this;
+        else {
+	    if ((typeof value) == 'function') {
+	        $.each (elem, function (i, v) {
+		    v.style3 (view_name, key, value (v));
+	        });
+	    }
+	    else if (is_list (value)) {
+	        $.each (elem, function (i, v) {
+		    v.style3 (view_name, key, value[i]);
+	        });	    
+	    }
+	    else {
+	        $.each (elem, function (i, v) {
+		    v.style3 (view_name, key, value);
+	        });
+	    }
+	    return this;
+        }
+    };
+
+    this.style = function (arg0, arg1, arg2) {
+        if (arg0.type == 'Engine') {
+            return this.style3 (arg0.id, arg1, arg2);
+        }
+        else {
+            return this.style3 ('*', arg0, arg1);
+        }
     };
 };
     var raster_shader = null;
@@ -5115,6 +5263,7 @@ function TileLayer (options) {
 		    geom: [oriented],
 		    attr: feature.properties
 		});
+                //return layer;
 	    }
 	    if (feature.geometry.type == 'MultiPolygon') {
 		var rings = [];
@@ -6083,6 +6232,7 @@ function Slider (pos, size, units) {
 
     window.wiggle = {
 	Map: Map,
+        TimeSeries: TimeSeries,
 	layer: {
             Layer: Layer,
 	    Grid: Grid,

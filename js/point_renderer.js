@@ -1,14 +1,14 @@
 var INITIAL_POINTS = 1024;
 
-var point_shader = null;
 var unit = rect (0, 0, 1, 1);
 
 function PointRenderer (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
-    if (!point_shader) {
-	point_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
+    if (!(engine.shaders['point'])) {
+        engine.shaders['point'] = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
+    var point_shader = engine.shaders['point'];
     
     // A value greater than or equal to the maximum radius of each point
     var max_rad = 10.0;
@@ -27,7 +27,7 @@ function PointRenderer (engine, layer) {
 
     // Rendering class for an individual point
     var PointView = function (feature) {
-        FeatureView.call (this, feature, layer);
+        FeatureView.call (this, feature, layer, engine);
 
         // The start index of the buffer
         var start;
@@ -82,10 +82,12 @@ function PointRenderer (engine, layer) {
     };
 
     this.view_factory = function (feature) {
-        return new PointView (feature, layer);
+        return new PointView (feature);
     };
 
     this.draw = function () {
+        var gl = engine.gl;
+
 	buffers.update ();
 
 	gl.useProgram (point_shader);

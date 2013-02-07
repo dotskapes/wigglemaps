@@ -15,17 +15,19 @@
     // #include 'camera.js'
     // #include 'panner.js'
     // #include 'events.js'
+    // #include 'feature_renderer.js'
+    // #include 'point_renderer.js'
+    // #include 'line_renderer.js'
+    // #include 'polygon_renderer.js'
+    // #include 'time_renderer.js'
     // #include 'engine.js'
+    // #include 'time_engine.js'
     // #include 'buffer.js'
     // #include 'select.js'
     // #include 'trapezoid.js'
     // #include 'aabb.js'
     // #include 'range.js'
     // #include 'point.js'
-    // #include 'feature_renderer.js'
-    // #include 'point_renderer.js'
-    // #include 'line_renderer.js'
-    // #include 'polygon_renderer.js'
     // #include 'layer.js'
     // #include 'feature.js'
     // #include 'polygon.js'
@@ -48,6 +50,7 @@
 
     window.wiggle = {
 	Map: Map,
+        TimeSeries: TimeSeries,
 	layer: {
             Layer: Layer,
 	    Grid: Grid,

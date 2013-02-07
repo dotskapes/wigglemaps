@@ -1,17 +1,14 @@
 var geom_types = {
     'Point': {
         geometry: Point,
-        renderer: PointRenderer,
         collection: PointCollection
     },
     'Polygon': {
         geometry: Polygon,
-        renderer: PolygonRenderer,
         collection: PolygonCollection
     },
     'Line': {
         geometry: Line,
-        renderer: LineRenderer,
         collection: LineCollection
     }
 };
@@ -41,24 +38,26 @@ function Layer (prop) {
             layer_style[key] = prop.style[key];
     }
 
-    this.style = function (key, value) {
-        // Getter if only one argument passed
-        if (arguments.length < 2) {
-            if (layer_style[key] !== undefined)
-                return layer_style[key];
+    this.style3 = function (view_name, key, value) {
+        if (layer_style[view_name] === undefined)
+            layer_style[view_name] = {};
+        if (value === undefined) {
+            if (layer_style[view_name][key] !== undefined)
+                return layer_style[view_name][key];
             else
                 return null;
         }
-        // Otherwise, set property
         else {
-            layer_style[key] = value;
-            // If initialized, update rendering property
-            if (layer_initialized) {
-                for (var id in renderers) {
-                    renderers[id].update (key);
-                }
-            }
-            return this;
+            throw "Not Implemeneted";
+        }
+    };
+
+    this.style = function (arg0, arg1, arg2) {
+        if (arg0.type == 'Engine') {
+            return this.style3 (arg0.id, arg1, arg2);
+        }
+        else {
+            return this.style3 ('*', arg0, arg1);
         }
     };
 
@@ -113,6 +112,26 @@ function Layer (prop) {
         }
         return new LayerSelector (results);*/
     };
+
+    var layer_attr = {};
+    this.attr = function (key, value) {
+        // Getter if only one argument passed
+        if (arguments.length < 2) {
+            if (layer_attr[key] !== undefined)
+                return layer_attr[key];
+            else
+                return null;
+        }
+        // Otherwise, set property
+        else {
+            layer_attr[key] = value;
+
+            // If initialized, update rendering property
+            if (layer_initialized) {
+                throw "Not Implemented";
+            }
+        }
+    };
     
     this.append = function (feature) {
         var f = new geom_types[feature.type]['geometry'] (feature, this);
@@ -141,7 +160,8 @@ function Layer (prop) {
 
         // If the layer has already been initialized, initialize the feature
         if (layer_initialized) {
-            f.initialize (renderers[f.type]);
+            throw "Not Implemeneted";
+            //f.initialize (renderers[f.type]);
         }
         dirty = true;
     };
@@ -188,18 +208,32 @@ function Layer (prop) {
 
     // Sets up the renderers for each geometry
     this.initialize = function (engine) {
-        //Setup the renderers for the layer
-        for (var key in geom_types) {
-            renderers[key] = new geom_types[key]['renderer'] (engine, this);
+        var new_renderers = {};
+        for (var key in engine.Renderer) {
+            new_renderers[key] = new engine.Renderer[key] (engine, this);
         }
+        /* //Setup the renderers for the layer
+        for (var key in geom_types) {
+            var Renderer = engine.Renderer[key];
+            if (!Renderer)
+                Renderer = engine.Renderer['*'];
+            new_renderers[key] = new Renderer (engine, this);
+        }*/
 
         layer_initialized = true;
 
         // Initialize all existing geometry for rendering
         for (var id in features) {
             var f = features[id];
-            features[id].initialize (renderers[f.type]);
+            var renderer;
+            if (new_renderers[f.type])
+                renderer = new_renderers[f.type]
+            else
+                renderer = new_renderers['*'];
+            if (renderer)
+                features[id].initialize (renderer);
         }
+        renderers[engine.id] = new_renderers;
     };
 
     // Update the data structures
@@ -221,7 +255,8 @@ function Layer (prop) {
             throw "Layer has not yet been initialized";
         }
         for (var key in renderers) {
-            renderers[key].draw ();
+            for (var geom in renderers[key])
+                renderers[key][geom].draw ();
         }
         //polygon_renderer.draw ();
         //line_renderer.draw ();

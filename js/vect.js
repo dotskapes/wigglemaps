@@ -19,6 +19,7 @@ function vect (x, y, z) {
 	this.x *= s;
 	this.y *= s;
 	this.z *= s;
+        return this;
     };
     this.length = function () {
 	return Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
@@ -26,10 +27,11 @@ function vect (x, y, z) {
     this.normalize = function () {
 	var scale = Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
 	if (scale == 0)
-	    return;
+	    return this;
 	this.x /= scale;
 	this.y /= scale;
 	this.z /= scale;
+        return this;
     };
     this.div = function (v) {
 	this.x /= v.x;
@@ -168,5 +170,16 @@ vect.rotate = function (v, omega) {
     xp = cos * v.x - sin * v.y;
     yp = sin * v.x + cos * v.y;
     var v = new vect (xp, yp, v.z);
+    return v;
+};
+
+vect.normalize = function (c) {
+    var v = c.clone ();
+    var scale = Math.sqrt (v.x * v.x + v.y * v.y + v.z * v.z);
+    if (scale == 0)
+	return v;
+    v.x /= scale;
+    v.y /= scale;
+    v.z /= scale;
     return v;
 };

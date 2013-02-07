@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Base Layer</title>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+    wiggle.ready (function () {
+        var graph = new wiggle.TimeSeries (null, {
+            //'background': wiggle.util.icolor (255, 255, 255, 255)
+        });
+        //graph.extents (52, 6000);
+        //graph.center (26, 3000);
+        graph.extents (1, 1);
+        graph.center (.5, .5);
+        var settings = {
+            'step': '1/2/2011',
+            'ramp': [
+                wiggle.util.icolor (254, 229, 217, 255),
+                wiggle.util.icolor (252, 187, 161, 255),
+                wiggle.util.icolor (252, 146, 114, 255),
+                wiggle.util.icolor (251, 106, 74, 255),
+                wiggle.util.icolor (222, 45, 38, 255),
+                wiggle.util.icolor (165, 15, 21, 255)
+            ],
+        };
+        $.ajax ({
+	    url: 'data/2011.json',
+	    dataType: 'json',
+     	    async: false,			
+	    success: function (data) {
+                var layer = wiggle.io.GeoJSON (data);
+                var order = ['1/2/2011', '1/9/2011', '1/16/2011', '1/23/2011', '1/30/2011', '2/6/2011', '2/13/2011', '2/20/2011', '2/27/2011', '3/6/2011', '3/13/2011', '3/20/2011', '3/27/2011', '4/3/2011', '4/10/2011', '4/17/2011', '4/24/2011', '5/1/2011', '5/8/2011', '5/15/2011', '5/22/2011', '5/29/2011', '6/5/2011', '6/12/2011', '6/19/2011', '6/26/2011', '7/3/2011', '7/10/2011', '7/17/2011', '7/24/2011', '7/31/2011', '8/7/2011', '8/14/2011', '8/21/2011', '8/28/2011', '9/4/2011', '9/11/2011', '9/18/2011', '9/25/2011', '10/2/2011', '10/9/2011', '10/16/2011', '10/23/2011', '10/30/2011', '11/6/2011', '11/13/2011', '11/20/2011', '11/27/2011', '12/4/2011', '12/11/2011', '12/18/2011', '12/25/2011']
+                layer.attr ('order', order);
+
+                for (var i = 0; i < settings['ramp'].length; i ++) {
+                    layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length).style ('stroke', settings['ramp'][i]);
+                }
+
+                graph.append (layer);
+            }
+        });
+        //graph.append (time_series);
+    });
+</script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+  </body>
+</html>

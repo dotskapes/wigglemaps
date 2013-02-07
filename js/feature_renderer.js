@@ -1,4 +1,6 @@
 function FeatureRenderer (engine, layer) {
+    this.engine = engine;
+
     // A list of views of the object
     this.views = [];
 
@@ -13,19 +15,19 @@ function FeatureRenderer (engine, layer) {
         throw "Not Implemented";
     };
 
-    this.create = function (feature) {
-        var view = this.view_factory (feature);
+    this.create = function (feature, feature_geom) {
+        var view = this.view_factory (feature, feature_geom, engine);
         this.views.push (view);
         return view;
     };
 };
 
-function FeatureView (feature, layer) {
+function FeatureView (feature, layer, engine) {
     this.style_map = {};
     
     // Update the buffers for a specific property
     this.update = function (key) {
-        var value = derived_style (feature, layer, key);
+        var value = derived_style (engine, feature, layer, key);
         if (value === null)
             throw "Style property does not exist";
         this.style_map[key] (value);
