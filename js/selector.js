@@ -157,40 +157,42 @@ var LayerSelector = function (elem) {
 	};
     };
 
-    this.style3 = function (view_name, key, value) {
-	if (arguments.length == 2) {
-	    var result = [];
-	    $.each (elem, function (i, v) {
-		result.push (v.style (view_name, key));
-	    });
-	    return result;
-	}
-        else {
-	    if ((typeof value) == 'function') {
-	        $.each (elem, function (i, v) {
-		    v.style3 (view_name, key, value (v));
-	        });
-	    }
-	    else if (is_list (value)) {
-	        $.each (elem, function (i, v) {
-		    v.style3 (view_name, key, value[i]);
-	        });	    
-	    }
-	    else {
-	        $.each (elem, function (i, v) {
-		    v.style3 (view_name, key, value);
-	        });
-	    }
-	    return this;
-        }
-    };
-
     this.style = function (arg0, arg1, arg2) {
+        var map_value = function (value, i, f) {
+	    if ((typeof value) == 'function') {
+                return value (f);
+            }
+            else if (is_list (value)) {
+                return value[i];
+            }
+            else 
+                return value;
+        };
+
+        var engine, key, value;
         if (arg0.type == 'Engine') {
-            return this.style3 (arg0.id, arg1, arg2);
+            engine = arg0;
+            key = arg1;
+            value = arg2;
         }
         else {
-            return this.style3 ('*', arg0, arg1);
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+            
+        // Getter style on a layer selector is shorthand for getting the style on
+        // only the first element
+        if (value === undefined) {
+            if (elem[0])
+                return elem[0].style (engine, key)
+        }
+        else {
+            // Otherwise, set the value, depending on the type of value
+	    $.each (elem, function (i, f) {
+                f.style (engine, key, map_value (value, i, f));
+	    });
+	    return this;
         }
     };
 };

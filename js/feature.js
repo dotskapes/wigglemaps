@@ -1,15 +1,15 @@
 // Constructor for the basic geometry types that can be rendered
-var Feature = function (prop, layer) {
-    // The set of features styles
-    var feature_style = {
-        '*': {}
-    };
 
-    // The views for a specific feature. Provides callbacks to update the renderer
-    var views = {};
+var STYLE = 1;
+var ATTR = 2;
+var GEOM = 3;
+
+var Feature = function (prop, layer) {
+    var feature = this;
 
     // Unique feature ID
     this.id = new_feature_id ();
+    this.type = 'Feature';
 
     // The Geometry type
     this.type = prop.type;
@@ -19,57 +19,57 @@ var Feature = function (prop, layer) {
     // Attribute getter and setter
     this.attr = function (key, value) {
         if (arguments.length < 2) {
-            return attr[key]
+            return attr[key];
+        }
+        else {
+            throw "Not Implemented";
         }
     };
 
     // The geometry of the object
     this.geom = prop.geom;
 
-    // Retreives the geometry of the object
+    // Retreives or sets the geometry of the object
     this.geometry = function () {
 
     };
 
-    // Initializes a view for a given renderer
-    this.initialize = function (renderer) {
-        // Create a location in the renderer for the feature
-        view = renderer.create (this);
+    /*var change_callbacks = [];
 
-        // Update all styles in the renderer
-        view.update_all ();
+    var trigger_change = function (mode, key, value) {
+        $.each (change_callbacks, function (i, callback) {
+            callback (feature, mode, key, value);
+        });
+    };
 
-        views[renderer.engine.id] = view; 
+    // A function to broadcast when the geometry or feature specific styles change
+    // This is used when changes occur that views may not be aware of
+    this.change = function (change_func) {
+        change_callbacks.push (change_func);
     };
 
     this.compute = function (engine, key) {
         return derived_style (engine, this, layer, key);
-    };
+    };*/
 
-    this.style3 = function (view_name, key, value) {
-        if (feature_style[view_name] === undefined)
-            feature_style[view_name] = {};
-        if (value === undefined) {
-            if (feature_style[view_name][key] !== undefined)
-                return feature_style[view_name][key];
-            else
-                return null;
-        }
-        else {
-            feature_style[view_name][key] = value;
-
-            // If initialized, update rendering property
-            if (views[view_name])
-                views[view_name].update (key);
-        }
-    };
-    
     this.style = function (arg0, arg1, arg2) {
-        if (arg0.type == 'Engine') {
-            return this.style3 (arg0.id, arg1, arg2);
+        var engine, key, value;
+        if (!arg0 || arg0.type == 'Engine') {
+            engine = arg0;
+            key = arg1;
+            value = arg2;
         }
         else {
-            return this.style3 ('*', arg0, arg1);
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+        if (value === undefined) {
+            return StyleManager.getStyle (this, engine, key);
+        }
+        else {
+            StyleManager.setStyle (this, engine, key, value);
+            return this;
         }
     };
 };
@@ -101,22 +101,3 @@ var rand_map = (function () {
 	return new vect (xmap[key], ymap[key]);
     };
 }) ();
-
-/*function Polygon (geom, prop) {
-  if (!prop)
-  prop = {};
-  if (!prop.attr)
-  prop.attr = {};
-  if (!prop.style)
-  prop.style = {};
-
-  this.geom = geom;
-  this.attr = prop.attr;
-  this.id = null;
-
-  var layer = null;
-  var start_outline, count_outline;
-  var start_main, count_main;
-  var buffers = null;
-  
-  };*/

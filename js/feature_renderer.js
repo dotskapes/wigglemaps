@@ -17,6 +17,7 @@ function FeatureRenderer (engine, layer) {
 
     this.create = function (feature, feature_geom) {
         var view = this.view_factory (feature, feature_geom, engine);
+        view.update_all ();
         this.views.push (view);
         return view;
     };
@@ -27,7 +28,7 @@ function FeatureView (feature, layer, engine) {
     
     // Update the buffers for a specific property
     this.update = function (key) {
-        var value = derived_style (engine, feature, layer, key);
+        var value = StyleManager.derivedStyle (feature, layer, engine, key);
         if (value === null)
             throw "Style property does not exist";
         this.style_map[key] (value);

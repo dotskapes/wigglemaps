@@ -14,14 +14,11 @@ var geom_types = {
 };
 
 function Layer (prop) {
-    // The renderers for displaying geometries
-    var renderers = {};
+    this.id = new_feature_id ();
+    this.type = 'Layer';
 
     // Collections for each geometry type
     var collections = {};
-
-    // If rendering for the layer has been initialized
-    var layer_initialized = false;
 
     // The layer's style properties
     var layer_style = {};
@@ -125,11 +122,6 @@ function Layer (prop) {
         // Otherwise, set property
         else {
             layer_attr[key] = value;
-
-            // If initialized, update rendering property
-            if (layer_initialized) {
-                throw "Not Implemented";
-            }
         }
     };
     
@@ -158,11 +150,6 @@ function Layer (prop) {
             }
         };
 
-        // If the layer has already been initialized, initialize the feature
-        if (layer_initialized) {
-            throw "Not Implemeneted";
-            //f.initialize (renderers[f.type]);
-        }
         dirty = true;
     };
 
@@ -206,59 +193,14 @@ function Layer (prop) {
 	current_over = {};
     };
 
-    // Sets up the renderers for each geometry
-    this.initialize = function (engine) {
-        var new_renderers = {};
-        for (var key in engine.Renderer) {
-            new_renderers[key] = new engine.Renderer[key] (engine, this);
-        }
-        /* //Setup the renderers for the layer
-        for (var key in geom_types) {
-            var Renderer = engine.Renderer[key];
-            if (!Renderer)
-                Renderer = engine.Renderer['*'];
-            new_renderers[key] = new Renderer (engine, this);
-        }*/
-
-        layer_initialized = true;
-
-        // Initialize all existing geometry for rendering
-        for (var id in features) {
-            var f = features[id];
-            var renderer;
-            if (new_renderers[f.type])
-                renderer = new_renderers[f.type]
-            else
-                renderer = new_renderers['*'];
-            if (renderer)
-                features[id].initialize (renderer);
-        }
-        renderers[engine.id] = new_renderers;
-    };
-
     // Update the data structures
     this.update = function () {
-        var selector = this.features ();
-        for (var key in geom_types) {
-            collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
+        if (dirty) {
+            var selector = this.features ();
+            for (var key in geom_types) {
+                collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
+            }
         }
         dirty = false;
-    };
-
-    // Draw all features in the layer
-    this.draw = function (dt) {
-        if (dirty) {
-            this.update ();
-        }
-
-        if (!layer_initialized) {
-            throw "Layer has not yet been initialized";
-        }
-        for (var key in renderers) {
-            for (var geom in renderers[key])
-                renderers[key][geom].draw ();
-        }
-        //polygon_renderer.draw ();
-        //line_renderer.draw ();
     };
 };

@@ -14,6 +14,16 @@ var PI = 3.14159265;
     }
 }*/
 
+var Mouse = {
+    x: 0,
+    y: 0
+};
+
+$ (document).mousemove (function (event) {
+    Mouse.x = event.clientX;
+    Mouse.y = event.clientY;
+});
+
 function make_url (base, vars) {
     var items = [];
     for (var key in vars) {

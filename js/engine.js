@@ -1,11 +1,214 @@
+function BaseEngine (selector, options) {
+    var engine = this;
+
+    default_model (options, {
+	background: new Color (0, 0, 0, 1),
+    });
+
+    this.type = 'Engine';
+    this.id = new_feature_id ();
+
+    this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
+    var gl = null;
+
+    if (selector) {
+	$ (selector).append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+    }
+    else {
+	selector = window;
+	$ ('body').append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+	$ (window).resize (function (event) {
+            engine.resize ();
+        });
+    }
+
+    this.resize = function () {
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());	
+	gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+	this.camera.reconfigure ();
+	for (var i = 0; i < framebuffers.length; i ++) {
+	    framebuffers[i].resize ();
+	}
+    };
+
+    gl = setContext (this.canvas, DEBUG);
+    this.gl = gl;
+    gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+
+    gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable (gl.BLEND);
+
+    this.camera = new Camera (this.canvas, options);
+    this.scroller = new Scroller (this);
+
+    this.extents = function (width, height) {
+	this.camera.extents (width, height);
+    };
+
+    this.center = function (x, y) {
+	this.camera.position (new vect (x, y));
+    };
+
+    this.vcenter = function (v) {
+	this.center (v.x, v.y);
+    };
+
+    this.pxW = 1 / this.canvas.attr ('width');
+    this.pxH = 1 / this.canvas.attr ('height');
+
+    this.Renderers = {};
+
+    this.renderers = {};
+    this.views = {};
+
+    this.styles = {};
+
+    this.defaultStyle = function (f_type, key) {
+        var value;
+        if (f_type in this.styles) {
+            value = this.styles[f_type][key];
+        }
+        if (value === null || value === undefined) {
+            value = this.styles['default'][key];
+        }
+        if (value === null || value === undefined) {
+            return null;
+        }
+        else {
+            return value;
+        }
+        
+    };
+
+    this.append = function (layer) {
+        if (layer.id in this.renderers)
+            throw "Added layer to Engine twice";
+        this.renderers[layer.id] = {}
+        layer.features ().each (function (i, f) {
+            var key;
+            if (f.type in engine.Renderers) {
+                key = f.type;
+            }
+            else {
+                key = '*';
+            }
+            if (!(key in engine.renderers[layer.id])) {
+                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer);
+            }
+            var view = engine.renderers[layer.id][key].create (f);
+            view.update_all ();
+
+            if (engine.views[f.id] !== undefined)
+                throw "Cannot add a feature twice to the same Engine";
+
+            engine.views[f.id] = view;
+            
+            StyleManager.registerCallback (engine, f, function (f, key) {
+                engine.views[f.id].update (key);
+            });
+            //f.change (handle_change);
+        });
+        this.scene[layer.id] = this.renderers;
+        this.layers[layer.id] = layer;
+    };
+
+    this.style = function (object, key, value) {
+        if (this.styles[object.id] === undefined)
+            this.styles[object.id] = {};
+        if (value === undefined) {
+            if (this.styles[object.id][key] !== undefined)
+                return this.styles[object.id][key];
+            else
+                return null;
+        }
+        else {
+            this.styles[object.id][key] = value;
+
+            // If initialized, update rendering property
+            if (object.id in this.views) {
+                this.views[object.id].update (key);
+            }
+            else if (object.id in this.renderers) {
+                $.each (this.renderers[object.id], function (i, renderer) {
+                    renderer.update ();
+                });
+            }
+        } 
+    };
+
+    this.sel = new SelectionBox (this);
+
+    var old_time =  new Date ().getTime ();
+    var fps_window = [];
+
+    // Ensures that the main drawing function is called in the scope of the engine
+    var draw = (function (engine) {
+        return function () {
+            engine.draw ();
+        };
+    }) (this);
+
+    this.shaders = {};
+
+    this.scene = {};
+    this.layers = {};
+
+    this.draw = function () {
+
+        // Update the FPS counter
+	var current_time = new Date ().getTime ();
+	var dt = (current_time - old_time) / 1000;
+	this.scroller.update (dt);
+	if (fps_window.length >= 60)
+	    fps_window.splice (0, 1);
+	fps_window.push (dt);
+	var fps = 0;
+	for (var i = 0; i < fps_window.length; i ++) {
+	    fps += fps_window[i];
+	}
+	fps /= fps_window.length;
+	$ ('#fps').text (Math.floor (1 / fps));
+	old_time = current_time;
+
+
+        // Clear the old color buffer
+	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.clearDepth (0.0);
+
+        $.each (this.layers, function (i, layer) {
+            layer.update ();
+        });
+        
+        $.each (this.scene, function (i, layers) {
+            $.each (layers, function (j, renderers) {
+                $.each (renderers, function (k, renderer) {
+                    renderer.draw (dt);
+                });
+            });
+        });
+
+	requestAnimationFrame (draw);
+
+	this.sel.draw (this, dt);
+
+    };
+
+    // Start the animation loop
+    requestAnimationFrame (draw);
+};
+
+
+/*
+
 //var set_id_color, bind_event;
 
 var TILE_SERVER = 'http://eland.ecohealthalliance.org/wigglemaps';
-
-var Mouse = {
-    x: 0,
-    y: 0
-};
 
 var blur_shader = null;
 var light_shader = null;
@@ -130,72 +333,6 @@ function Engine (selector, map, options) {
 		size: 256
 	    });
 	    base = new MultiTileLayer (settings);
-	    /*base = new MultiTileLayer ([
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/512',
-		    min: new vect (-180, -90),
-		    cols: 2,
-		    rows: 1,
-		    cellsize: 180,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/1024',
-		    min: new vect (-180, -90),
-		    cols: 4,
-		    rows: 2,
-		    cellsize: 90,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/2048',
-		    min: new vect (-180, -90),
-		    cols: 8,
-		    rows: 4,
-		    cellsize: 45,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/4096',
-		    min: new vect (-180, -90),
-		    cols: 16,
-		    rows: 8,
-		    cellsize: 22.5,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/8192',
-		    min: new vect (-180, -90),
-		    cols: 32,
-		    rows: 16,
-		    cellsize: 11.25,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/16384',
-		    min: new vect (-180, -90),
-		    cols: 64,
-		    rows: 32,
-		    cellsize: 5.625,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/32768',
-		    min: new vect (-180, -90),
-		    cols: 128,
-		    rows: 64,
-		    cellsize: 2.8125,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/65536',
-		    min: new vect (-180, -90),
-		    cols: 256,
-		    rows: 128,
-		    cellsize: 1.40625,
-		    size: 256
-		}
-	    ], options);*/
 	}
 	else if (options.base == 'ne') {
 	    var settings = copy (options);
@@ -206,56 +343,6 @@ function Engine (selector, map, options) {
 		size: 256
 	    });
 	    base = new MultiTileLayer (settings);
-	    /*base = new MultiTileLayer ([
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/512',
-		    min: new vect (-180, -90),
-		    cols: 2,
-		    rows: 1,
-		    cellsize: 180,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/1024',
-		    min: new vect (-180, -90),
-		    cols: 4,
-		    rows: 2,
-		    cellsize: 90,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/2048',
-		    min: new vect (-180, -90),
-		    cols: 8,
-		    rows: 4,
-		    cellsize: 45,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/4096',
-		    min: new vect (-180, -90),
-		    cols: 16,
-		    rows: 8,
-		    cellsize: 22.5,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/8192',
-		    min: new vect (-180, -90),
-		    cols: 32,
-		    rows: 16,
-		    cellsize: 11.25,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/16384',
-		    min: new vect (-180, -90),
-		    cols: 64,
-		    rows: 32,
-		    cellsize: 5.625,
-		    size: 256
-		}
-	    ], options);*/
 	}
 	else if (options.base == 'ne1') {
 	    var settings = copy (options);
@@ -494,3 +581,4 @@ function Engine (selector, map, options) {
     requestAnimationFrame (draw);
     
 };
+*/

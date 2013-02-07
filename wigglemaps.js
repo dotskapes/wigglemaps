@@ -417,6 +417,16 @@ function handler(event) {
     }
 }*/
 
+var Mouse = {
+    x: 0,
+    y: 0
+};
+
+$ (document).mousemove (function (event) {
+    Mouse.x = event.clientX;
+    Mouse.y = event.clientY;
+});
+
 function make_url (base, vars) {
     var items = [];
     for (var key in vars) {
@@ -1002,7 +1012,111 @@ function getImage (path, callback) {
     };
     img.src = path;
 };
-    // Default style properties
+    var StyleManager = new function () {
+    // The structure of style lookup is: Engine ids, then feature and layer ids
+    // Layers and features coexist on the same level. The cascade is looked up
+    // at runtime
+    //
+    // 'default' is used for feature's styles specified sans Engine
+    // Engine's define their own default styles, which they must will registered the
+    // first time that Engine is seen
+    this.styles = {};
+
+    var addEngineDefaults = function (engine) {
+
+    };
+
+    this.derivedStyle = function (feature, layer, engine, key) {
+        // It makes no sense to talk about the derived style without an engine
+        if (!engine)
+            throw "Undefined operation";
+        var value;
+        // First precxidence is an engine's feature style
+        value = this.getStyle (feature, engine, key);
+        // Second is an orphaned feature style
+        if (value === null) {
+            value = this.getStyle (feature, null, key);
+            // Third is ane engine's layer style
+            if (value === null) {
+                value = this.getStyle (layer, engine, key);                
+                // Fourth is an  orphaned layer style
+                if (value === null) {
+                    value = this.getStyle (layer, engine, key);     
+                    // Fifth is the engine type default
+                    if (value === null) {
+                        value = engine.defaultStyle (feature.type, key);
+                    }
+                }
+            }
+        }
+        return value;
+    };
+
+    var callbacks = {};
+    this.registerCallback = function (engine, object, func) {
+        if (!callbacks[engine.id])
+            callbacks[engine.id] = {};
+        callbacks[engine.id][object.id] = func;
+    };
+
+    var lookupEngine = function (engine) {
+        if (!engine) { 
+            return 'default';
+        }
+        else {
+            return engine.id;
+        }
+    }
+
+    var initializeStyle = function (object, engine) {
+        var engine_id = lookupEngine (engine);
+        if (!(engine_id in StyleManager.styles))
+            StyleManager.styles[engine_id] = {};
+        if (!(object.id in StyleManager.styles[engine_id]))
+            StyleManager.styles[engine_id][object.id] = {};
+    };
+
+    // object is a layer or feature
+    this.getStyle = function (object, engine, key) {
+        initializeStyle (object, engine);
+        var value;
+        var engine_id = lookupEngine (engine);
+        value = this.styles[engine_id][object.id][key];
+        if (value === undefined)
+            return null;
+        else
+            return value;
+    };
+
+    // object is a layer or feature
+    this.setStyle = function (object, engine, key, value) {
+        initializeStyle (object, engine);
+        var engine_id = lookupEngine (engine);
+        this.styles[engine_id][object.id][key] = value;
+        if (engine) {
+            if (callbacks[engine.id]) {
+                if (callbacks[engine.id][object.id]) {
+                    callbacks[engine.id][object.id] (object, key);
+                }
+            }
+        }
+        else {
+            $.each (callbacks, function (i, engine_id) {
+                if (callbacks[engine_id]) {
+                    if (callbacks[engine_id][object.id]) {
+                        callbacks[engine_id][object.id] (object, key);
+                    }
+                    
+                }                
+            });
+        }
+    };
+
+} ();
+
+
+
+// Default style properties
 var default_style = {
     'Point': {
         'fill': new Color (.02, .44, .69, 1.0),
@@ -1024,7 +1138,7 @@ var default_style = {
         'stroke-width': 2.0
     }
 };
-
+/*
 // Cascading style lookup
 function derived_style (engine, feature, layer, key) {
     var value = feature.style (engine, key); 
@@ -1035,7 +1149,7 @@ function derived_style (engine, feature, layer, key) {
         }
     }
     return value;
-};
+};*/
 
 // function StyleManager () {
 //     var matches = {};
@@ -1471,6 +1585,7 @@ function derived_style (engine, feature, layer, key) {
 
     this.create = function (feature, feature_geom) {
         var view = this.view_factory (feature, feature_geom, engine);
+        view.update_all ();
         this.views.push (view);
         return view;
     };
@@ -1481,7 +1596,7 @@ function FeatureView (feature, layer, engine) {
     
     // Update the buffers for a specific property
     this.update = function (key) {
-        var value = derived_style (engine, feature, layer, key);
+        var value = StyleManager.derivedStyle (feature, layer, engine, key);
         if (value === null)
             throw "Style property does not exist";
         this.style_map[key] (value);
@@ -1825,14 +1940,217 @@ function PolygonRenderer (engine, layer) {
     };
 
 };
-    //var set_id_color, bind_event;
+    function BaseEngine (selector, options) {
+    var engine = this;
+
+    default_model (options, {
+	background: new Color (0, 0, 0, 1),
+    });
+
+    this.type = 'Engine';
+    this.id = new_feature_id ();
+
+    this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
+    var gl = null;
+
+    if (selector) {
+	$ (selector).append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+    }
+    else {
+	selector = window;
+	$ ('body').append (this.canvas);
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());
+	$ (window).resize (function (event) {
+            engine.resize ();
+        });
+    }
+
+    this.resize = function () {
+	this.canvas.attr ('width', $ (selector).width ());
+	this.canvas.attr ('height', $ (selector).height ());	
+	gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+	this.camera.reconfigure ();
+	for (var i = 0; i < framebuffers.length; i ++) {
+	    framebuffers[i].resize ();
+	}
+    };
+
+    gl = setContext (this.canvas, DEBUG);
+    this.gl = gl;
+    gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+
+    gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.enable (gl.BLEND);
+
+    this.camera = new Camera (this.canvas, options);
+    this.scroller = new Scroller (this);
+
+    this.extents = function (width, height) {
+	this.camera.extents (width, height);
+    };
+
+    this.center = function (x, y) {
+	this.camera.position (new vect (x, y));
+    };
+
+    this.vcenter = function (v) {
+	this.center (v.x, v.y);
+    };
+
+    this.pxW = 1 / this.canvas.attr ('width');
+    this.pxH = 1 / this.canvas.attr ('height');
+
+    this.Renderers = {};
+
+    this.renderers = {};
+    this.views = {};
+
+    this.styles = {};
+
+    this.defaultStyle = function (f_type, key) {
+        var value;
+        if (f_type in this.styles) {
+            value = this.styles[f_type][key];
+        }
+        if (value === null || value === undefined) {
+            value = this.styles['default'][key];
+        }
+        if (value === null || value === undefined) {
+            return null;
+        }
+        else {
+            return value;
+        }
+        
+    };
+
+    this.append = function (layer) {
+        if (layer.id in this.renderers)
+            throw "Added layer to Engine twice";
+        this.renderers[layer.id] = {}
+        layer.features ().each (function (i, f) {
+            var key;
+            if (f.type in engine.Renderers) {
+                key = f.type;
+            }
+            else {
+                key = '*';
+            }
+            if (!(key in engine.renderers[layer.id])) {
+                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer);
+            }
+            var view = engine.renderers[layer.id][key].create (f);
+            view.update_all ();
+
+            if (engine.views[f.id] !== undefined)
+                throw "Cannot add a feature twice to the same Engine";
+
+            engine.views[f.id] = view;
+            
+            StyleManager.registerCallback (engine, f, function (f, key) {
+                engine.views[f.id].update (key);
+            });
+            //f.change (handle_change);
+        });
+        this.scene[layer.id] = this.renderers;
+        this.layers[layer.id] = layer;
+    };
+
+    this.style = function (object, key, value) {
+        if (this.styles[object.id] === undefined)
+            this.styles[object.id] = {};
+        if (value === undefined) {
+            if (this.styles[object.id][key] !== undefined)
+                return this.styles[object.id][key];
+            else
+                return null;
+        }
+        else {
+            this.styles[object.id][key] = value;
+
+            // If initialized, update rendering property
+            if (object.id in this.views) {
+                this.views[object.id].update (key);
+            }
+            else if (object.id in this.renderers) {
+                $.each (this.renderers[object.id], function (i, renderer) {
+                    renderer.update ();
+                });
+            }
+        } 
+    };
+
+    this.sel = new SelectionBox (this);
+
+    var old_time =  new Date ().getTime ();
+    var fps_window = [];
+
+    // Ensures that the main drawing function is called in the scope of the engine
+    var draw = (function (engine) {
+        return function () {
+            engine.draw ();
+        };
+    }) (this);
+
+    this.shaders = {};
+
+    this.scene = {};
+    this.layers = {};
+
+    this.draw = function () {
+
+        // Update the FPS counter
+	var current_time = new Date ().getTime ();
+	var dt = (current_time - old_time) / 1000;
+	this.scroller.update (dt);
+	if (fps_window.length >= 60)
+	    fps_window.splice (0, 1);
+	fps_window.push (dt);
+	var fps = 0;
+	for (var i = 0; i < fps_window.length; i ++) {
+	    fps += fps_window[i];
+	}
+	fps /= fps_window.length;
+	$ ('#fps').text (Math.floor (1 / fps));
+	old_time = current_time;
+
+
+        // Clear the old color buffer
+	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.clearDepth (0.0);
+
+        $.each (this.layers, function (i, layer) {
+            layer.update ();
+        });
+        
+        $.each (this.scene, function (i, layers) {
+            $.each (layers, function (j, renderers) {
+                $.each (renderers, function (k, renderer) {
+                    renderer.draw (dt);
+                });
+            });
+        });
+
+	requestAnimationFrame (draw);
+
+	this.sel.draw (this, dt);
+
+    };
+
+    // Start the animation loop
+    requestAnimationFrame (draw);
+};
+
+
+/*
+
+//var set_id_color, bind_event;
 
 var TILE_SERVER = 'http://eland.ecohealthalliance.org/wigglemaps';
-
-var Mouse = {
-    x: 0,
-    y: 0
-};
 
 var blur_shader = null;
 var light_shader = null;
@@ -1957,72 +2275,6 @@ function Engine (selector, map, options) {
 		size: 256
 	    });
 	    base = new MultiTileLayer (settings);
-	    /*base = new MultiTileLayer ([
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/512',
-		    min: new vect (-180, -90),
-		    cols: 2,
-		    rows: 1,
-		    cellsize: 180,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/1024',
-		    min: new vect (-180, -90),
-		    cols: 4,
-		    rows: 2,
-		    cellsize: 90,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/2048',
-		    min: new vect (-180, -90),
-		    cols: 8,
-		    rows: 4,
-		    cellsize: 45,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/4096',
-		    min: new vect (-180, -90),
-		    cols: 16,
-		    rows: 8,
-		    cellsize: 22.5,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/8192',
-		    min: new vect (-180, -90),
-		    cols: 32,
-		    rows: 16,
-		    cellsize: 11.25,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/16384',
-		    min: new vect (-180, -90),
-		    cols: 64,
-		    rows: 32,
-		    cellsize: 5.625,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/32768',
-		    min: new vect (-180, -90),
-		    cols: 128,
-		    rows: 64,
-		    cellsize: 2.8125,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/nasa_topo_bathy/65536',
-		    min: new vect (-180, -90),
-		    cols: 256,
-		    rows: 128,
-		    cellsize: 1.40625,
-		    size: 256
-		}
-	    ], options);*/
 	}
 	else if (options.base == 'ne') {
 	    var settings = copy (options);
@@ -2033,56 +2285,6 @@ function Engine (selector, map, options) {
 		size: 256
 	    });
 	    base = new MultiTileLayer (settings);
-	    /*base = new MultiTileLayer ([
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/512',
-		    min: new vect (-180, -90),
-		    cols: 2,
-		    rows: 1,
-		    cellsize: 180,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/1024',
-		    min: new vect (-180, -90),
-		    cols: 4,
-		    rows: 2,
-		    cellsize: 90,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/2048',
-		    min: new vect (-180, -90),
-		    cols: 8,
-		    rows: 4,
-		    cellsize: 45,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/4096',
-		    min: new vect (-180, -90),
-		    cols: 16,
-		    rows: 8,
-		    cellsize: 22.5,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/8192',
-		    min: new vect (-180, -90),
-		    cols: 32,
-		    rows: 16,
-		    cellsize: 11.25,
-		    size: 256
-		},
-		{
-		    url: BASE_DIR + 'tiles/NE1_HR_LC_SR_W_DR/16384',
-		    min: new vect (-180, -90),
-		    cols: 64,
-		    rows: 32,
-		    cellsize: 5.625,
-		    size: 256
-		}
-	    ], options);*/
 	}
 	else if (options.base == 'ne1') {
 	    var settings = copy (options);
@@ -2321,137 +2523,24 @@ function Engine (selector, map, options) {
     requestAnimationFrame (draw);
     
 };
-    function BaseEngine (selector, options) {
-    default_model (options, {
-	background: new Color (0, 0, 0, 1),
-    });
-
-    this.type = 'Engine';
-    this.id = new_feature_id ();
-
-    this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
-    var gl = null;
-
-    if (selector) {
-	$ (selector).append (this.canvas);
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());
-    }
-    else {
-	selector = window;
-	$ ('body').append (this.canvas);
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());
-	$ (window).resize ((function (engine) {
-            return function (event) {
-	        this.resize.call (engine);
-            };
-        }) (this));
-    }
-
-    this.resize = function () {
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());	
-	gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
-	this.camera.reconfigure ();
-	for (var i = 0; i < framebuffers.length; i ++) {
-	    framebuffers[i].resize ();
-	}
-    };
-
-    gl = setContext (this.canvas, DEBUG);
-    this.gl = gl;
-    gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
-
-    gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.enable (gl.BLEND);
-
-    this.camera = new Camera (this.canvas, options);
-    this.scroller = new Scroller (this);
-
-    this.pxW = 1 / this.canvas.attr ('width');
-    this.pxH = 1 / this.canvas.attr ('height');
-
-    this.Renderer = {
-        '*': TimeSeriesRenderer
-    };
-
-    this.sel = new SelectionBox (this);
-
-    var old_time =  new Date ().getTime ();
-    var fps_window = [];
-
-    // Ensures that the main drawing function is called in the scope of the engine
-    var draw = (function (engine) {
-        return function () {
-            engine.draw ();
-        };
-    }) (this);
-
-    this.shaders = {};
-
-    this.scene = [];
-
-    this.draw = function () {
-
-        // Update the FPS counter
-	var current_time = new Date ().getTime ();
-	var dt = (current_time - old_time) / 1000;
-	this.scroller.update (dt);
-	if (fps_window.length >= 60)
-	    fps_window.splice (0, 1);
-	fps_window.push (dt);
-	var fps = 0;
-	for (var i = 0; i < fps_window.length; i ++) {
-	    fps += fps_window[i];
-	}
-	fps /= fps_window.length;
-	$ ('#fps').text (Math.floor (1 / fps));
-	old_time = current_time;
-
-
-        // Clear the old color buffer
-	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
-	gl.clear(gl.COLOR_BUFFER_BIT);
-	gl.clearDepth (0.0);
-
-	for (var i = 0; i < this.scene.length; i ++) {
-	    this.scene[i].draw (this, dt, false);
-	}
-
-	requestAnimationFrame (draw);
-
-	this.sel.draw (this, dt);
-
-    };
-
-    $ (document).mousemove (function (event) {
-	Mouse.x = event.clientX;
-	Mouse.y = event.clientY;
-    });
-
-    // Start the animation loop
-    requestAnimationFrame (draw);
-};
-
-function TimeSeries (selector, options) {
+*/
+    function TimeSeries (selector, options) {
+    if (options === undefined)
+        options = {};
     BaseEngine.call (this, selector, options);
 
-    this.append = function (layer) {
-        layer.initialize (this);
-        this.scene.push (layer);
+    this.styles = {
+        'default': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 2.0
+        }
     };
 
-    this.extents = function (width, height) {
-	this.camera.extents (width, height);
-    };
-
-    this.center = function (x, y) {
-	this.camera.position (new vect (x, y));
-    };
-
-    this.vcenter = function (v) {
-	this.center (v.x, v.y);
+    this.Renderers = {
+        '*': TimeSeriesRenderer
     };
 };
     function Buffers (gl, initial_size) {
@@ -3453,14 +3542,11 @@ var PointCollection = function (points) {
 };
 
 function Layer (prop) {
-    // The renderers for displaying geometries
-    var renderers = {};
+    this.id = new_feature_id ();
+    this.type = 'Layer';
 
     // Collections for each geometry type
     var collections = {};
-
-    // If rendering for the layer has been initialized
-    var layer_initialized = false;
 
     // The layer's style properties
     var layer_style = {};
@@ -3564,11 +3650,6 @@ function Layer (prop) {
         // Otherwise, set property
         else {
             layer_attr[key] = value;
-
-            // If initialized, update rendering property
-            if (layer_initialized) {
-                throw "Not Implemented";
-            }
         }
     };
     
@@ -3597,11 +3678,6 @@ function Layer (prop) {
             }
         };
 
-        // If the layer has already been initialized, initialize the feature
-        if (layer_initialized) {
-            throw "Not Implemeneted";
-            //f.initialize (renderers[f.type]);
-        }
         dirty = true;
     };
 
@@ -3645,74 +3721,29 @@ function Layer (prop) {
 	current_over = {};
     };
 
-    // Sets up the renderers for each geometry
-    this.initialize = function (engine) {
-        var new_renderers = {};
-        for (var key in engine.Renderer) {
-            new_renderers[key] = new engine.Renderer[key] (engine, this);
-        }
-        /* //Setup the renderers for the layer
-        for (var key in geom_types) {
-            var Renderer = engine.Renderer[key];
-            if (!Renderer)
-                Renderer = engine.Renderer['*'];
-            new_renderers[key] = new Renderer (engine, this);
-        }*/
-
-        layer_initialized = true;
-
-        // Initialize all existing geometry for rendering
-        for (var id in features) {
-            var f = features[id];
-            var renderer;
-            if (new_renderers[f.type])
-                renderer = new_renderers[f.type]
-            else
-                renderer = new_renderers['*'];
-            if (renderer)
-                features[id].initialize (renderer);
-        }
-        renderers[engine.id] = new_renderers;
-    };
-
     // Update the data structures
     this.update = function () {
-        var selector = this.features ();
-        for (var key in geom_types) {
-            collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
+        if (dirty) {
+            var selector = this.features ();
+            for (var key in geom_types) {
+                collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
+            }
         }
         dirty = false;
     };
-
-    // Draw all features in the layer
-    this.draw = function (dt) {
-        if (dirty) {
-            this.update ();
-        }
-
-        if (!layer_initialized) {
-            throw "Layer has not yet been initialized";
-        }
-        for (var key in renderers) {
-            for (var geom in renderers[key])
-                renderers[key][geom].draw ();
-        }
-        //polygon_renderer.draw ();
-        //line_renderer.draw ();
-    };
 };
     // Constructor for the basic geometry types that can be rendered
-var Feature = function (prop, layer) {
-    // The set of features styles
-    var feature_style = {
-        '*': {}
-    };
 
-    // The views for a specific feature. Provides callbacks to update the renderer
-    var views = {};
+var STYLE = 1;
+var ATTR = 2;
+var GEOM = 3;
+
+var Feature = function (prop, layer) {
+    var feature = this;
 
     // Unique feature ID
     this.id = new_feature_id ();
+    this.type = 'Feature';
 
     // The Geometry type
     this.type = prop.type;
@@ -3722,57 +3753,57 @@ var Feature = function (prop, layer) {
     // Attribute getter and setter
     this.attr = function (key, value) {
         if (arguments.length < 2) {
-            return attr[key]
+            return attr[key];
+        }
+        else {
+            throw "Not Implemented";
         }
     };
 
     // The geometry of the object
     this.geom = prop.geom;
 
-    // Retreives the geometry of the object
+    // Retreives or sets the geometry of the object
     this.geometry = function () {
 
     };
 
-    // Initializes a view for a given renderer
-    this.initialize = function (renderer) {
-        // Create a location in the renderer for the feature
-        view = renderer.create (this);
+    /*var change_callbacks = [];
 
-        // Update all styles in the renderer
-        view.update_all ();
+    var trigger_change = function (mode, key, value) {
+        $.each (change_callbacks, function (i, callback) {
+            callback (feature, mode, key, value);
+        });
+    };
 
-        views[renderer.engine.id] = view; 
+    // A function to broadcast when the geometry or feature specific styles change
+    // This is used when changes occur that views may not be aware of
+    this.change = function (change_func) {
+        change_callbacks.push (change_func);
     };
 
     this.compute = function (engine, key) {
         return derived_style (engine, this, layer, key);
-    };
+    };*/
 
-    this.style3 = function (view_name, key, value) {
-        if (feature_style[view_name] === undefined)
-            feature_style[view_name] = {};
-        if (value === undefined) {
-            if (feature_style[view_name][key] !== undefined)
-                return feature_style[view_name][key];
-            else
-                return null;
-        }
-        else {
-            feature_style[view_name][key] = value;
-
-            // If initialized, update rendering property
-            if (views[view_name])
-                views[view_name].update (key);
-        }
-    };
-    
     this.style = function (arg0, arg1, arg2) {
-        if (arg0.type == 'Engine') {
-            return this.style3 (arg0.id, arg1, arg2);
+        var engine, key, value;
+        if (!arg0 || arg0.type == 'Engine') {
+            engine = arg0;
+            key = arg1;
+            value = arg2;
         }
         else {
-            return this.style3 ('*', arg0, arg1);
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+        if (value === undefined) {
+            return StyleManager.getStyle (this, engine, key);
+        }
+        else {
+            StyleManager.setStyle (this, engine, key, value);
+            return this;
         }
     };
 };
@@ -3804,25 +3835,6 @@ var rand_map = (function () {
 	return new vect (xmap[key], ymap[key]);
     };
 }) ();
-
-/*function Polygon (geom, prop) {
-  if (!prop)
-  prop = {};
-  if (!prop.attr)
-  prop.attr = {};
-  if (!prop.style)
-  prop.style = {};
-
-  this.geom = geom;
-  this.attr = prop.attr;
-  this.id = null;
-
-  var layer = null;
-  var start_outline, count_outline;
-  var start_main, count_main;
-  var buffers = null;
-  
-  };*/
     function Polygon (prop, layer) {
     Feature.call (this, prop, layer);
     
@@ -4621,40 +4633,42 @@ function Grid (options) {
 	};
     };
 
-    this.style3 = function (view_name, key, value) {
-	if (arguments.length == 2) {
-	    var result = [];
-	    $.each (elem, function (i, v) {
-		result.push (v.style (view_name, key));
-	    });
-	    return result;
-	}
-        else {
-	    if ((typeof value) == 'function') {
-	        $.each (elem, function (i, v) {
-		    v.style3 (view_name, key, value (v));
-	        });
-	    }
-	    else if (is_list (value)) {
-	        $.each (elem, function (i, v) {
-		    v.style3 (view_name, key, value[i]);
-	        });	    
-	    }
-	    else {
-	        $.each (elem, function (i, v) {
-		    v.style3 (view_name, key, value);
-	        });
-	    }
-	    return this;
-        }
-    };
-
     this.style = function (arg0, arg1, arg2) {
+        var map_value = function (value, i, f) {
+	    if ((typeof value) == 'function') {
+                return value (f);
+            }
+            else if (is_list (value)) {
+                return value[i];
+            }
+            else 
+                return value;
+        };
+
+        var engine, key, value;
         if (arg0.type == 'Engine') {
-            return this.style3 (arg0.id, arg1, arg2);
+            engine = arg0;
+            key = arg1;
+            value = arg2;
         }
         else {
-            return this.style3 ('*', arg0, arg1);
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+            
+        // Getter style on a layer selector is shorthand for getting the style on
+        // only the first element
+        if (value === undefined) {
+            if (elem[0])
+                return elem[0].style (engine, key)
+        }
+        else {
+            // Otherwise, set the value, depending on the type of value
+	    $.each (elem, function (i, f) {
+                f.style (engine, key, map_value (value, i, f));
+	    });
+	    return this;
         }
     };
 };
@@ -6141,6 +6155,18 @@ function Slider (pos, size, units) {
     });
     
 };    var Map = function (selector, options) {
+    if (options === undefined)
+        options = {};
+
+    BaseEngine.call (this, selector, options);    
+
+    this.Renderers = {
+        'Point': PointRenderer,
+        'Polygon': PolygonRenderer,
+        'Line': LineRenderer,
+    };
+};
+/*var Map = function (selector, options) {
     this.center = function (x, y) {
 	engine.camera.position (new vect (x, y));
     };
@@ -6192,11 +6218,7 @@ function Slider (pos, size, units) {
 
     this.png = function () {
 	var data = engine.canvas.get (0).toDataURL ();
-	/*var form = $ ('<form method="POST" action="http://skapes.org/app_in/geodata/export.png"></form>')
-	var data_input = $ ('<input name="data" type="text" />');
-	data_input.val (data);
-	form.append (data_input);
-	form.submit ();*/
+
 	$.ajax ({
 	    url: '../server/export.png',
 	    type: 'POST',
@@ -6227,6 +6249,7 @@ function Slider (pos, size, units) {
 	}
     });
 };
+*/
 
     var ready_queue = [];
 

@@ -1,4 +1,16 @@
 var Map = function (selector, options) {
+    if (options === undefined)
+        options = {};
+
+    BaseEngine.call (this, selector, options);    
+
+    this.Renderers = {
+        'Point': PointRenderer,
+        'Polygon': PolygonRenderer,
+        'Line': LineRenderer,
+    };
+};
+/*var Map = function (selector, options) {
     this.center = function (x, y) {
 	engine.camera.position (new vect (x, y));
     };
@@ -50,11 +62,7 @@ var Map = function (selector, options) {
 
     this.png = function () {
 	var data = engine.canvas.get (0).toDataURL ();
-	/*var form = $ ('<form method="POST" action="http://skapes.org/app_in/geodata/export.png"></form>')
-	var data_input = $ ('<input name="data" type="text" />');
-	data_input.val (data);
-	form.append (data_input);
-	form.submit ();*/
+
 	$.ajax ({
 	    url: '../server/export.png',
 	    type: 'POST',
@@ -85,3 +93,4 @@ var Map = function (selector, options) {
 	}
     });
 };
+*/

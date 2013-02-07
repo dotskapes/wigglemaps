@@ -1,3 +1,107 @@
+var StyleManager = new function () {
+    // The structure of style lookup is: Engine ids, then feature and layer ids
+    // Layers and features coexist on the same level. The cascade is looked up
+    // at runtime
+    //
+    // 'default' is used for feature's styles specified sans Engine
+    // Engine's define their own default styles, which they must will registered the
+    // first time that Engine is seen
+    this.styles = {};
+
+    var addEngineDefaults = function (engine) {
+
+    };
+
+    this.derivedStyle = function (feature, layer, engine, key) {
+        // It makes no sense to talk about the derived style without an engine
+        if (!engine)
+            throw "Undefined operation";
+        var value;
+        // First precxidence is an engine's feature style
+        value = this.getStyle (feature, engine, key);
+        // Second is an orphaned feature style
+        if (value === null) {
+            value = this.getStyle (feature, null, key);
+            // Third is ane engine's layer style
+            if (value === null) {
+                value = this.getStyle (layer, engine, key);                
+                // Fourth is an  orphaned layer style
+                if (value === null) {
+                    value = this.getStyle (layer, engine, key);     
+                    // Fifth is the engine type default
+                    if (value === null) {
+                        value = engine.defaultStyle (feature.type, key);
+                    }
+                }
+            }
+        }
+        return value;
+    };
+
+    var callbacks = {};
+    this.registerCallback = function (engine, object, func) {
+        if (!callbacks[engine.id])
+            callbacks[engine.id] = {};
+        callbacks[engine.id][object.id] = func;
+    };
+
+    var lookupEngine = function (engine) {
+        if (!engine) { 
+            return 'default';
+        }
+        else {
+            return engine.id;
+        }
+    }
+
+    var initializeStyle = function (object, engine) {
+        var engine_id = lookupEngine (engine);
+        if (!(engine_id in StyleManager.styles))
+            StyleManager.styles[engine_id] = {};
+        if (!(object.id in StyleManager.styles[engine_id]))
+            StyleManager.styles[engine_id][object.id] = {};
+    };
+
+    // object is a layer or feature
+    this.getStyle = function (object, engine, key) {
+        initializeStyle (object, engine);
+        var value;
+        var engine_id = lookupEngine (engine);
+        value = this.styles[engine_id][object.id][key];
+        if (value === undefined)
+            return null;
+        else
+            return value;
+    };
+
+    // object is a layer or feature
+    this.setStyle = function (object, engine, key, value) {
+        initializeStyle (object, engine);
+        var engine_id = lookupEngine (engine);
+        this.styles[engine_id][object.id][key] = value;
+        if (engine) {
+            if (callbacks[engine.id]) {
+                if (callbacks[engine.id][object.id]) {
+                    callbacks[engine.id][object.id] (object, key);
+                }
+            }
+        }
+        else {
+            $.each (callbacks, function (i, engine_id) {
+                if (callbacks[engine_id]) {
+                    if (callbacks[engine_id][object.id]) {
+                        callbacks[engine_id][object.id] (object, key);
+                    }
+                    
+                }                
+            });
+        }
+    };
+
+} ();
+
+
+
 // Default style properties
 var default_style = {
     'Point': {
@@ -20,7 +124,7 @@ var default_style = {
         'stroke-width': 2.0
     }
 };
-
+/*
 // Cascading style lookup
 function derived_style (engine, feature, layer, key) {
     var value = feature.style (engine, key); 
@@ -31,7 +135,7 @@ function derived_style (engine, feature, layer, key) {
         }
     }
     return value;
-};
+};*/
 
 // function StyleManager () {
 //     var matches = {};

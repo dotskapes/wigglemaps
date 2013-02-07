@@ -38,8 +38,8 @@
                 for (var i = 0; i < settings['ramp'].length; i ++) {
                     layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length).style ('stroke', settings['ramp'][i]);
                 }
-
                 graph.append (layer);
+
             }
         });
         //graph.append (time_series);
