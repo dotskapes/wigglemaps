@@ -44,10 +44,13 @@ function LineRenderer (engine, layer) {
 	$.each (feature_geom, function (i, poly) {
 	    for (var i = 0; i < poly.length; i ++) {
 		stroke_count += poly[i].length * 6;
-                if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
+                if (!point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
+                    throw "Bad ring";
+                draw_graph_lines (stroke_buffers, poly[i]);
+                /*if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
                     draw_map_lines (stroke_buffers, poly[i]);
                 else
-		    draw_graph_lines (stroke_buffers, poly[i]);
+		    draw_graph_lines (stroke_buffers, poly[i]);*/
 	    }
 	});
 

@@ -61,7 +61,11 @@ function draw_graph_lines (stroke_buffers, geom) {
         var x3 = vect.add (p2, norm2);
         var x4 = vect.add (p3, norm2);
         
-        return vect.intersect2dpos (x1, x2, x3, x4);
+        var intersect = vect.intersect2dpos (x1, x2, x3, x4);
+        if (intersect == Infinity)
+            return vect.add (p2, norm1);
+        else
+            return intersect;
     };
 
     var p_norm1 = vect.dir (prev, current).rotate (-PI / 2);

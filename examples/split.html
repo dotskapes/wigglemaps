@@ -10,16 +10,6 @@
     wiggle.ready (function () {
         $ ('#container').css ('height', $ (window).height ());
 
-        var graph = new wiggle.TimeSeries ('#time', {
-            //'background': wiggle.util.icolor (255, 255, 255, 255)
-        });
-        //graph.extents (52, 6000);
-        //graph.center (26, 3000);
-        graph.extents (1, 1);
-        graph.center (.5, .5);
-
-        var map = new wiggle.Map ('#map');
-
         var settings = {
             'step': '1/2/2011',
             'ramp': [
@@ -41,11 +31,24 @@
                 order.sort ();
                 layer.attr ('order', order);
 
-                for (var i = 0; i < settings['ramp'].length; i ++) {
-                    layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length).style (graph, 'stroke', settings['ramp'][i]);
-                    layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length).style (map, 'fill', settings['ramp'][i]);
-                }
+                var graph = new wiggle.TimeSeries ('#time', {
+                    'background': wiggle.util.icolor (250, 250, 250, 255),
+                    'range': new wiggle.util.Box (new vect (0, 0), new vect (52, 6500))
+                });
+                
+                var map = new wiggle.Map ('#map');
 
+
+                for (var i = 0; i < settings['ramp'].length; i ++) {
+                    layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length)
+                        .style (graph, 'stroke', settings['ramp'][i]);
+                    
+                    layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length)
+                        .style (map, 'fill', settings['ramp'][i])
+                        .style (map, 'stroke', wiggle.util.icolor (255, 255, 255, 255))
+                        .style (map, 'fill-opacity', .9);
+                }
+                
                 graph.append (layer);
                 map.append (layer);
             }

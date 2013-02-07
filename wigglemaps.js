@@ -1022,10 +1022,6 @@ function getImage (path, callback) {
     // first time that Engine is seen
     this.styles = {};
 
-    var addEngineDefaults = function (engine) {
-
-    };
-
     this.derivedStyle = function (feature, layer, engine, key) {
         // It makes no sense to talk about the derived style without an engine
         if (!engine)
@@ -1101,13 +1097,10 @@ function getImage (path, callback) {
             }
         }
         else {
-            $.each (callbacks, function (i, engine_id) {
-                if (callbacks[engine_id]) {
-                    if (callbacks[engine_id][object.id]) {
-                        callbacks[engine_id][object.id] (object, key);
-                    }
-                    
-                }                
+            $.each (callbacks, function (engine_id, ob_callback) {
+                if (ob_callback[object.id]) {
+                    ob_callback[object.id] (object, key);
+                }
             });
         }
     };
@@ -1116,28 +1109,6 @@ function getImage (path, callback) {
 
 
 
-// Default style properties
-var default_style = {
-    'Point': {
-        'fill': new Color (.02, .44, .69, 1.0),
-        'opacity': 1.0,
-        'radius': 5.0,
-        'stroke': 'none',
-        'stroke-width': 2.0
-    },
-    'Polygon': {
-        'fill': new Color (.02, .44, .69, 1.0),
-        'fill-opacity': .5,
-        'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0,
-        'stroke-width': 2.0
-    },
-    'Line': {
-        'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0,
-        'stroke-width': 2.0
-    }
-};
 /*
 // Cascading style lookup
 function derived_style (engine, feature, layer, key) {
@@ -1774,10 +1745,13 @@ function LineRenderer (engine, layer) {
 	$.each (feature_geom, function (i, poly) {
 	    for (var i = 0; i < poly.length; i ++) {
 		stroke_count += poly[i].length * 6;
-                if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
+                if (!point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
+                    throw "Bad ring";
+                draw_graph_lines (stroke_buffers, poly[i]);
+                /*if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
                     draw_map_lines (stroke_buffers, poly[i]);
                 else
-		    draw_graph_lines (stroke_buffers, poly[i]);
+		    draw_graph_lines (stroke_buffers, poly[i]);*/
 	    }
 	});
 
@@ -1904,8 +1878,8 @@ function PolygonRenderer (engine, layer) {
         line_renderer.draw ();
     };
 };
-    function TimeSeriesRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
+    function TimeSeriesRenderer (engine, layer, options) {
+    FeatureRenderer.call (this, engine, layer, options);
     
     var line_renderer = new LineRenderer (engine, layer);
 
@@ -1923,8 +1897,9 @@ function PolygonRenderer (engine, layer) {
                     linestring = [];
                 }
             }
-            else
-                linestring.push ([i / 52, y / 6500]);
+            else {
+                linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
+            }
         }
         if (linestring.length > 0)
             linestrings.push (linestring);
@@ -2027,20 +2002,32 @@ function PolygonRenderer (engine, layer) {
         
     };
 
+    // Used as a callback when the StyleManager changes a feature
+    var update_feature = function (f, key) {
+        engine.views[f.id].update (key);
+    };
+
     this.append = function (layer) {
+        // Legacy layer drawing code
+        if ('draw' in layer) {
+            this.scene[layer.id] = layer;
+            return;
+        }
+        // An engine can only draw a layer once
         if (layer.id in this.renderers)
             throw "Added layer to Engine twice";
-        this.renderers[layer.id] = {}
+
+        this.renderers[layer.id] = {};
         layer.features ().each (function (i, f) {
             var key;
             if (f.type in engine.Renderers) {
                 key = f.type;
             }
             else {
-                key = '*';
+                key = 'default';
             }
             if (!(key in engine.renderers[layer.id])) {
-                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer);
+                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer, options);
             }
             var view = engine.renderers[layer.id][key].create (f);
             view.update_all ();
@@ -2050,12 +2037,10 @@ function PolygonRenderer (engine, layer) {
 
             engine.views[f.id] = view;
             
-            StyleManager.registerCallback (engine, f, function (f, key) {
-                engine.views[f.id].update (key);
-            });
+            StyleManager.registerCallback (engine, f, update_feature);
             //f.change (handle_change);
         });
-        this.scene[layer.id] = this.renderers;
+        //this.scene[layer.id] = this.renderers;
         this.layers[layer.id] = layer;
     };
 
@@ -2126,12 +2111,15 @@ function PolygonRenderer (engine, layer) {
         $.each (this.layers, function (i, layer) {
             layer.update ();
         });
+
+        // Legacy drawing code
+        $.each (this.scene, function (i, layer) {
+            layer.draw (engine, dt);
+        });
         
-        $.each (this.scene, function (i, layers) {
-            $.each (layers, function (j, renderers) {
-                $.each (renderers, function (k, renderer) {
+        $.each (this.renderers, function (i, layer_renderers) {
+            $.each (layer_renderers, function (j, renderer) {
                     renderer.draw (dt);
-                });
             });
         });
 
@@ -2140,6 +2128,15 @@ function PolygonRenderer (engine, layer) {
 	this.sel.draw (this, dt);
 
     };
+
+    this.enableZ = function () {
+	gl.depthFunc (gl.LEQUAL);
+	gl.enable (gl.DEPTH_TEST);
+    };
+
+    this.disableZ = function () {
+	gl.disable (gl.DEPTH_TEST);
+    }
 
     // Start the animation loop
     requestAnimationFrame (draw);
@@ -2539,8 +2536,11 @@ function Engine (selector, map, options) {
         }
     };
 
+    this.extents (1, 1);
+    this.center (.5, .5);
+
     this.Renderers = {
-        '*': TimeSeriesRenderer
+        'default': TimeSeriesRenderer
     };
 };
     function Buffers (gl, initial_size) {
@@ -3563,27 +3563,8 @@ function Layer (prop) {
             layer_style[key] = prop.style[key];
     }
 
-    this.style3 = function (view_name, key, value) {
-        if (layer_style[view_name] === undefined)
-            layer_style[view_name] = {};
-        if (value === undefined) {
-            if (layer_style[view_name][key] !== undefined)
-                return layer_style[view_name][key];
-            else
-                return null;
-        }
-        else {
-            throw "Not Implemeneted";
-        }
-    };
-
     this.style = function (arg0, arg1, arg2) {
-        if (arg0.type == 'Engine') {
-            return this.style3 (arg0.id, arg1, arg2);
-        }
-        else {
-            return this.style3 ('*', arg0, arg1);
-        }
+        throw "Not Implemented";
     };
 
     this.bounds = null;
@@ -3987,7 +3968,11 @@ function draw_graph_lines (stroke_buffers, geom) {
         var x3 = vect.add (p2, norm2);
         var x4 = vect.add (p3, norm2);
         
-        return vect.intersect2dpos (x1, x2, x3, x4);
+        var intersect = vect.intersect2dpos (x1, x2, x3, x4);
+        if (intersect == Infinity)
+            return vect.add (p2, norm1);
+        else
+            return intersect;
     };
 
     var p_norm1 = vect.dir (prev, current).rotate (-PI / 2);
@@ -4957,7 +4942,7 @@ function MultiTileLayer (options) {
 	    current.draw (engine, dt, buffers, 0, true);
 	}
 	else {	    
-	    engine.enable_z ();
+	    engine.enableZ ();
 	    //current.draw (engine, dt, z_top);
 	    var count = 0;
 	    for (var i = max_layer; i >= 0; i --) {
@@ -4965,7 +4950,7 @@ function MultiTileLayer (options) {
 		//if (layers[i].ready ())
 		//    break;
 	    }
-	    engine.disable_z ();
+	    engine.disableZ ();
 	}
 	$.each (layers, function (i, layer) {
 	    layer.cull ();
@@ -4991,9 +4976,12 @@ function TileLayer (options) {
 	    options.available.push (new Texture (gl));
     }
 
+    var engine;
+
     var gl = null;
-    var change_context = function (new_gl) {
-        gl = new_gl;
+    var change_context = function (_engine) {
+        engine = _engine;
+        gl = engine.gl;
     };
     
     var url = options.url;
@@ -5175,7 +5163,7 @@ function TileLayer (options) {
         if (!tile_shader)
 	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
 
-        change_context (engine.gl);
+        change_context (engine);
         initialized = true;
     };
 
@@ -6155,16 +6143,94 @@ function Slider (pos, size, units) {
     });
     
 };    var Map = function (selector, options) {
+    var engine = this;
+
     if (options === undefined)
         options = {};
 
     BaseEngine.call (this, selector, options);    
+
+    default_model (options, {
+        'base': 'default',
+        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps'
+    });
 
     this.Renderers = {
         'Point': PointRenderer,
         'Polygon': PolygonRenderer,
         'Line': LineRenderer,
     };
+
+    this.styles = {
+        'Point': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'opacity': 1.0,
+            'radius': 5.0,
+            'stroke': 'none',
+            'stroke-width': 2.0
+        },
+        'Polygon': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': .75
+        },
+        'Line': {
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 2.0
+        },
+        'default': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 1.0            
+        }
+    };
+
+    var base = null;
+    var setBase = function () {
+	if (options.base == 'default' || options.base == 'nasa') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: options['tile-server'] + '/tiles/nasa_topo_bathy',
+		levels: 8,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else if (options.base == 'ne') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else if (options.base == 'ne1') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: TILE_SERVER + '/tiles/NE1_HR_LC',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else {
+	    base = null;
+	}
+        if (base) {
+            base.initialize (engine);
+            engine.scene[base.id] = base;
+        };
+    };
+    setBase ();
 };
 /*var Map = function (selector, options) {
     this.center = function (x, y) {

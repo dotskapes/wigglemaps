@@ -1,5 +1,5 @@
-function TimeSeriesRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
+function TimeSeriesRenderer (engine, layer, options) {
+    FeatureRenderer.call (this, engine, layer, options);
     
     var line_renderer = new LineRenderer (engine, layer);
 
@@ -17,8 +17,9 @@ function TimeSeriesRenderer (engine, layer) {
                     linestring = [];
                 }
             }
-            else
-                linestring.push ([i / 52, y / 6500]);
+            else {
+                linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
+            }
         }
         if (linestring.length > 0)
             linestrings.push (linestring);

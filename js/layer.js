@@ -35,27 +35,8 @@ function Layer (prop) {
             layer_style[key] = prop.style[key];
     }
 
-    this.style3 = function (view_name, key, value) {
-        if (layer_style[view_name] === undefined)
-            layer_style[view_name] = {};
-        if (value === undefined) {
-            if (layer_style[view_name][key] !== undefined)
-                return layer_style[view_name][key];
-            else
-                return null;
-        }
-        else {
-            throw "Not Implemeneted";
-        }
-    };
-
     this.style = function (arg0, arg1, arg2) {
-        if (arg0.type == 'Engine') {
-            return this.style3 (arg0.id, arg1, arg2);
-        }
-        else {
-            return this.style3 ('*', arg0, arg1);
-        }
+        throw "Not Implemented";
     };
 
     this.bounds = null;

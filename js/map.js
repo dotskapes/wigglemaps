@@ -1,14 +1,92 @@
 var Map = function (selector, options) {
+    var engine = this;
+
     if (options === undefined)
         options = {};
 
     BaseEngine.call (this, selector, options);    
+
+    default_model (options, {
+        'base': 'default',
+        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps'
+    });
 
     this.Renderers = {
         'Point': PointRenderer,
         'Polygon': PolygonRenderer,
         'Line': LineRenderer,
     };
+
+    this.styles = {
+        'Point': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'opacity': 1.0,
+            'radius': 5.0,
+            'stroke': 'none',
+            'stroke-width': 2.0
+        },
+        'Polygon': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': .75
+        },
+        'Line': {
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 2.0
+        },
+        'default': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 1.0            
+        }
+    };
+
+    var base = null;
+    var setBase = function () {
+	if (options.base == 'default' || options.base == 'nasa') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: options['tile-server'] + '/tiles/nasa_topo_bathy',
+		levels: 8,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else if (options.base == 'ne') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else if (options.base == 'ne1') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: TILE_SERVER + '/tiles/NE1_HR_LC',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else {
+	    base = null;
+	}
+        if (base) {
+            base.initialize (engine);
+            engine.scene[base.id] = base;
+        };
+    };
+    setBase ();
 };
 /*var Map = function (selector, options) {
     this.center = function (x, y) {

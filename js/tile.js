@@ -97,7 +97,7 @@ function MultiTileLayer (options) {
 	    current.draw (engine, dt, buffers, 0, true);
 	}
 	else {	    
-	    engine.enable_z ();
+	    engine.enableZ ();
 	    //current.draw (engine, dt, z_top);
 	    var count = 0;
 	    for (var i = max_layer; i >= 0; i --) {
@@ -105,7 +105,7 @@ function MultiTileLayer (options) {
 		//if (layers[i].ready ())
 		//    break;
 	    }
-	    engine.disable_z ();
+	    engine.disableZ ();
 	}
 	$.each (layers, function (i, layer) {
 	    layer.cull ();
@@ -131,9 +131,12 @@ function TileLayer (options) {
 	    options.available.push (new Texture (gl));
     }
 
+    var engine;
+
     var gl = null;
-    var change_context = function (new_gl) {
-        gl = new_gl;
+    var change_context = function (_engine) {
+        engine = _engine;
+        gl = engine.gl;
     };
     
     var url = options.url;
@@ -315,7 +318,7 @@ function TileLayer (options) {
         if (!tile_shader)
 	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
 
-        change_context (engine.gl);
+        change_context (engine);
         initialized = true;
     };
 

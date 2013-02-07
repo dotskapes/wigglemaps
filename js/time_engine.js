@@ -13,7 +13,10 @@ function TimeSeries (selector, options) {
         }
     };
 
+    this.extents (1, 1);
+    this.center (.5, .5);
+
     this.Renderers = {
-        '*': TimeSeriesRenderer
+        'default': TimeSeriesRenderer
     };
 };

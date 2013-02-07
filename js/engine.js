@@ -85,20 +85,32 @@ function BaseEngine (selector, options) {
         
     };
 
+    // Used as a callback when the StyleManager changes a feature
+    var update_feature = function (f, key) {
+        engine.views[f.id].update (key);
+    };
+
     this.append = function (layer) {
+        // Legacy layer drawing code
+        if ('draw' in layer) {
+            this.scene[layer.id] = layer;
+            return;
+        }
+        // An engine can only draw a layer once
         if (layer.id in this.renderers)
             throw "Added layer to Engine twice";
-        this.renderers[layer.id] = {}
+
+        this.renderers[layer.id] = {};
         layer.features ().each (function (i, f) {
             var key;
             if (f.type in engine.Renderers) {
                 key = f.type;
             }
             else {
-                key = '*';
+                key = 'default';
             }
             if (!(key in engine.renderers[layer.id])) {
-                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer);
+                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer, options);
             }
             var view = engine.renderers[layer.id][key].create (f);
             view.update_all ();
@@ -108,12 +120,10 @@ function BaseEngine (selector, options) {
 
             engine.views[f.id] = view;
             
-            StyleManager.registerCallback (engine, f, function (f, key) {
-                engine.views[f.id].update (key);
-            });
+            StyleManager.registerCallback (engine, f, update_feature);
             //f.change (handle_change);
         });
-        this.scene[layer.id] = this.renderers;
+        //this.scene[layer.id] = this.renderers;
         this.layers[layer.id] = layer;
     };
 
@@ -184,12 +194,15 @@ function BaseEngine (selector, options) {
         $.each (this.layers, function (i, layer) {
             layer.update ();
         });
+
+        // Legacy drawing code
+        $.each (this.scene, function (i, layer) {
+            layer.draw (engine, dt);
+        });
         
-        $.each (this.scene, function (i, layers) {
-            $.each (layers, function (j, renderers) {
-                $.each (renderers, function (k, renderer) {
+        $.each (this.renderers, function (i, layer_renderers) {
+            $.each (layer_renderers, function (j, renderer) {
                     renderer.draw (dt);
-                });
             });
         });
 
@@ -198,6 +211,15 @@ function BaseEngine (selector, options) {
 	this.sel.draw (this, dt);
 
     };
+
+    this.enableZ = function () {
+	gl.depthFunc (gl.LEQUAL);
+	gl.enable (gl.DEPTH_TEST);
+    };
+
+    this.disableZ = function () {
+	gl.disable (gl.DEPTH_TEST);
+    }
 
     // Start the animation loop
     requestAnimationFrame (draw);

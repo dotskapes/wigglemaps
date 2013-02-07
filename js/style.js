@@ -8,10 +8,6 @@ var StyleManager = new function () {
     // first time that Engine is seen
     this.styles = {};
 
-    var addEngineDefaults = function (engine) {
-
-    };
-
     this.derivedStyle = function (feature, layer, engine, key) {
         // It makes no sense to talk about the derived style without an engine
         if (!engine)
@@ -87,13 +83,10 @@ var StyleManager = new function () {
             }
         }
         else {
-            $.each (callbacks, function (i, engine_id) {
-                if (callbacks[engine_id]) {
-                    if (callbacks[engine_id][object.id]) {
-                        callbacks[engine_id][object.id] (object, key);
-                    }
-                    
-                }                
+            $.each (callbacks, function (engine_id, ob_callback) {
+                if (ob_callback[object.id]) {
+                    ob_callback[object.id] (object, key);
+                }
             });
         }
     };
@@ -102,28 +95,6 @@ var StyleManager = new function () {
 
 
 
-// Default style properties
-var default_style = {
-    'Point': {
-        'fill': new Color (.02, .44, .69, 1.0),
-        'opacity': 1.0,
-        'radius': 5.0,
-        'stroke': 'none',
-        'stroke-width': 2.0
-    },
-    'Polygon': {
-        'fill': new Color (.02, .44, .69, 1.0),
-        'fill-opacity': .5,
-        'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0,
-        'stroke-width': 2.0
-    },
-    'Line': {
-        'stroke': new Color (.02, .44, .69, 1.0),
-        'stroke-opacity': 1.0,
-        'stroke-width': 2.0
-    }
-};
 /*
 // Cascading style lookup
 function derived_style (engine, feature, layer, key) {
