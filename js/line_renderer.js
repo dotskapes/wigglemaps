@@ -34,9 +34,9 @@ function draw_lines (stroke_buffers, geom) {
     var next_list = [];
     
     while (current) {
-        prev_list.push (prev || current);
+        prev_list.push (prev || vect.add (current, vect.sub (current, next)));
         current_list.push (current);
-        next_list.push (next || current);
+        next_list.push (next || vect.add (current, vect.sub (current, prev)));
 
         prev = current;
 	current = next;

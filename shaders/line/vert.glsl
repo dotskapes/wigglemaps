@@ -70,8 +70,9 @@ void main () {
   float denom = intersect_denom (s1, s2, t1, t2);
 
   vec3 inter;
-  if (abs (denom) < 1e-3)
-    inter = currentScreen + norm1;
+  // I don't know what the tolerance should be, but there is a singularity at 0.0...
+  if (abs (denom) < 10.0)
+    inter = s2;
   else
     inter = intersect (s1, s2, t1, t2, denom);
 
