@@ -31,7 +31,9 @@ function FeatureView (feature, layer, engine) {
         var value = StyleManager.derivedStyle (feature, layer, engine, key);
         if (value === null)
             throw "Style property does not exist";
-        this.style_map[key] (value);
+        if (key in this.style_map) {
+            this.style_map[key] (value);
+        }
     };
         
     // Update all buffers for all properties

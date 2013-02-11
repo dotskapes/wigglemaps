@@ -20,6 +20,8 @@
     // #include 'line_renderer.js'
     // #include 'polygon_renderer.js'
     // #include 'time_renderer.js'
+    // #include 'query/Querier.js'
+    // #include 'query/PointQuerier.js'
     // #include 'engine.js'
     // #include 'time_engine.js'
     // #include 'buffer.js'

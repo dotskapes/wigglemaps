@@ -1,4 +1,49 @@
-function EventManager (engine) {
+var EventManager = new function () {
+    this.listeners = {};
+
+    this.manage = function (object) {
+        this.listeners[object.id] = {
+            parents: [],
+            callbacks: {}
+        };
+    };
+
+    this.linkParent = function (parent, object) {
+        this.listeners[object.id].parents.push (parent.id);
+    };
+
+    this.addEventHandler = function (object, eventType, handler) {
+        if (!(this.listeners[object.id].callbacks[eventType]))
+            this.listeners[object.id].callbacks[eventType] = [];
+        this.listeners[object.id].callbacks[eventType].push (handler);
+    };
+
+    // Maybe these low level events should be handler by the engine itself?
+    // The engine knows how to search layers for individual features
+    this.moveMouse = function (engine) {
+
+    };
+    this.clickMouse = function (engine) {
+
+    };
+    this.mouseDown = function (engine) {
+
+    };
+    this.trigger = function (object, eventType, args) {
+        if (object.id in this.listeners) {
+            if (eventType in this.listeners[object.id].callbacks) {
+                $.each (this.listeners[object.id].callbacks[eventType], function (i, handler) {
+                    handler.apply (object, args);
+                });
+            }
+            $.each (this.listeners[object.id].parents, function (i, parent) {
+                EventManager.trigger (parent, eventType, args);
+            });
+        }
+    };
+
+} ();
+/*function EventManager (engine) {
     var events = {
 	'mouseover': {},
 	'mouseout': {},
@@ -27,14 +72,6 @@ function EventManager (engine) {
 	    g: g,
 	    b: b
 	};
-	/*for (var i = feature.start; i < feature.start + feature.count; i ++) {
-	    array[i * 4] = r / 255;
-	    array[i * 4 + 1] = g / 255;
-	    array[i * 4 + 2] = b / 255;
-	    array[i * 4 + 3] = 1.0;
-	}
-	var key = r + ',' + g + ',' + b;
-	return key;*/
     };
 
     this.register = function (layer, f) {
@@ -122,3 +159,4 @@ function EventManager (engine) {
 	}
     };
 };
+*/

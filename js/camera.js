@@ -1,8 +1,89 @@
 function Camera (canvas, options) {
-    var ratio = canvas.width () / canvas.height (); 
+    var camera = this;
+    if (!options)
+        options = {};
 
+    if (options.size && options.center) {
+        var world_half = options.size.clone ().scale (.5);
+        options.min = vect.sub (options.center, world_half);
+        options.max = vect.add (options.center, world_half);
+    }
+
+    default_model (options, {
+        min: new vect (0, 0),
+        max: new vect (1, 1)
+    });
+
+    var world_max = options.max;
+    var world_min = options.min;
+
+    this.worldToPx = new Float32Array (9);
+    this.pxToScreen = new Float32Array (9);
+    this.worldToScreen = new Float32Array (9);
+
+    // Legacy access for backwards compatibility
+    this.mat3 = this.worldToScreen;
+
+    this.reconfigure = function () {
+        var width = canvas.width ();
+        var height = canvas.height ();
+        var world_range = vect.sub (world_max, world_min);
+
+        var setupWorld = function () {
+            camera.worldToPx[0] = width / world_range.x;
+            camera.worldToPx[1] = 0;
+            camera.worldToPx[2] = 0;
+            camera.worldToPx[3] = 0;
+            camera.worldToPx[4] = height / world_range.y;
+            camera.worldToPx[5] = 0;
+            camera.worldToPx[6] = -(world_min.x * width) / world_range.x;
+            camera.worldToPx[7] = -(world_min.y * height) / world_range.y;
+            camera.worldToPx[8] = 1;
+        };
+
+        var setupPx = function () {
+            camera.pxToScreen[0] = 2.0 / width;
+            camera.pxToScreen[1] = 0;
+            camera.pxToScreen[2] = 0;
+            camera.pxToScreen[3] = 0;
+            camera.pxToScreen[4] = 2.0 / height;
+            camera.pxToScreen[5] = 0;
+            camera.pxToScreen[6] = -1;
+            camera.pxToScreen[7] = -1;
+            camera.pxToScreen[8] = 1;
+        };
+
+        var setupProj = function () {
+            camera.worldToScreen[0] = 2.0 / world_range.x;
+            camera.worldToScreen[1] = 0;
+            camera.worldToScreen[2] = 0;
+            camera.worldToScreen[3] = 0;
+            camera.worldToScreen[4] = 2.0 / world_range.y;
+            camera.worldToScreen[5] = 0;
+            camera.worldToScreen[6] = -world_min.x / world_range.x - 1;
+            camera.worldToScreen[7] = -world_min.y / world_range.y - 1;
+            camera.worldToScreen[8] = 1;
+        };
+
+        setupWorld ();
+        setupPx ();
+        setupProj ();
+
+    };
+
+    this.reconfigure ();
+
+    canvas.resize (function(event) {
+        camera.reconfigure ();
+    });
+};
+
+/*function Camera (canvas, options) {
     if (!options)
 	options = {};
+
+    var ratio = canvas.width () / canvas.height (); 
+
     if (!('center' in options))
 	options.center = new vect (0, 0);
     if (!('extents' in options))
@@ -102,4 +183,4 @@ function Camera (canvas, options) {
 	this.mat3[4] *= ratio;
 	this.position (p);
     };
-};
+};*/

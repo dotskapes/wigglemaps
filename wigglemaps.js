@@ -1048,12 +1048,12 @@ function getImage (path, callback) {
         return value;
     };
 
-    var callbacks = {};
+    /*var callbacks = {};
     this.registerCallback = function (engine, object, func) {
         if (!callbacks[engine.id])
             callbacks[engine.id] = {};
         callbacks[engine.id][object.id] = func;
-    };
+    };*/
 
     var lookupEngine = function (engine) {
         if (!engine) { 
@@ -1089,7 +1089,8 @@ function getImage (path, callback) {
         initializeStyle (object, engine);
         var engine_id = lookupEngine (engine);
         this.styles[engine_id][object.id][key] = value;
-        if (engine) {
+        EventManager.trigger (object, 'style', [object, key]);
+        /*if (engine) {
             if (callbacks[engine.id]) {
                 if (callbacks[engine.id][object.id]) {
                     callbacks[engine.id][object.id] (object, key);
@@ -1102,7 +1103,7 @@ function getImage (path, callback) {
                     ob_callback[object.id] (object, key);
                 }
             });
-        }
+        }*/
     };
 
 } ();
@@ -1236,10 +1237,91 @@ function derived_style (engine, feature, layer, key) {
 //     };
 // };
     function Camera (canvas, options) {
-    var ratio = canvas.width () / canvas.height (); 
+    var camera = this;
+    if (!options)
+        options = {};
 
+    if (options.size && options.center) {
+        var world_half = options.size.clone ().scale (.5);
+        options.min = vect.sub (options.center, world_half);
+        options.max = vect.add (options.center, world_half);
+    }
+
+    default_model (options, {
+        min: new vect (0, 0),
+        max: new vect (1, 1)
+    });
+
+    var world_max = options.max;
+    var world_min = options.min;
+
+    this.worldToPx = new Float32Array (9);
+    this.pxToScreen = new Float32Array (9);
+    this.worldToScreen = new Float32Array (9);
+
+    // Legacy access for backwards compatibility
+    this.mat3 = this.worldToScreen;
+
+    this.reconfigure = function () {
+        var width = canvas.width ();
+        var height = canvas.height ();
+        var world_range = vect.sub (world_max, world_min);
+
+        var setupWorld = function () {
+            camera.worldToPx[0] = width / world_range.x;
+            camera.worldToPx[1] = 0;
+            camera.worldToPx[2] = 0;
+            camera.worldToPx[3] = 0;
+            camera.worldToPx[4] = height / world_range.y;
+            camera.worldToPx[5] = 0;
+            camera.worldToPx[6] = -(world_min.x * width) / world_range.x;
+            camera.worldToPx[7] = -(world_min.y * height) / world_range.y;
+            camera.worldToPx[8] = 1;
+        };
+
+        var setupPx = function () {
+            camera.pxToScreen[0] = 2.0 / width;
+            camera.pxToScreen[1] = 0;
+            camera.pxToScreen[2] = 0;
+            camera.pxToScreen[3] = 0;
+            camera.pxToScreen[4] = 2.0 / height;
+            camera.pxToScreen[5] = 0;
+            camera.pxToScreen[6] = -1;
+            camera.pxToScreen[7] = -1;
+            camera.pxToScreen[8] = 1;
+        };
+
+        var setupProj = function () {
+            camera.worldToScreen[0] = 2.0 / world_range.x;
+            camera.worldToScreen[1] = 0;
+            camera.worldToScreen[2] = 0;
+            camera.worldToScreen[3] = 0;
+            camera.worldToScreen[4] = 2.0 / world_range.y;
+            camera.worldToScreen[5] = 0;
+            camera.worldToScreen[6] = -world_min.x / world_range.x - 1;
+            camera.worldToScreen[7] = -world_min.y / world_range.y - 1;
+            camera.worldToScreen[8] = 1;
+        };
+
+        setupWorld ();
+        setupPx ();
+        setupProj ();
+
+    };
+
+    this.reconfigure ();
+
+    canvas.resize (function(event) {
+        camera.reconfigure ();
+    });
+};
+
+/*function Camera (canvas, options) {
     if (!options)
 	options = {};
+
+    var ratio = canvas.width () / canvas.height (); 
+
     if (!('center' in options))
 	options.center = new vect (0, 0);
     if (!('extents' in options))
@@ -1339,7 +1421,7 @@ function derived_style (engine, feature, layer, key) {
 	this.mat3[4] *= ratio;
 	this.position (p);
     };
-};
+};*/
     function Scroller (engine) {
     var drag = false;
     var start = new vect (0, 0);
@@ -1414,7 +1496,52 @@ function derived_style (engine, feature, layer, key) {
             }
 	}
     };
-};    function EventManager (engine) {
+};    var EventManager = new function () {
+    this.listeners = {};
+
+    this.manage = function (object) {
+        this.listeners[object.id] = {
+            parents: [],
+            callbacks: {}
+        };
+    };
+
+    this.linkParent = function (parent, object) {
+        this.listeners[object.id].parents.push (parent.id);
+    };
+
+    this.addEventHandler = function (object, eventType, handler) {
+        if (!(this.listeners[object.id].callbacks[eventType]))
+            this.listeners[object.id].callbacks[eventType] = [];
+        this.listeners[object.id].callbacks[eventType].push (handler);
+    };
+
+    // Maybe these low level events should be handler by the engine itself?
+    // The engine knows how to search layers for individual features
+    this.moveMouse = function (engine) {
+
+    };
+    this.clickMouse = function (engine) {
+
+    };
+    this.mouseDown = function (engine) {
+
+    };
+    this.trigger = function (object, eventType, args) {
+        if (object.id in this.listeners) {
+            if (eventType in this.listeners[object.id].callbacks) {
+                $.each (this.listeners[object.id].callbacks[eventType], function (i, handler) {
+                    handler.apply (object, args);
+                });
+            }
+            $.each (this.listeners[object.id].parents, function (i, parent) {
+                EventManager.trigger (parent, eventType, args);
+            });
+        }
+    };
+
+} ();
+/*function EventManager (engine) {
     var events = {
 	'mouseover': {},
 	'mouseout': {},
@@ -1443,14 +1570,6 @@ function derived_style (engine, feature, layer, key) {
 	    g: g,
 	    b: b
 	};
-	/*for (var i = feature.start; i < feature.start + feature.count; i ++) {
-	    array[i * 4] = r / 255;
-	    array[i * 4 + 1] = g / 255;
-	    array[i * 4 + 2] = b / 255;
-	    array[i * 4 + 3] = 1.0;
-	}
-	var key = r + ',' + g + ',' + b;
-	return key;*/
     };
 
     this.register = function (layer, f) {
@@ -1537,7 +1656,9 @@ function derived_style (engine, feature, layer, key) {
 	    }
 	}
     };
-};    function FeatureRenderer (engine, layer) {
+};
+*/
+    function FeatureRenderer (engine, layer) {
     this.engine = engine;
 
     // A list of views of the object
@@ -1570,7 +1691,9 @@ function FeatureView (feature, layer, engine) {
         var value = StyleManager.derivedStyle (feature, layer, engine, key);
         if (value === null)
             throw "Style property does not exist";
-        this.style_map[key] (value);
+        if (key in this.style_map) {
+            this.style_map[key] (value);
+        }
     };
         
     // Update all buffers for all properties
@@ -1745,8 +1868,6 @@ function LineRenderer (engine, layer) {
 	$.each (feature_geom, function (i, poly) {
 	    for (var i = 0; i < poly.length; i ++) {
 		stroke_count += poly[i].length * 6;
-                if (!point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
-                    throw "Bad ring";
                 draw_graph_lines (stroke_buffers, poly[i]);
                 /*if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
                     draw_map_lines (stroke_buffers, poly[i]);
@@ -1768,7 +1889,8 @@ function LineRenderer (engine, layer) {
 
 	gl.useProgram (line_shader);
 	
-	line_shader.data ('screen', engine.camera.mat3);
+	line_shader.data ('world', engine.camera.worldToPx);
+	line_shader.data ('screen', engine.camera.pxToScreen);
 	line_shader.data ('pos', stroke_buffers.get ('vert'));
 	line_shader.data ('norm', stroke_buffers.get ('norm'));
 	line_shader.data ('color_in', stroke_buffers.get ('color'));
@@ -1898,7 +2020,8 @@ function PolygonRenderer (engine, layer) {
                 }
             }
             else {
-                linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
+                //linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
+                linestring.push ([i, y]);
             }
         }
         if (linestring.length > 0)
@@ -1914,6 +2037,82 @@ function PolygonRenderer (engine, layer) {
         line_renderer.draw ();
     };
 
+};
+    var Querier = function (engine, layer) {
+    queryTypes = {
+        'Point': PointQuerier,
+        //'Polygon': PolygonQuerier,
+        //'Line': lineQuerier
+    };
+
+    var queriers = {};
+    $.each (queryTypes, function (geomType, GeomQuerier) {
+        queriers[geomType] = new GeomQuerier (engine, layer, layer.features ().type (geomType));
+    });
+
+     this.boxSearch = function (box) {
+        var results = new LayerSelector ([]);
+        for (var key in queriers) {
+            var search_results = queriers[key].boxSearch (box);
+            results = results.join (search_results);
+        }
+        return results;
+    };
+
+    this.pointSearch = function (engine, p) {
+        var results = new LayerSelector ([]);
+        for (var key in queriers) {
+            var search_results = queriers[key].pointSearch (p);
+            results = results.join (search_results);
+        }
+        return results;
+    };
+};
+    // A controller for point specific operations, particualrly to perform geometric queries
+// on points faster. 
+var PointQuerier = function (engine, layer, points) {
+    var search_points = [];
+    var max_radius = 0;
+    points.each (function (i, point) {
+        var radius = StyleManager.derivedStyle (point, layer, engine, 'radius');
+        if (radius > max_radius)
+            max_radius = radius;
+        $.each (point.geom, function (index, pair) {
+            search_points.push ({
+                x: pair[0],
+                y: pair[1],
+                ref: point
+            });
+        });
+    });
+    var range_tree = new RangeTree (search_points);
+
+    this.boxSearch = function (box) {
+        var elem = range_tree.search (box);
+	var results = [];
+	$.each (elem, function (index, point) {
+	    results.push (point.ref);
+	});
+	return new LayerSelector (results);
+    }
+
+    this.pointSearch = function (s) {
+        var min = vect.add (s, new vect (-max_radius, max_radius));
+        var max = vect.add (s, new vect (max_radius, -max_radius));
+        var box = new Box (engine.camera.project (min), engine.camera.project (max));
+        var elem = range_tree.search (box);
+        for (var i = 0; i < elem.length; i ++) {
+            var point = elem[i].ref;
+
+            var rad = StyleManager.derivedStyle (point, layer, engine, 'radius');
+            for (var i = 0; i < point.geom.length; i ++) {
+                var v = engine.camera.screen (geom2vect (point.geom[i]));
+                if (vect.dist (v, s) < rad)
+                    return new LayerSelector ([point.ref]);
+            }
+	}
+        return new LayerSelector ([]);
+    };
 };
     function BaseEngine (selector, options) {
     var engine = this;
@@ -2007,6 +2206,8 @@ function PolygonRenderer (engine, layer) {
         engine.views[f.id].update (key);
     };
 
+    EventManager.manage (this);
+
     this.append = function (layer) {
         // Legacy layer drawing code
         if ('draw' in layer) {
@@ -2016,6 +2217,9 @@ function PolygonRenderer (engine, layer) {
         // An engine can only draw a layer once
         if (layer.id in this.renderers)
             throw "Added layer to Engine twice";
+
+        EventManager.manage (layer);
+        EventManager.linkParent (this, layer);
 
         this.renderers[layer.id] = {};
         layer.features ().each (function (i, f) {
@@ -2037,11 +2241,18 @@ function PolygonRenderer (engine, layer) {
 
             engine.views[f.id] = view;
             
-            StyleManager.registerCallback (engine, f, update_feature);
+            //StyleManager.registerCallback (engine, f, update_feature);
+            EventManager.manage (f);
+            EventManager.linkParent (layer, f);
+            EventManager.addEventHandler (f, 'style', update_feature);
             //f.change (handle_change);
         });
         //this.scene[layer.id] = this.renderers;
         this.layers[layer.id] = layer;
+        this.queriers[layer.id] = new Querier (this, layer);
+
+        // Temporary for dev: Make the layer immutable
+        layer.fixed = true;
     };
 
     this.style = function (object, key, value) {
@@ -2084,6 +2295,7 @@ function PolygonRenderer (engine, layer) {
 
     this.scene = {};
     this.layers = {};
+    this.queriers = {};
 
     this.draw = function () {
 
@@ -2107,10 +2319,6 @@ function PolygonRenderer (engine, layer) {
 	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
-
-        $.each (this.layers, function (i, layer) {
-            layer.update ();
-        });
 
         // Legacy drawing code
         $.each (this.scene, function (i, layer) {
@@ -2525,6 +2733,10 @@ function Engine (selector, map, options) {
     if (options === undefined)
         options = {};
     BaseEngine.call (this, selector, options);
+   
+    default_model (options, {
+        'range': new Box (new vect (0, 0), new vect (1, 1))
+    });
 
     this.styles = {
         'default': {
@@ -2532,12 +2744,12 @@ function Engine (selector, map, options) {
             'fill-opacity': .5,
             'stroke': new Color (.02, .44, .69, 1.0),
             'stroke-opacity': 1.0,
-            'stroke-width': 2.0
+            'stroke-width': 2.0,
         }
     };
 
-    this.extents (1, 1);
-    this.center (.5, .5);
+    //this.extents (1, 1);
+    //this.center (.5, .5);
 
     this.Renderers = {
         'default': TimeSeriesRenderer
@@ -3470,7 +3682,8 @@ var Point = function (prop, layer) {
     this.map_contains = function (engine, p) {
         //var s = engine.camera.screen (p);
         var s = p;
-        var rad = this.compute ('radius');
+        //var rad = this.compute ('radius');
+        var rad = StyleManager.derivedStyle (this, layer, engine, 'radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
             if (vect.dist (v, s) < rad)
@@ -3480,14 +3693,12 @@ var Point = function (prop, layer) {
     };
 };
 
-// Contains point specific operations, particualrly to perform geometric queries
-// on points faster. This datatype is immutable. Points cannot be added or removed 
-// from it.
+
 var PointCollection = function (points) {
     var search_points = [];
     var max_radius = 0;
     $.each (points, function (key, point) {
-        var radius = point.compute ('radius');
+        var radius = StyleManager.derivedStyle (this, layer, engine, 'radius');
         if (radius > max_radius)
             max_radius = radius;
         $.each (point.geom, function (index, pair) {
@@ -3527,26 +3738,17 @@ var PointCollection = function (points) {
     };
 };
     var geom_types = {
-    'Point': {
-        geometry: Point,
-        collection: PointCollection
-    },
-    'Polygon': {
-        geometry: Polygon,
-        collection: PolygonCollection
-    },
-    'Line': {
-        geometry: Line,
-        collection: LineCollection
-    }
+    'Point': Point,
+    'Polygon': Polygon,
+    'Line': Line
 };
 
-function Layer (prop) {
+function Layer (options) {
+    if (!options)
+        options = {};
+
     this.id = new_feature_id ();
     this.type = 'Layer';
-
-    // Collections for each geometry type
-    var collections = {};
 
     // The layer's style properties
     var layer_style = {};
@@ -3554,13 +3756,9 @@ function Layer (prop) {
     // Lookup for each geometry type
     var features = {};
 
-    // If new geometry collections need to be instantiated
-    var dirty = false;
-
     // Copy over the defined styles
-    if (prop.style) {
-        for (var key in prop.style)
-            layer_style[key] = prop.style[key];
+    if (options.style) {
+        throw "Not Implemeneted";
     }
 
     this.style = function (arg0, arg1, arg2) {
@@ -3587,38 +3785,6 @@ function Layer (prop) {
         return results;
     };
 
-    // Geometry queries
-
-    this.search = function (box) {
-        if (dirty) {
-            this.update ();
-        }
-        var results = new LayerSelector ([]);
-        for (var key in collections) {
-            var search_results = collections[key].search (box);
-            results = results.join (search_results);
-        }
-        return results;
-    };
-    this.map_contains = function (engine, p) {
-        if (dirty) {
-            this.update ();
-        }
-        var results = new LayerSelector ([]);
-        for (var key in collections) {
-            var search_results = collections[key].map_contains (engine, p);
-            results = results.join (search_results);
-        }
-        return results;
-	/*var results = [];
-	for (var i in features) {
-	    var feature = features[i];
-            if (feature.contains (engine, p))
-                results.push (feature);
-        }
-        return new LayerSelector (results);*/
-    };
-
     var layer_attr = {};
     this.attr = function (key, value) {
         // Getter if only one argument passed
@@ -3633,9 +3799,13 @@ function Layer (prop) {
             layer_attr[key] = value;
         }
     };
+
+    this.fixed = false;
     
     this.append = function (feature) {
-        var f = new geom_types[feature.type]['geometry'] (feature, this);
+        if (this.fixed)
+            throw "Layers are currently immutable once added to a map";
+        var f = new geom_types[feature.type] (feature, this);
         features[f.id] = f;
 
         // Update the layer bounding box
@@ -3700,17 +3870,6 @@ function Layer (prop) {
 		out_func (current_over[key]);
 	}
 	current_over = {};
-    };
-
-    // Update the data structures
-    this.update = function () {
-        if (dirty) {
-            var selector = this.features ();
-            for (var key in geom_types) {
-                collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
-            }
-        }
-        dirty = false;
     };
 };
     // Constructor for the basic geometry types that can be rendered
@@ -5930,6 +6089,7 @@ var load_shp = function (data, indices, options) {
 	    var y = ldbl64 (data, record_offset + 12);
 	    
 	    points.push ({
+                type: 'Point',
 		attr: {},
 		geom: [[x, y]]
 	    });
@@ -5955,6 +6115,7 @@ var load_shp = function (data, indices, options) {
 		rings.push (ring);
 	    }
 	    polys.push ({
+                type: 'Polygon',
 		attr: {},
 		geom: [rings]
 	    });
@@ -5975,28 +6136,18 @@ var load_shp = function (data, indices, options) {
     }
 
     if (points.length > 0) {
-	var p_layer = new PointLayer (points.length);
+	var layer = new Layer (options);
 	$.each (points, function (i, v) {
-	    p_layer.append (v);
+	    layer.append (v);
 	});
-	return p_layer;
+	return layer;
     }
     else if (polys.length > 0) {
-	var p_layer = new PolygonLayer (options);
+	var layer = new Layer (options);
 	$.each (polys, function (i, v) {
-	    var count = 0;
-	    while (count < 100) {
-		try {
-		    p_layer.append (v);
-		    count = 101;
-		} catch (e) {
-		    count ++;
-		}
-	    }
-	    if (count == 100)
-		console.log ('rendering polygon failed')
+	    layer.append (v);
 	});
-	return p_layer;	
+	return layer;	
     }
 };
     var basic_shader = null;

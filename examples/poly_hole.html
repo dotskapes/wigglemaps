@@ -14,7 +14,7 @@
 	var map = new wiggle.Map ();
 	map.center (x0, y0);
 	
-	var poly = new wiggle.layer.PolygonLayer ();
+	var poly = new wiggle.layer.Layer ();
 
 	var outer = [];
 	var inner = [];
@@ -35,20 +35,14 @@
 	    inner.push ([x0 + x * 5, y0 + y * 5]);
 	}
 
-	var okay = false;
-	while (!okay) {
-	    try {
-		poly.append ({
-		    geom: [[
-			outer,
-			inner
-		    ]]
-		});
-		okay = true;
-	    }
-	    catch (e) {
-	    }
-	}
+        
+	poly.append ({
+	    geom: [[
+		outer,
+		inner
+	    ]],
+            type: 'Polygon'
+	});
 	
 	map.append (poly);
     });

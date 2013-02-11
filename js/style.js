@@ -34,12 +34,12 @@ var StyleManager = new function () {
         return value;
     };
 
-    var callbacks = {};
+    /*var callbacks = {};
     this.registerCallback = function (engine, object, func) {
         if (!callbacks[engine.id])
             callbacks[engine.id] = {};
         callbacks[engine.id][object.id] = func;
-    };
+    };*/
 
     var lookupEngine = function (engine) {
         if (!engine) { 
@@ -75,7 +75,8 @@ var StyleManager = new function () {
         initializeStyle (object, engine);
         var engine_id = lookupEngine (engine);
         this.styles[engine_id][object.id][key] = value;
-        if (engine) {
+        EventManager.trigger (object, 'style', [object, key]);
+        /*if (engine) {
             if (callbacks[engine.id]) {
                 if (callbacks[engine.id][object.id]) {
                     callbacks[engine.id][object.id] (object, key);
@@ -88,7 +89,7 @@ var StyleManager = new function () {
                     ob_callback[object.id] (object, key);
                 }
             });
-        }
+        }*/
     };
 
 } ();

@@ -38,7 +38,6 @@
                 
                 var map = new wiggle.Map ('#map');
 
-
                 for (var i = 0; i < settings['ramp'].length; i ++) {
                     layer.features ().quantile (settings['step'], i + 1, settings['ramp'].length)
                         .style (graph, 'stroke', settings['ramp'][i]);
@@ -48,8 +47,8 @@
                         .style (map, 'stroke', wiggle.util.icolor (255, 255, 255, 255))
                         .style (map, 'fill-opacity', .9);
                 }
-                
-                graph.append (layer);
+
+                graph.append (layer);                
                 map.append (layer);
             }
         });

@@ -25,7 +25,8 @@ var Point = function (prop, layer) {
     this.map_contains = function (engine, p) {
         //var s = engine.camera.screen (p);
         var s = p;
-        var rad = this.compute ('radius');
+        //var rad = this.compute ('radius');
+        var rad = StyleManager.derivedStyle (this, layer, engine, 'radius');
         for (var i = 0; i < this.geom.length; i ++) {
             var v = engine.camera.screen (geom2vect (this.geom[i]));
             if (vect.dist (v, s) < rad)
@@ -35,14 +36,12 @@ var Point = function (prop, layer) {
     };
 };
 
-// Contains point specific operations, particualrly to perform geometric queries
-// on points faster. This datatype is immutable. Points cannot be added or removed 
-// from it.
+
 var PointCollection = function (points) {
     var search_points = [];
     var max_radius = 0;
     $.each (points, function (key, point) {
-        var radius = point.compute ('radius');
+        var radius = StyleManager.derivedStyle (this, layer, engine, 'radius');
         if (radius > max_radius)
             max_radius = radius;
         $.each (point.geom, function (index, pair) {

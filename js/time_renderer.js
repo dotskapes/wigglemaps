@@ -18,7 +18,8 @@ function TimeSeriesRenderer (engine, layer, options) {
                 }
             }
             else {
-                linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
+                //linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
+                linestring.push ([i, y]);
             }
         }
         if (linestring.length > 0)

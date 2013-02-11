@@ -90,6 +90,8 @@ function BaseEngine (selector, options) {
         engine.views[f.id].update (key);
     };
 
+    EventManager.manage (this);
+
     this.append = function (layer) {
         // Legacy layer drawing code
         if ('draw' in layer) {
@@ -99,6 +101,9 @@ function BaseEngine (selector, options) {
         // An engine can only draw a layer once
         if (layer.id in this.renderers)
             throw "Added layer to Engine twice";
+
+        EventManager.manage (layer);
+        EventManager.linkParent (this, layer);
 
         this.renderers[layer.id] = {};
         layer.features ().each (function (i, f) {
@@ -120,11 +125,18 @@ function BaseEngine (selector, options) {
 
             engine.views[f.id] = view;
             
-            StyleManager.registerCallback (engine, f, update_feature);
+            //StyleManager.registerCallback (engine, f, update_feature);
+            EventManager.manage (f);
+            EventManager.linkParent (layer, f);
+            EventManager.addEventHandler (f, 'style', update_feature);
             //f.change (handle_change);
         });
         //this.scene[layer.id] = this.renderers;
         this.layers[layer.id] = layer;
+        this.queriers[layer.id] = new Querier (this, layer);
+
+        // Temporary for dev: Make the layer immutable
+        layer.fixed = true;
     };
 
     this.style = function (object, key, value) {
@@ -167,6 +179,7 @@ function BaseEngine (selector, options) {
 
     this.scene = {};
     this.layers = {};
+    this.queriers = {};
 
     this.draw = function () {
 
@@ -190,10 +203,6 @@ function BaseEngine (selector, options) {
 	gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
-
-        $.each (this.layers, function (i, layer) {
-            layer.update ();
-        });
 
         // Legacy drawing code
         $.each (this.scene, function (i, layer) {

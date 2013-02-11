@@ -87,6 +87,7 @@ var load_shp = function (data, indices, options) {
 	    var y = ldbl64 (data, record_offset + 12);
 	    
 	    points.push ({
+                type: 'Point',
 		attr: {},
 		geom: [[x, y]]
 	    });
@@ -112,6 +113,7 @@ var load_shp = function (data, indices, options) {
 		rings.push (ring);
 	    }
 	    polys.push ({
+                type: 'Polygon',
 		attr: {},
 		geom: [rings]
 	    });
@@ -132,27 +134,17 @@ var load_shp = function (data, indices, options) {
     }
 
     if (points.length > 0) {
-	var p_layer = new PointLayer (points.length);
+	var layer = new Layer (options);
 	$.each (points, function (i, v) {
-	    p_layer.append (v);
+	    layer.append (v);
 	});
-	return p_layer;
+	return layer;
     }
     else if (polys.length > 0) {
-	var p_layer = new PolygonLayer (options);
+	var layer = new Layer (options);
 	$.each (polys, function (i, v) {
-	    var count = 0;
-	    while (count < 100) {
-		try {
-		    p_layer.append (v);
-		    count = 101;
-		} catch (e) {
-		    count ++;
-		}
-	    }
-	    if (count == 100)
-		console.log ('rendering polygon failed')
+	    layer.append (v);
 	});
-	return p_layer;	
+	return layer;	
     }
 };

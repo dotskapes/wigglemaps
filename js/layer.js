@@ -1,24 +1,15 @@
 var geom_types = {
-    'Point': {
-        geometry: Point,
-        collection: PointCollection
-    },
-    'Polygon': {
-        geometry: Polygon,
-        collection: PolygonCollection
-    },
-    'Line': {
-        geometry: Line,
-        collection: LineCollection
-    }
+    'Point': Point,
+    'Polygon': Polygon,
+    'Line': Line
 };
 
-function Layer (prop) {
+function Layer (options) {
+    if (!options)
+        options = {};
+
     this.id = new_feature_id ();
     this.type = 'Layer';
-
-    // Collections for each geometry type
-    var collections = {};
 
     // The layer's style properties
     var layer_style = {};
@@ -26,13 +17,9 @@ function Layer (prop) {
     // Lookup for each geometry type
     var features = {};
 
-    // If new geometry collections need to be instantiated
-    var dirty = false;
-
     // Copy over the defined styles
-    if (prop.style) {
-        for (var key in prop.style)
-            layer_style[key] = prop.style[key];
+    if (options.style) {
+        throw "Not Implemeneted";
     }
 
     this.style = function (arg0, arg1, arg2) {
@@ -59,38 +46,6 @@ function Layer (prop) {
         return results;
     };
 
-    // Geometry queries
-
-    this.search = function (box) {
-        if (dirty) {
-            this.update ();
-        }
-        var results = new LayerSelector ([]);
-        for (var key in collections) {
-            var search_results = collections[key].search (box);
-            results = results.join (search_results);
-        }
-        return results;
-    };
-    this.map_contains = function (engine, p) {
-        if (dirty) {
-            this.update ();
-        }
-        var results = new LayerSelector ([]);
-        for (var key in collections) {
-            var search_results = collections[key].map_contains (engine, p);
-            results = results.join (search_results);
-        }
-        return results;
-	/*var results = [];
-	for (var i in features) {
-	    var feature = features[i];
-            if (feature.contains (engine, p))
-                results.push (feature);
-        }
-        return new LayerSelector (results);*/
-    };
-
     var layer_attr = {};
     this.attr = function (key, value) {
         // Getter if only one argument passed
@@ -105,9 +60,13 @@ function Layer (prop) {
             layer_attr[key] = value;
         }
     };
+
+    this.fixed = false;
     
     this.append = function (feature) {
-        var f = new geom_types[feature.type]['geometry'] (feature, this);
+        if (this.fixed)
+            throw "Layers are currently immutable once added to a map";
+        var f = new geom_types[feature.type] (feature, this);
         features[f.id] = f;
 
         // Update the layer bounding box
@@ -172,16 +131,5 @@ function Layer (prop) {
 		out_func (current_over[key]);
 	}
 	current_over = {};
-    };
-
-    // Update the data structures
-    this.update = function () {
-        if (dirty) {
-            var selector = this.features ();
-            for (var key in geom_types) {
-                collections[key] = new geom_types[key]['collection'] (selector.type (key).items ());
-            }
-        }
-        dirty = false;
     };
 };
