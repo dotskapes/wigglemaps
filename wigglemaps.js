@@ -1245,8 +1245,12 @@ function derived_style (engine, feature, layer, key) {
     if (!options)
         options = {};
 
-    if (options.size && options.center) {
-        var world_half = options.size.clone ().scale (.5);
+    var ratio = canvas.width () / canvas.height (); 
+
+    if (options.width && options.center) {
+        var half_width = options.width / 2;
+        var half_height = half_width / ratio;
+        var world_half = new vect (half_width, half_height);
         options.min = vect.sub (options.center, world_half);
         options.max = vect.add (options.center, world_half);
     }
@@ -1311,8 +1315,8 @@ function derived_style (engine, feature, layer, key) {
             camera.worldToScreen[3] = 0;
             camera.worldToScreen[4] = 2.0 / world_range.y;
             camera.worldToScreen[5] = 0;
-            camera.worldToScreen[6] = -world_min.x / world_range.x - 1;
-            camera.worldToScreen[7] = -world_min.y / world_range.y - 1;
+            camera.worldToScreen[6] = -2.0 * world_min.x / world_range.x - 1;
+            camera.worldToScreen[7] = -2.0 * world_min.y / world_range.y - 1;
             camera.worldToScreen[8] = 1;
         };
 
@@ -1345,18 +1349,18 @@ function derived_style (engine, feature, layer, key) {
     this.move = function (v) {
         center.add (v);
         this.reconfigure ();
-        //this.mat3[6] -= v.x * this.mat3[0];
-        //this.mat3[7] -= v.y * this.mat3[4];
     };
 
     this.zoom = function (scale) {
-	//var pos = new vect (this.mat3[6] / this.mat3[0], this.mat3[7] / this.mat3[4]);
-	//this.mat3[0] *= scale;
-	//this.mat3[4] *= scale;
-	//this.mat3[6] = pos.x * this.mat3[0];
-	//this.mat3[7] = pos.y * this.mat3[4];
 	level *= scale;
         this.reconfigure ();
+    };
+
+    this.position = function (p) {
+        if (!p)
+            return center;
+        else
+            center = p.clone ();
     };
 
     canvas.resize (function(event) {
@@ -6435,11 +6439,18 @@ function Slider (pos, size, units) {
     if (options === undefined)
         options = {};
 
+    default_model (options, {
+        'width': 360,
+        'center': new vect (0, 0)
+    });
+
     BaseEngine.call (this, selector, options);    
 
     default_model (options, {
         'base': 'default',
-        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps'
+        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps',
+        'min': new vect (-180, -90),
+        'max': new vect (180, 90),
     });
 
     this.Renderers = {

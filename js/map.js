@@ -4,11 +4,18 @@ var Map = function (selector, options) {
     if (options === undefined)
         options = {};
 
+    default_model (options, {
+        'width': 360,
+        'center': new vect (0, 0)
+    });
+
     BaseEngine.call (this, selector, options);    
 
     default_model (options, {
         'base': 'default',
-        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps'
+        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps',
+        'min': new vect (-180, -90),
+        'max': new vect (180, 90),
     });
 
     this.Renderers = {
