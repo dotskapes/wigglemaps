@@ -14,8 +14,9 @@ function Camera (canvas, options) {
         max: new vect (1, 1)
     });
 
-    var world_max = options.max;
-    var world_min = options.min;
+    var center = vect.add (options.max, options.min).scale (.5);
+
+    var level = 1.0;
 
     this.worldToPx = new Float32Array (9);
     this.pxToScreen = new Float32Array (9);
@@ -25,6 +26,14 @@ function Camera (canvas, options) {
     this.mat3 = this.worldToScreen;
 
     this.reconfigure = function () {
+        var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
+
+        var world_max = vect.add (center, half_size);
+        var world_min = vect.sub (center, half_size);
+        
+        //var world_max = vect.add (options.max, translate).scale (level);
+        //var world_min = vect.add (options.min, translate).scale (level);
+
         var width = canvas.width ();
         var height = canvas.height ();
         var world_range = vect.sub (world_max, world_min);
@@ -72,6 +81,41 @@ function Camera (canvas, options) {
     };
 
     this.reconfigure ();
+
+    this.project = function (v) {
+	var c = new vect (
+            2.0 * (v.x - canvas.offset ().left) / canvas.width () - 1.0,
+		-(2.0 * (v.y - canvas.offset ().top) / canvas.height () - 1.0));
+        c.x = c.x / this.mat3[0] - this.mat3[6] / this.mat3[0];
+        c.y = c.y / this.mat3[4] - this.mat3[7] / this.mat3[4];
+	return c;
+    };
+    
+    this.screen = function (v) {
+        var c = new vect (
+	    v.x * this.mat3[0] + this.mat3[6],
+            v.y * this.mat3[4] + this.mat3[7]);
+        c.x = canvas.offset ().left + canvas.width () * (c.x + 1.0) / 2.0;
+        c.y = canvas.offset ().top + canvas.height () * (-c.y + 1.0) / 2.0;
+        return c;
+    };
+
+    this.move = function (v) {
+        center.add (v);
+        this.reconfigure ();
+        //this.mat3[6] -= v.x * this.mat3[0];
+        //this.mat3[7] -= v.y * this.mat3[4];
+    };
+
+    this.zoom = function (scale) {
+	//var pos = new vect (this.mat3[6] / this.mat3[0], this.mat3[7] / this.mat3[4]);
+	//this.mat3[0] *= scale;
+	//this.mat3[4] *= scale;
+	//this.mat3[6] = pos.x * this.mat3[0];
+	//this.mat3[7] = pos.y * this.mat3[4];
+	level *= scale;
+        this.reconfigure ();
+    };
 
     canvas.resize (function(event) {
         camera.reconfigure ();

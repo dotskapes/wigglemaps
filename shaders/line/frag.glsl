@@ -8,7 +8,7 @@ varying float alpha;
 
 void main () {
   gl_FragColor = vec4 (color.rgb, alpha);
-
+  
   if (abs (circle.y) > .5)
     gl_FragColor.a = alpha - (abs (circle.y) - .5) / .5;
 }

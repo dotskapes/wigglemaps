@@ -65,6 +65,10 @@ function vect (x, y, z) {
     this.clone = function () {
         return new vect (this.x, this.y, this.z); 
     };
+
+    this.array = function () {
+        return [this.x, this.y];
+    };
 };
 
 vect.scale = function (v, s) {
@@ -154,14 +158,14 @@ vect.intersect2dpos = function (a, b, c, d) {
         d.x * (c.y - a.y);
     var s = num_s / denom;
 
-    var num_t = -(a.x * (c.y - b.y) +
+    /*var num_t = -(a.x * (c.y - b.y) +
                   b.x * (a.y - c.y) +
 		  c.x * (b.y - a.y));
-    var t = num_t / denom;
+    var t = num_t / denom;*/
     
-    var next = vect.sub (b, a);
-    next.scale (s);
-    return vect.add (a, next);
+    var dir = vect.sub (b, a);
+    dir.scale (s);
+    return vect.add (a, dir);
 };
 
 vect.rotate = function (v, omega) {
@@ -1252,8 +1256,9 @@ function derived_style (engine, feature, layer, key) {
         max: new vect (1, 1)
     });
 
-    var world_max = options.max;
-    var world_min = options.min;
+    var center = vect.add (options.max, options.min).scale (.5);
+
+    var level = 1.0;
 
     this.worldToPx = new Float32Array (9);
     this.pxToScreen = new Float32Array (9);
@@ -1263,6 +1268,14 @@ function derived_style (engine, feature, layer, key) {
     this.mat3 = this.worldToScreen;
 
     this.reconfigure = function () {
+        var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
+
+        var world_max = vect.add (center, half_size);
+        var world_min = vect.sub (center, half_size);
+        
+        //var world_max = vect.add (options.max, translate).scale (level);
+        //var world_min = vect.add (options.min, translate).scale (level);
+
         var width = canvas.width ();
         var height = canvas.height ();
         var world_range = vect.sub (world_max, world_min);
@@ -1310,6 +1323,41 @@ function derived_style (engine, feature, layer, key) {
     };
 
     this.reconfigure ();
+
+    this.project = function (v) {
+	var c = new vect (
+            2.0 * (v.x - canvas.offset ().left) / canvas.width () - 1.0,
+		-(2.0 * (v.y - canvas.offset ().top) / canvas.height () - 1.0));
+        c.x = c.x / this.mat3[0] - this.mat3[6] / this.mat3[0];
+        c.y = c.y / this.mat3[4] - this.mat3[7] / this.mat3[4];
+	return c;
+    };
+    
+    this.screen = function (v) {
+        var c = new vect (
+	    v.x * this.mat3[0] + this.mat3[6],
+            v.y * this.mat3[4] + this.mat3[7]);
+        c.x = canvas.offset ().left + canvas.width () * (c.x + 1.0) / 2.0;
+        c.y = canvas.offset ().top + canvas.height () * (-c.y + 1.0) / 2.0;
+        return c;
+    };
+
+    this.move = function (v) {
+        center.add (v);
+        this.reconfigure ();
+        //this.mat3[6] -= v.x * this.mat3[0];
+        //this.mat3[7] -= v.y * this.mat3[4];
+    };
+
+    this.zoom = function (scale) {
+	//var pos = new vect (this.mat3[6] / this.mat3[0], this.mat3[7] / this.mat3[4]);
+	//this.mat3[0] *= scale;
+	//this.mat3[4] *= scale;
+	//this.mat3[6] = pos.x * this.mat3[0];
+	//this.mat3[7] = pos.y * this.mat3[4];
+	level *= scale;
+        this.reconfigure ();
+    };
 
     canvas.resize (function(event) {
         camera.reconfigure ();
@@ -1824,6 +1872,85 @@ function PointRenderer (engine, layer) {
 };
     var INITIAL_LINES = 1024;
 
+function draw_lines (stroke_buffers, geom) {
+
+    var vertCount = 6 * geom.length;
+    var startIndex = stroke_buffers.alloc (vertCount);
+    
+    var unit_buffer = [-1, 1, 
+                       -1, -1, 
+                       1, -1,
+
+                       -1, 1,
+                       1, -1,
+                       1, 1
+                      ];
+
+    var index = 0;
+    var next_vert = function () {
+	if (geom[index]) {
+	    var v = new vect (geom[index][0], geom[index][1]);
+	    index ++;
+	    return v;
+	}
+	else
+	    return null;
+    };
+
+    var prev = null;
+    var current = next_vert ();
+    var next = next_vert ();
+
+    var prev_list = [];
+    var current_list = [];
+    var next_list = [];
+    
+    while (current) {
+        prev_list.push (prev || current);
+        current_list.push (current);
+        next_list.push (next || current);
+
+        prev = current;
+	current = next;
+	next = next_vert ();
+    }
+
+    var prev_buffer = [];
+    var current_buffer = [];
+    var next_buffer = [];
+
+    currentIndex = startIndex;
+
+    var add_vert = function (p, c, n) {
+        /*prev_buffer.push (p.x);
+        prev_buffer.push (p.y);
+
+        current_buffer.push (c.x);
+        current_buffer.push (c.y);
+
+        current_buffer.push (c.x);
+        current_buffer.push (c.y);*/
+        stroke_buffers.write ('prev', p.array (), currentIndex, 1);
+        stroke_buffers.write ('current', c.array (), currentIndex, 1);
+        stroke_buffers.write ('next', n.array (), currentIndex, 1);
+        currentIndex ++;
+
+    };
+        
+    for (var i = 1; i < geom.length; i ++) {
+        stroke_buffers.write ('unit', unit_buffer, currentIndex, 6);
+
+        add_vert (prev_list[i - 1], current_list[i - 1], next_list[i - 1]);
+        add_vert (next_list[i - 1], current_list[i - 1], prev_list[i - 1]);
+        add_vert (next_list[i], current_list[i], prev_list[i]);
+
+        add_vert (prev_list[i - 1], current_list[i - 1], next_list[i - 1]);
+        add_vert (next_list[i], current_list[i], prev_list[i]);
+        add_vert (prev_list[i], current_list[i], next_list[i]);
+    }
+    return vertCount;
+};
+
 function LineRenderer (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
@@ -1833,12 +1960,18 @@ function LineRenderer (engine, layer) {
     var line_shader = engine.shaders['line'];
 
     var stroke_buffers = new Buffers (engine.gl, 1024);
-    stroke_buffers.create ('vert', 2);
-    stroke_buffers.create ('norm', 2);
-    stroke_buffers.create ('width', 2);
-    stroke_buffers.create ('color', 3);
+    //stroke_buffers.create ('vert', 2);
+    //stroke_buffers.create ('norm', 2);
+    stroke_buffers.create ('prev', 2);
+    stroke_buffers.create ('current', 2);
+    stroke_buffers.create ('next', 2);
     stroke_buffers.create ('unit', 2);
+
+    stroke_buffers.create ('width', 1);
+    stroke_buffers.create ('color', 3);
     stroke_buffers.create ('alpha', 1);
+
+    //stroke_buffers.create ('unit', 2);
 
     var LineView = function (feature, feature_geom) {
         FeatureView.call (this, feature, layer, engine);
@@ -1867,8 +2000,9 @@ function LineRenderer (engine, layer) {
 
 	$.each (feature_geom, function (i, poly) {
 	    for (var i = 0; i < poly.length; i ++) {
-		stroke_count += poly[i].length * 6;
-                draw_graph_lines (stroke_buffers, poly[i]);
+		//stroke_count += poly[i].length * 6;
+                //draw_graph_lines (stroke_buffers, poly[i]);
+                stroke_count += draw_lines (stroke_buffers, poly[i]);
                 /*if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
                     draw_map_lines (stroke_buffers, poly[i]);
                 else
@@ -1891,16 +2025,18 @@ function LineRenderer (engine, layer) {
 	
 	line_shader.data ('world', engine.camera.worldToPx);
 	line_shader.data ('screen', engine.camera.pxToScreen);
-	line_shader.data ('pos', stroke_buffers.get ('vert'));
-	line_shader.data ('norm', stroke_buffers.get ('norm'));
+
+
+        line_shader.data ('prev', stroke_buffers.get ('prev'));
+        line_shader.data ('current', stroke_buffers.get ('current'));
+        line_shader.data ('next', stroke_buffers.get ('next'));
 	line_shader.data ('color_in', stroke_buffers.get ('color'));
 	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
 	line_shader.data ('circle_in', stroke_buffers.get ('unit'));
-	line_shader.data ('width_in', stroke_buffers.get ('width'));
+	line_shader.data ('width', stroke_buffers.get ('width'));
 	
 	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
 	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
-	
 	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
     }
 

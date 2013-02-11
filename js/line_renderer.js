@@ -2,11 +2,6 @@ var INITIAL_LINES = 1024;
 
 function draw_lines (stroke_buffers, geom) {
 
-    stroke_buffer.create ('prev', 2);
-    stroke_buffer.create ('current', 2);
-    stroke_buffer.create ('next', 2);
-    stroke_buffer.create ('unit', 2);
-
     var vertCount = 6 * geom.length;
     var startIndex = stroke_buffers.alloc (vertCount);
     
@@ -95,6 +90,11 @@ function LineRenderer (engine, layer) {
     var stroke_buffers = new Buffers (engine.gl, 1024);
     //stroke_buffers.create ('vert', 2);
     //stroke_buffers.create ('norm', 2);
+    stroke_buffers.create ('prev', 2);
+    stroke_buffers.create ('current', 2);
+    stroke_buffers.create ('next', 2);
+    stroke_buffers.create ('unit', 2);
+
     stroke_buffers.create ('width', 1);
     stroke_buffers.create ('color', 3);
     stroke_buffers.create ('alpha', 1);
@@ -153,19 +153,18 @@ function LineRenderer (engine, layer) {
 	
 	line_shader.data ('world', engine.camera.worldToPx);
 	line_shader.data ('screen', engine.camera.pxToScreen);
-	//line_shader.data ('pos', stroke_buffers.get ('vert'));
-	//line_shader.data ('norm', stroke_buffers.get ('norm'));
+
+
         line_shader.data ('prev', stroke_buffers.get ('prev'));
         line_shader.data ('current', stroke_buffers.get ('current'));
         line_shader.data ('next', stroke_buffers.get ('next'));
 	line_shader.data ('color_in', stroke_buffers.get ('color'));
 	line_shader.data ('alpha_in', stroke_buffers.get ('alpha'));
 	line_shader.data ('circle_in', stroke_buffers.get ('unit'));
-	line_shader.data ('width_in', stroke_buffers.get ('width'));
+	line_shader.data ('width', stroke_buffers.get ('width'));
 	
 	line_shader.data ('px_w', 2.0 / engine.canvas.width ());
 	line_shader.data ('px_h', 2.0 / engine.canvas.height ());
-	
 	gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
     }
 

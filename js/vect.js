@@ -65,6 +65,10 @@ function vect (x, y, z) {
     this.clone = function () {
         return new vect (this.x, this.y, this.z); 
     };
+
+    this.array = function () {
+        return [this.x, this.y];
+    };
 };
 
 vect.scale = function (v, s) {
@@ -154,14 +158,14 @@ vect.intersect2dpos = function (a, b, c, d) {
         d.x * (c.y - a.y);
     var s = num_s / denom;
 
-    var num_t = -(a.x * (c.y - b.y) +
+    /*var num_t = -(a.x * (c.y - b.y) +
                   b.x * (a.y - c.y) +
 		  c.x * (b.y - a.y));
-    var t = num_t / denom;
+    var t = num_t / denom;*/
     
-    var next = vect.sub (b, a);
-    next.scale (s);
-    return vect.add (a, next);
+    var dir = vect.sub (b, a);
+    dir.scale (s);
+    return vect.add (a, dir);
 };
 
 vect.rotate = function (v, omega) {
