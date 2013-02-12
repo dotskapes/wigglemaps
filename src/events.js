@@ -2,10 +2,12 @@ var EventManager = new function () {
     this.listeners = {};
 
     this.manage = function (object) {
-        this.listeners[object.id] = {
-            parents: [],
-            callbacks: {}
-        };
+        if (!(object.id in this.listeners) {
+            this.listeners[object.id] = {
+                parents: [],
+                callbacks: {}
+            };
+        }
     };
 
     this.linkParent = function (parent, object) {
