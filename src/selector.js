@@ -127,12 +127,15 @@ var LayerSelector = function (elem) {
     }
 
     this.quantile = function (field, q, total) {
-	elem.sort (function (a, b) {
+        var clean = elem.filter (function (f) {
+            return (f.attr (field) !== undefined);
+        });
+	clean.sort (function (a, b) {
 	    return a.attr(field) - b.attr(field);
 	});
-	var top = Math.round (q * this.length / total);
-	var bottom = Math.round ((q - 1) * this.length / total);
-	return new LayerSelector (elem.slice (bottom, top));
+	var top = Math.round (q * clean.length / total);
+	var bottom = Math.round ((q - 1) * clean.length / total);
+	return new LayerSelector (clean.slice (bottom, top));
     };
 
     this.range = function (field) {
