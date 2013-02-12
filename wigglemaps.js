@@ -4375,7 +4375,24 @@ function Layer (options) {
     }
 
     this.style = function (arg0, arg1, arg2) {
-        throw "Not Implemented";
+        var engine, key, value;
+        if (!arg0 || arg0.type == 'Engine') {
+            engine = arg0;
+            key = arg1;
+            value = arg2;
+        }
+        else {
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+        if (value === undefined) {
+            return StyleManager.getStyle (this, engine, key);
+        }
+        else {
+            StyleManager.setStyle (this, engine, key, value);
+            return this;
+        }
     };
 
     this.bounds = null;
