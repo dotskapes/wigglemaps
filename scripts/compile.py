@@ -3,43 +3,6 @@ from sys import argv
 
 import re
 
-manifest = [
-    'base',
-    'utils/jquery.hotkeys',
-    'utils/jquery.mousewheel',
-    #'webgl-debug',
-    'rAF',
-    'util',
-    'utils/binary',
-    'vect',
-    'shader-utils',
-    'utils/texture',
-    'camera',
-    'panner',
-    'events',
-    'engine',
-    'buffer',
-    'select',
-    'trapezoid',
-    'range',
-    'feature',
-    'point',
-    'polygon',
-    'line',
-    'grid',
-    'ascii',
-    'sgrid',
-    'selector',
-    'raster',
-    'tile',
-    'ows',
-    'geojson',
-    'shapefile',
-    'range_bar',
-    'slider',
-    'map'
-    ];
-
 def base_path (path):
     return re.sub ('/[^/]*$', '', path);
 
@@ -62,15 +25,10 @@ if __name__ == '__main__':
     if len (argv) != 3: 
         print 'Usage: python compile.py <input> <output>'
     input = open (argv[1], 'r')
-    base = base_path (argv[1]);
+    #base = base_path (argv[1]);
+    base = '.'
     buffer = input.read ()
     buffer = include (base, buffer)
     output = open (argv[2], 'w')
     output.write (buffer)
-    '''output = open (argv[2], 'w')
-    for path in manifest:
-        buf = open ('js/' + path + '.js', 'r').read ()
-        buf = buf.replace ('/*!', '/*')
-        out.write (buf + '\n')
-    out.close ()'''
     

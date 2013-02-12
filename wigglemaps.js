@@ -405,7 +405,8 @@ function handler(event) {
         window.cancelAnimationFrame = function(id) {
             clearTimeout(id);
         };
-}());    var PI = 3.14159265;
+}());
+    var PI = 3.14159265;
 
 /*if (! ('requestAnimationFrame' in window)) {
     if ('mozRequestAnimationFrame' in window)
@@ -974,6 +975,102 @@ function getTexture (gl, path, callback) {
     });
     return jxhr;
 }*/
+    function Buffers (gl, initial_size) {
+    var data = {};
+    
+    var size;
+    if (!initial_size)
+	size = 256;
+    else
+	size = initial_size;
+
+    var current = 0;
+
+    var copy_array = function (dst, src, start, count) {
+	if (!dst)
+	    console.log ('ack');
+	if (!start)
+	    start = 0;
+	if (!count)
+	    count = src.length;
+	for (var i = 0; i < count; i ++) {
+	    dst[start + i] = src[i];
+	}
+    };
+
+    var resize = function (min_expand) {
+	var new_size = size;
+	while (new_size < min_expand)
+	    new_size *= 2;
+	size = new_size;
+	for (name in data) {
+	    var new_array = new Float32Array (new_size * data[name].len);
+	    var old_array = data[name].array;
+	    var new_buffer = dynamicBuffer (gl, size, data[name].len);
+	    
+	    copy_array (new_array, old_array);
+	    data[name].array = new_array;
+	    data[name].buffer = new_buffer;
+	    data[name].dirty = true;
+	}
+    };
+
+    this.create = function (name, len) {
+	if (!len)
+	    throw "Length of buffer must be a positive integer";
+	var array = new Float32Array (size * len);
+	var buffer = dynamicBuffer (gl, size, len);
+	data[name] = {
+	    array: array,
+	    buffer: buffer,
+	    len: len,
+	    dirty: false
+	};
+    };
+
+    this.alloc = function (num) {
+	if ((current + num) >= size)
+	    resize (current + num);
+	var start = current;
+	current += num;
+	return start;
+    };
+
+    this.get = function (name) {
+	//console.log (name, data[name].array);
+	return data[name].buffer;
+    };
+
+    this.write = function (name, array, start, count) {
+	copy_array (data[name].array, array, start * data[name].len, count * data[name].len);
+	data[name].dirty = true;
+    };
+
+    this.repeat = function (name, elem, start, count) {
+	for (var i = 0; i < count; i ++) {
+	    copy_array (data[name].array, elem, (start + i) * data[name].len, data[name].len);
+	}
+	data[name].dirty = true;	
+    };
+
+    this.count = function () {
+	return current;
+    };
+
+    this.data = function (name) {
+	return data[name].array;
+    };
+
+    this.update = function () {
+	for (name in data) {
+	    if (data[name].dirty) {
+		if (data[name].buffer)
+		    data[name].buffer.update (data[name].array, 0);
+		data[name].dirty = false;
+	    }
+	}
+    };
+};
     function Texture (gl, options) {
     var settings = copy (options);
     default_model (settings, {
@@ -1016,6 +1113,7 @@ function getImage (path, callback) {
     };
     img.src = path;
 };
+
     var StyleManager = new function () {
     // The structure of style lookup is: Engine ids, then feature and layer ids
     // Layers and features coexist on the same level. The cascade is looked up
@@ -1762,6 +1860,170 @@ function derived_style (engine, feature, layer, key) {
     };
 };
 */
+    var basic_shader = null;
+
+function RangeBar (engine, colors, bottom, top, vert) {
+    if (!basic_shader)
+	basic_shader = makeProgram (BASE_DIR + 'shaders/basic');
+    
+    var c = [];
+    var pos = [];
+
+    if (!vert) {
+	var box_width = Math.abs ((top.x - bottom.x) / colors.length);
+	var box_height = Math.abs (top.y - bottom.y);
+
+	for (var i = 0; i < colors.length; i ++) {
+	    var min = new vect (bottom.x + box_width * i, bottom.y);
+	    var max = new vect (bottom.x + box_width * (i + 1), top.y);
+	    pos.push.apply (pos, rectv (engine.camera.percent (min), engine.camera.percent (max)));
+	    for (var k = 0; k < 6; k ++) {
+		c.push.apply (c, colors[i].vect ());
+	    }
+	}
+    }
+    else {
+	var box_width = Math.abs (top.x - bottom.x);
+	var box_height = Math.abs ((top.y - bottom.y) / colors.length);
+	for (var i = 0; i < colors.length; i ++) {
+	    var j = colors.length - 1 - i;
+	    var min = new vect (bottom.x,  bottom.y + box_height * (j + 1));
+	    var max = new vect (top.x, bottom.y - box_height * j);
+	    console.log ('box', min, max);
+	    pos.push.apply (pos, rectv (engine.camera.percent (min), engine.camera.percent (max)));
+	    for (var k = 0; k < 6; k ++) {
+		c.push.apply (c, colors[i].vect ());
+	    }
+	}
+    }
+
+    var pos_buffer = staticBuffer (pos, 2);
+    var color_buffer = staticBuffer (c, 4);
+
+    this.update = function (engine, p) {
+
+    };
+    
+    this.draw = function (engine, dt, select) {
+	if (select)
+	    return;
+	gl.useProgram (basic_shader);
+
+	basic_shader.data ('pos', pos_buffer);
+	basic_shader.data ('color_in', color_buffer);
+
+	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
+    };
+};    var SLIDER_WIDTH = 20;
+
+function Slider (pos, size, units) {
+    var position = function (index) {
+	if (index >= units)
+	    throw "Slider index out of bounds";
+	return (size.x / (units - 1)) * index;
+    };
+
+    var slider_index = function (p) {
+	if (p <= pos.x)
+	    return 0;
+	if (p >= pos.x + size.x)
+	    return units - 1;
+	return Math.round (((p - pos.x) / size.x) * (units - 1));
+    };
+    
+    this.dom = $ ('<div></div>')
+	.addClass ('slider-container')
+	.css ('position', 'relative')
+	.css ('left', pos.x)
+	.css ('top', pos.y)
+	.css ('width', size.x)
+	.css ('height', size.y);
+
+    var dragging = false;
+    var current = 0;
+    var bar = $ ('<div></div>')
+	.addClass ('slider-box')
+	.css ('position', 'relative')
+	.css ('left', -SLIDER_WIDTH / 2)
+	.css ('height', size.y)
+	.css ('width', SLIDER_WIDTH)
+	.mousedown (function () {
+	    dragging = true;
+	});
+
+    this.tick = function () {
+	return current;
+    };
+
+    this.count = function () {
+	return units;
+    };
+
+    var change_event = function (index) {};
+    this.change = function (func) {
+	change_event = func;
+    };
+
+    var release_event = function (index) {};
+    this.release = function (func) {
+	release_event = func;
+    };
+
+    this.dragging = function () {
+	return dragging;
+    };
+
+    this.dom.append (bar);
+
+    this.set = function (index) {
+	if (index != current)
+	    change_event (index);
+	current = index;
+	var px = position (index);
+	bar.css ('left', px - SLIDER_WIDTH / 2);
+	release_event (index);
+    };
+    
+    $ (document).bind ('mouseup', function () {
+	if (!dragging)
+	    return;
+	dragging = false;
+	var index = slider_index (event.clientX);
+	release_event (index);
+    });
+
+    $ (document).bind ('mousemove', function (event) {    
+	if (dragging) {
+	    var index = slider_index (event.clientX);
+	    if (index != current)
+		change_event (index);
+	    current = index;
+	    var px = position (index);
+	    bar.css ('left', px - SLIDER_WIDTH / 2);
+	}
+    });
+    
+};
+    function FeatureView (feature, layer, engine) {
+    this.style_map = {};
+    
+    // Update the buffers for a specific property
+    this.update = function (key) {
+        var value = StyleManager.derivedStyle (feature, layer, engine, key);
+        if (value === null)
+            throw "Style property does not exist";
+        if (key in this.style_map) {
+            this.style_map[key] (value);
+        }
+    };
+        
+    // Update all buffers for all properties
+    this.update_all = function () {
+        for (var key in this.style_map) {
+            this.update (key);
+        }
+    };
+};
     function FeatureRenderer (engine, layer) {
     this.engine = engine;
 
@@ -1784,27 +2046,6 @@ function derived_style (engine, feature, layer, key) {
         view.update_all ();
         this.views.push (view);
         return view;
-    };
-};
-
-function FeatureView (feature, layer, engine) {
-    this.style_map = {};
-    
-    // Update the buffers for a specific property
-    this.update = function (key) {
-        var value = StyleManager.derivedStyle (feature, layer, engine, key);
-        if (value === null)
-            throw "Style property does not exist";
-        if (key in this.style_map) {
-            this.style_map[key] (value);
-        }
-    };
-        
-    // Update all buffers for all properties
-    this.update_all = function () {
-        for (var key in this.style_map) {
-            this.update (key);
-        }
     };
 };
     var INITIAL_POINTS = 1024;
@@ -2230,6 +2471,7 @@ function PolygonRenderer (engine, layer) {
     };
 
 };
+
     var Querier = function (engine, layer) {
     queryTypes = {
         'Point': PointQuerier,
@@ -2353,6 +2595,7 @@ var PointQuerier = function (engine, layer, points) {
         return new LayerSelector (results);
     };
 };
+
     function BaseEngine (selector, options) {
     var engine = this;
 
@@ -2992,6 +3235,187 @@ function Engine (selector, map, options) {
     
 };
 */
+    var Map = function (selector, options) {
+    var engine = this;
+
+    if (options === undefined)
+        options = {};
+
+    default_model (options, {
+        'width': 360,
+        'center': new vect (0, 0)
+    });
+
+    BaseEngine.call (this, selector, options);    
+
+    default_model (options, {
+        'base': 'default',
+        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps',
+        'min': new vect (-180, -90),
+        'max': new vect (180, 90),
+    });
+
+    this.Renderers = {
+        'Point': PointRenderer,
+        'Polygon': PolygonRenderer,
+        'Line': LineRenderer,
+    };
+
+    this.styles = {
+        'Point': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'opacity': 1.0,
+            'radius': 5.0,
+            'stroke': 'none',
+            'stroke-width': 2.0
+        },
+        'Polygon': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': .75
+        },
+        'Line': {
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 2.0
+        },
+        'default': {
+            'fill': new Color (.02, .44, .69, 1.0),
+            'fill-opacity': .5,
+            'stroke': new Color (.02, .44, .69, 1.0),
+            'stroke-opacity': 1.0,
+            'stroke-width': 1.0            
+        }
+    };
+
+    var base = null;
+    var setBase = function () {
+	if (options.base == 'default' || options.base == 'nasa') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: options['tile-server'] + '/tiles/nasa_topo_bathy',
+		levels: 8,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else if (options.base == 'ne') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else if (options.base == 'ne1') {
+	    var settings = copy (options);
+	    copy_to (settings, {
+		source: 'file',
+		url: TILE_SERVER + '/tiles/NE1_HR_LC',
+		levels: 6,
+		size: 256
+	    });
+	    base = new MultiTileLayer (settings);
+	}
+	else {
+	    base = null;
+	}
+        if (base) {
+            base.initialize (engine);
+            engine.scene[base.id] = base;
+        };
+    };
+    setBase ();
+};
+/*var Map = function (selector, options) {
+    this.center = function (x, y) {
+	engine.camera.position (new vect (x, y));
+    };
+
+    this.vcenter = function (v) {
+	this.center (v.x, v.y);
+    };
+
+    this.extents = function (width) {
+	engine.camera.extents (width);
+    };
+
+    this.append = function (layer) {
+        layer.initialize (engine);
+	engine.scene.push (layer);
+    };
+
+    this.remove = function (layer) {
+	for (var i = 0; i < engine.scene.length; i ++) {
+	    if (engine.scene[i] == layer) {
+		engine.scene.splice (i, 1);
+		return true;
+	    }
+	}
+	return false;
+    };
+
+    this.shade = function (data) {
+	var shade = new Hillshade (data);
+	engine.shade = shade;
+    };
+
+    this.select = function (func)  {
+	if (!func)
+	    engine.select (false);
+	else {
+	    engine.sel.select (func);
+	    engine.select (true);
+	}
+    };
+
+    this.resize = function () {
+	engine.resize ();
+    }
+
+    this.attr = function (key, value) {
+	engine.attr (key, value);
+    };
+
+    this.png = function () {
+	var data = engine.canvas.get (0).toDataURL ();
+
+	$.ajax ({
+	    url: '../server/export.png',
+	    type: 'POST',
+	    data: data
+	});
+    };
+
+    this.width = function () {
+	return engine.canvas.innerWidth ();
+    };
+
+    this.height = function () {
+	return engine.canvas.innerHeight ();
+    };
+
+    var click_func = null;
+    this.click = function (func) {
+	click_func = func;
+    };
+
+    engine = new Engine (selector, this, options);
+
+    engine.canvas.click (function (event) {
+	if (click_func) {
+	    var v = new vect (event.pageX, event.pageY);
+	    var p = engine.camera.project (v);
+	    click_func (p);
+	}
+    });
+};
+*/
     function TimeSeries (selector, options) {
     if (options === undefined)
         options = {};
@@ -3018,102 +3442,7 @@ function Engine (selector, map, options) {
         'default': TimeSeriesRenderer
     };
 };
-    function Buffers (gl, initial_size) {
-    var data = {};
-    
-    var size;
-    if (!initial_size)
-	size = 256;
-    else
-	size = initial_size;
 
-    var current = 0;
-
-    var copy_array = function (dst, src, start, count) {
-	if (!dst)
-	    console.log ('ack');
-	if (!start)
-	    start = 0;
-	if (!count)
-	    count = src.length;
-	for (var i = 0; i < count; i ++) {
-	    dst[start + i] = src[i];
-	}
-    };
-
-    var resize = function (min_expand) {
-	var new_size = size;
-	while (new_size < min_expand)
-	    new_size *= 2;
-	size = new_size;
-	for (name in data) {
-	    var new_array = new Float32Array (new_size * data[name].len);
-	    var old_array = data[name].array;
-	    var new_buffer = dynamicBuffer (gl, size, data[name].len);
-	    
-	    copy_array (new_array, old_array);
-	    data[name].array = new_array;
-	    data[name].buffer = new_buffer;
-	    data[name].dirty = true;
-	}
-    };
-
-    this.create = function (name, len) {
-	if (!len)
-	    throw "Length of buffer must be a positive integer";
-	var array = new Float32Array (size * len);
-	var buffer = dynamicBuffer (gl, size, len);
-	data[name] = {
-	    array: array,
-	    buffer: buffer,
-	    len: len,
-	    dirty: false
-	};
-    };
-
-    this.alloc = function (num) {
-	if ((current + num) >= size)
-	    resize (current + num);
-	var start = current;
-	current += num;
-	return start;
-    };
-
-    this.get = function (name) {
-	//console.log (name, data[name].array);
-	return data[name].buffer;
-    };
-
-    this.write = function (name, array, start, count) {
-	copy_array (data[name].array, array, start * data[name].len, count * data[name].len);
-	data[name].dirty = true;
-    };
-
-    this.repeat = function (name, elem, start, count) {
-	for (var i = 0; i < count; i ++) {
-	    copy_array (data[name].array, elem, (start + i) * data[name].len, data[name].len);
-	}
-	data[name].dirty = true;	
-    };
-
-    this.count = function () {
-	return current;
-    };
-
-    this.data = function (name) {
-	return data[name].array;
-    };
-
-    this.update = function () {
-	for (name in data) {
-	    if (data[name].dirty) {
-		if (data[name].buffer)
-		    data[name].buffer.update (data[name].array, 0);
-		data[name].dirty = false;
-	    }
-	}
-    };
-};
     function SelectionBox (engine) {
     var sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
@@ -3917,88 +4246,110 @@ function RangeTree (elem) {
 	return result;
     };
 };
-    // A point for the layer. A point is actually a multi-point, so it can be
-// made up of many "spatial" points. The geometry format for the point type is:
-// [[lon, lat], [lon, lat], [lon, lat], ...]
-var Point = function (prop, layer) {
-    Feature.call (this, prop, layer);
 
-    // Converts geometry representation of a point to a vector
-    var geom2vect = function (geom) {
-        return new vect (geom[0], geom[1]);
-    };
+    // Constructor for the basic geometry types that can be rendered
 
-    // Set the bounding box for the point
-    this.bounds = null;
-    for (var i = 0; i < this.geom.length; i ++) {
-        var pos = geom2vect (this.geom[i]);
-        var bbox = new Box (pos.clone (), pos.clone ());
-	if (this.bounds)
-	    this.bounds.union (bbox);
-	else
-	    this.bounds = bbox;
-    }
+var STYLE = 1;
+var ATTR = 2;
+var GEOM = 3;
 
-    // Check if a point (usually a mouse position) is contained in the buffer
-    // of this Point
-    this.map_contains = function (engine, p) {
-        //var s = engine.camera.screen (p);
-        var s = p;
-        //var rad = this.compute ('radius');
-        var rad = StyleManager.derivedStyle (this, layer, engine, 'radius');
-        for (var i = 0; i < this.geom.length; i ++) {
-            var v = engine.camera.screen (geom2vect (this.geom[i]));
-            if (vect.dist (v, s) < rad)
-                return true;
+var Feature = function (prop, layer) {
+    var feature = this;
+
+    // Unique feature ID
+    this.id = new_feature_id ();
+    this.type = 'Feature';
+
+    // The Geometry type
+    this.type = prop.type;
+
+    var attr = prop.attr;
+
+    // Attribute getter and setter
+    this.attr = function (key, value) {
+        if (value === undefined) {
+            return attr[key];
         }
-        return false;
+        else {
+            throw "Not Implemented";
+        }
     };
-};
 
+    // The geometry of the object
+    this.geom = prop.geom;
 
-var PointCollection = function (points) {
-    var search_points = [];
-    var max_radius = 0;
-    $.each (points, function (key, point) {
-        var radius = StyleManager.derivedStyle (this, layer, engine, 'radius');
-        if (radius > max_radius)
-            max_radius = radius;
-        $.each (point.geom, function (index, pair) {
-            search_points.push ({
-                x: pair[0],
-                y: pair[1],
-                ref: point
-            });
+    // Retreives or sets the geometry of the object
+    this.geometry = function () {
+
+    };
+
+    /*var change_callbacks = [];
+
+    var trigger_change = function (mode, key, value) {
+        $.each (change_callbacks, function (i, callback) {
+            callback (feature, mode, key, value);
         });
-    });
-    var range_tree = new RangeTree (search_points);
-
-    // Search a rectangle for point contained within
-    this.search = function (box) {
-        var elem = range_tree.search (box);
-	var results = [];
-	$.each (elem, function (index, point) {
-	    results.push (point.ref);
-	});
-	return new LayerSelector (results);
     };
 
-    // Determine if a point is contained in the buffer of any of the points
-    this.map_contains = function (engine, p) {
-        //var s = engine.camera.screen (p);
-        var s = p;
-        var min = vect.add (s, new vect (-max_radius, max_radius));
-        var max = vect.add (s, new vect (max_radius, -max_radius));
-        var box = new Box (engine.camera.project (min), engine.camera.project (max));
-        var elem = range_tree.search (box);
-        for (var i = 0; i < elem.length; i ++) {
-            var point = elem[i];
-	    if (point.ref.map_contains (engine, p))
-                return new LayerSelector ([point.ref]);
-	}
-        return new LayerSelector ([]);
+    // A function to broadcast when the geometry or feature specific styles change
+    // This is used when changes occur that views may not be aware of
+    this.change = function (change_func) {
+        change_callbacks.push (change_func);
+    };
+
+    this.compute = function (engine, key) {
+        return derived_style (engine, this, layer, key);
+    };*/
+
+    this.style = function (arg0, arg1, arg2) {
+        var engine, key, value;
+        if (!arg0 || arg0.type == 'Engine') {
+            engine = arg0;
+            key = arg1;
+            value = arg2;
+        }
+        else {
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+        if (value === undefined) {
+            return StyleManager.getStyle (this, engine, key);
+        }
+        else {
+            StyleManager.setStyle (this, engine, key, value);
+            return this;
+        }
     };
 };
+
+var EARTH = 6378.1
+
+var new_feature_id = (function () {
+    var current_id = 1;
+    return function () {
+	var id = current_id;
+	current_id ++;
+	return id;
+    };
+}) ();
+
+var rand_map = (function () {
+    var factor = 1e-6
+    var xmap = {} 
+    var ymap = {} 
+    return function (x, y) {
+	// Temporary Fix
+	return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
+	// End Temp
+	var key = x.toString () + ',' + y.toString ();
+	if (!(key in xmap)) {
+	    xmap[key] = x + Math.random () * factor - (factor / 2);
+	    ymap[key] = y + Math.random () * factor - (factor / 2);
+	}
+	return new vect (xmap[key], ymap[key]);
+    };
+}) ();
     var geom_types = {
     'Point': Point,
     'Polygon': Polygon,
@@ -4141,109 +4492,88 @@ function Layer (options) {
 	current_over = {};
     };
 };
-    // Constructor for the basic geometry types that can be rendered
+    // A point for the layer. A point is actually a multi-point, so it can be
+// made up of many "spatial" points. The geometry format for the point type is:
+// [[lon, lat], [lon, lat], [lon, lat], ...]
+var Point = function (prop, layer) {
+    Feature.call (this, prop, layer);
 
-var STYLE = 1;
-var ATTR = 2;
-var GEOM = 3;
-
-var Feature = function (prop, layer) {
-    var feature = this;
-
-    // Unique feature ID
-    this.id = new_feature_id ();
-    this.type = 'Feature';
-
-    // The Geometry type
-    this.type = prop.type;
-
-    var attr = prop.attr;
-
-    // Attribute getter and setter
-    this.attr = function (key, value) {
-        if (value === undefined) {
-            return attr[key];
-        }
-        else {
-            throw "Not Implemented";
-        }
+    // Converts geometry representation of a point to a vector
+    var geom2vect = function (geom) {
+        return new vect (geom[0], geom[1]);
     };
 
-    // The geometry of the object
-    this.geom = prop.geom;
+    // Set the bounding box for the point
+    this.bounds = null;
+    for (var i = 0; i < this.geom.length; i ++) {
+        var pos = geom2vect (this.geom[i]);
+        var bbox = new Box (pos.clone (), pos.clone ());
+	if (this.bounds)
+	    this.bounds.union (bbox);
+	else
+	    this.bounds = bbox;
+    }
 
-    // Retreives or sets the geometry of the object
-    this.geometry = function () {
-
-    };
-
-    /*var change_callbacks = [];
-
-    var trigger_change = function (mode, key, value) {
-        $.each (change_callbacks, function (i, callback) {
-            callback (feature, mode, key, value);
-        });
-    };
-
-    // A function to broadcast when the geometry or feature specific styles change
-    // This is used when changes occur that views may not be aware of
-    this.change = function (change_func) {
-        change_callbacks.push (change_func);
-    };
-
-    this.compute = function (engine, key) {
-        return derived_style (engine, this, layer, key);
-    };*/
-
-    this.style = function (arg0, arg1, arg2) {
-        var engine, key, value;
-        if (!arg0 || arg0.type == 'Engine') {
-            engine = arg0;
-            key = arg1;
-            value = arg2;
+    // Check if a point (usually a mouse position) is contained in the buffer
+    // of this Point
+    this.map_contains = function (engine, p) {
+        //var s = engine.camera.screen (p);
+        var s = p;
+        //var rad = this.compute ('radius');
+        var rad = StyleManager.derivedStyle (this, layer, engine, 'radius');
+        for (var i = 0; i < this.geom.length; i ++) {
+            var v = engine.camera.screen (geom2vect (this.geom[i]));
+            if (vect.dist (v, s) < rad)
+                return true;
         }
-        else {
-            engine = null;
-            key = arg0;
-            value = arg1;
-        }
-        if (value === undefined) {
-            return StyleManager.getStyle (this, engine, key);
-        }
-        else {
-            StyleManager.setStyle (this, engine, key, value);
-            return this;
-        }
+        return false;
     };
 };
 
-var EARTH = 6378.1
 
-var new_feature_id = (function () {
-    var current_id = 1;
-    return function () {
-	var id = current_id;
-	current_id ++;
-	return id;
+var PointCollection = function (points) {
+    var search_points = [];
+    var max_radius = 0;
+    $.each (points, function (key, point) {
+        var radius = StyleManager.derivedStyle (this, layer, engine, 'radius');
+        if (radius > max_radius)
+            max_radius = radius;
+        $.each (point.geom, function (index, pair) {
+            search_points.push ({
+                x: pair[0],
+                y: pair[1],
+                ref: point
+            });
+        });
+    });
+    var range_tree = new RangeTree (search_points);
+
+    // Search a rectangle for point contained within
+    this.search = function (box) {
+        var elem = range_tree.search (box);
+	var results = [];
+	$.each (elem, function (index, point) {
+	    results.push (point.ref);
+	});
+	return new LayerSelector (results);
     };
-}) ();
 
-var rand_map = (function () {
-    var factor = 1e-6
-    var xmap = {} 
-    var ymap = {} 
-    return function (x, y) {
-	// Temporary Fix
-	return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
-	// End Temp
-	var key = x.toString () + ',' + y.toString ();
-	if (!(key in xmap)) {
-	    xmap[key] = x + Math.random () * factor - (factor / 2);
-	    ymap[key] = y + Math.random () * factor - (factor / 2);
+    // Determine if a point is contained in the buffer of any of the points
+    this.map_contains = function (engine, p) {
+        //var s = engine.camera.screen (p);
+        var s = p;
+        var min = vect.add (s, new vect (-max_radius, max_radius));
+        var max = vect.add (s, new vect (max_radius, -max_radius));
+        var box = new Box (engine.camera.project (min), engine.camera.project (max));
+        var elem = range_tree.search (box);
+        for (var i = 0; i < elem.length; i ++) {
+            var point = elem[i];
+	    if (point.ref.map_contains (engine, p))
+                return new LayerSelector ([point.ref]);
 	}
-	return new vect (xmap[key], ymap[key]);
+        return new LayerSelector ([]);
     };
-}) ();
+};
     function Polygon (prop, layer) {
     Feature.call (this, prop, layer);
     
@@ -4568,6 +4898,7 @@ function LineCollection (lines) {
         return new LayerSelector ([]);
     };
 };
+
     var grid_shader = null;
 
 function Grid (options) {
@@ -6419,330 +6750,6 @@ var load_shp = function (data, indices, options) {
 	return layer;	
     }
 };
-    var basic_shader = null;
-
-function RangeBar (engine, colors, bottom, top, vert) {
-    if (!basic_shader)
-	basic_shader = makeProgram (BASE_DIR + 'shaders/basic');
-    
-    var c = [];
-    var pos = [];
-
-    if (!vert) {
-	var box_width = Math.abs ((top.x - bottom.x) / colors.length);
-	var box_height = Math.abs (top.y - bottom.y);
-
-	for (var i = 0; i < colors.length; i ++) {
-	    var min = new vect (bottom.x + box_width * i, bottom.y);
-	    var max = new vect (bottom.x + box_width * (i + 1), top.y);
-	    pos.push.apply (pos, rectv (engine.camera.percent (min), engine.camera.percent (max)));
-	    for (var k = 0; k < 6; k ++) {
-		c.push.apply (c, colors[i].vect ());
-	    }
-	}
-    }
-    else {
-	var box_width = Math.abs (top.x - bottom.x);
-	var box_height = Math.abs ((top.y - bottom.y) / colors.length);
-	for (var i = 0; i < colors.length; i ++) {
-	    var j = colors.length - 1 - i;
-	    var min = new vect (bottom.x,  bottom.y + box_height * (j + 1));
-	    var max = new vect (top.x, bottom.y - box_height * j);
-	    console.log ('box', min, max);
-	    pos.push.apply (pos, rectv (engine.camera.percent (min), engine.camera.percent (max)));
-	    for (var k = 0; k < 6; k ++) {
-		c.push.apply (c, colors[i].vect ());
-	    }
-	}
-    }
-
-    var pos_buffer = staticBuffer (pos, 2);
-    var color_buffer = staticBuffer (c, 4);
-
-    this.update = function (engine, p) {
-
-    };
-    
-    this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
-	gl.useProgram (basic_shader);
-
-	basic_shader.data ('pos', pos_buffer);
-	basic_shader.data ('color_in', color_buffer);
-
-	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
-    };
-};    var SLIDER_WIDTH = 20;
-
-function Slider (pos, size, units) {
-    var position = function (index) {
-	if (index >= units)
-	    throw "Slider index out of bounds";
-	return (size.x / (units - 1)) * index;
-    };
-
-    var slider_index = function (p) {
-	if (p <= pos.x)
-	    return 0;
-	if (p >= pos.x + size.x)
-	    return units - 1;
-	return Math.round (((p - pos.x) / size.x) * (units - 1));
-    };
-    
-    this.dom = $ ('<div></div>')
-	.addClass ('slider-container')
-	.css ('position', 'relative')
-	.css ('left', pos.x)
-	.css ('top', pos.y)
-	.css ('width', size.x)
-	.css ('height', size.y);
-
-    var dragging = false;
-    var current = 0;
-    var bar = $ ('<div></div>')
-	.addClass ('slider-box')
-	.css ('position', 'relative')
-	.css ('left', -SLIDER_WIDTH / 2)
-	.css ('height', size.y)
-	.css ('width', SLIDER_WIDTH)
-	.mousedown (function () {
-	    dragging = true;
-	});
-
-    this.tick = function () {
-	return current;
-    };
-
-    this.count = function () {
-	return units;
-    };
-
-    var change_event = function (index) {};
-    this.change = function (func) {
-	change_event = func;
-    };
-
-    var release_event = function (index) {};
-    this.release = function (func) {
-	release_event = func;
-    };
-
-    this.dragging = function () {
-	return dragging;
-    };
-
-    this.dom.append (bar);
-
-    this.set = function (index) {
-	if (index != current)
-	    change_event (index);
-	current = index;
-	var px = position (index);
-	bar.css ('left', px - SLIDER_WIDTH / 2);
-	release_event (index);
-    };
-    
-    $ (document).bind ('mouseup', function () {
-	if (!dragging)
-	    return;
-	dragging = false;
-	var index = slider_index (event.clientX);
-	release_event (index);
-    });
-
-    $ (document).bind ('mousemove', function (event) {    
-	if (dragging) {
-	    var index = slider_index (event.clientX);
-	    if (index != current)
-		change_event (index);
-	    current = index;
-	    var px = position (index);
-	    bar.css ('left', px - SLIDER_WIDTH / 2);
-	}
-    });
-    
-};    var Map = function (selector, options) {
-    var engine = this;
-
-    if (options === undefined)
-        options = {};
-
-    default_model (options, {
-        'width': 360,
-        'center': new vect (0, 0)
-    });
-
-    BaseEngine.call (this, selector, options);    
-
-    default_model (options, {
-        'base': 'default',
-        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps',
-        'min': new vect (-180, -90),
-        'max': new vect (180, 90),
-    });
-
-    this.Renderers = {
-        'Point': PointRenderer,
-        'Polygon': PolygonRenderer,
-        'Line': LineRenderer,
-    };
-
-    this.styles = {
-        'Point': {
-            'fill': new Color (.02, .44, .69, 1.0),
-            'opacity': 1.0,
-            'radius': 5.0,
-            'stroke': 'none',
-            'stroke-width': 2.0
-        },
-        'Polygon': {
-            'fill': new Color (.02, .44, .69, 1.0),
-            'fill-opacity': .5,
-            'stroke': new Color (.02, .44, .69, 1.0),
-            'stroke-opacity': 1.0,
-            'stroke-width': .75
-        },
-        'Line': {
-            'stroke': new Color (.02, .44, .69, 1.0),
-            'stroke-opacity': 1.0,
-            'stroke-width': 2.0
-        },
-        'default': {
-            'fill': new Color (.02, .44, .69, 1.0),
-            'fill-opacity': .5,
-            'stroke': new Color (.02, .44, .69, 1.0),
-            'stroke-opacity': 1.0,
-            'stroke-width': 1.0            
-        }
-    };
-
-    var base = null;
-    var setBase = function () {
-	if (options.base == 'default' || options.base == 'nasa') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: options['tile-server'] + '/tiles/nasa_topo_bathy',
-		levels: 8,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else if (options.base == 'ne') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
-		levels: 6,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else if (options.base == 'ne1') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: TILE_SERVER + '/tiles/NE1_HR_LC',
-		levels: 6,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else {
-	    base = null;
-	}
-        if (base) {
-            base.initialize (engine);
-            engine.scene[base.id] = base;
-        };
-    };
-    setBase ();
-};
-/*var Map = function (selector, options) {
-    this.center = function (x, y) {
-	engine.camera.position (new vect (x, y));
-    };
-
-    this.vcenter = function (v) {
-	this.center (v.x, v.y);
-    };
-
-    this.extents = function (width) {
-	engine.camera.extents (width);
-    };
-
-    this.append = function (layer) {
-        layer.initialize (engine);
-	engine.scene.push (layer);
-    };
-
-    this.remove = function (layer) {
-	for (var i = 0; i < engine.scene.length; i ++) {
-	    if (engine.scene[i] == layer) {
-		engine.scene.splice (i, 1);
-		return true;
-	    }
-	}
-	return false;
-    };
-
-    this.shade = function (data) {
-	var shade = new Hillshade (data);
-	engine.shade = shade;
-    };
-
-    this.select = function (func)  {
-	if (!func)
-	    engine.select (false);
-	else {
-	    engine.sel.select (func);
-	    engine.select (true);
-	}
-    };
-
-    this.resize = function () {
-	engine.resize ();
-    }
-
-    this.attr = function (key, value) {
-	engine.attr (key, value);
-    };
-
-    this.png = function () {
-	var data = engine.canvas.get (0).toDataURL ();
-
-	$.ajax ({
-	    url: '../server/export.png',
-	    type: 'POST',
-	    data: data
-	});
-    };
-
-    this.width = function () {
-	return engine.canvas.innerWidth ();
-    };
-
-    this.height = function () {
-	return engine.canvas.innerHeight ();
-    };
-
-    var click_func = null;
-    this.click = function (func) {
-	click_func = func;
-    };
-
-    engine = new Engine (selector, this, options);
-
-    engine.canvas.click (function (event) {
-	if (click_func) {
-	    var v = new vect (event.pageX, event.pageY);
-	    var p = engine.camera.project (v);
-	    click_func (p);
-	}
-    });
-};
-*/
 
     var ready_queue = [];
 
