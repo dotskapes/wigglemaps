@@ -2,7 +2,7 @@ var EventManager = new function () {
     this.listeners = {};
 
     this.manage = function (object) {
-        if (!(object.id in this.listeners) {
+        if (!(object.id in this.listeners)) {
             this.listeners[object.id] = {
                 parents: [],
                 callbacks: {}
