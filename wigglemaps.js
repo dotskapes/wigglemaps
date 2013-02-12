@@ -1245,41 +1245,55 @@ function derived_style (engine, feature, layer, key) {
     if (!options)
         options = {};
 
-    var ratio = canvas.width () / canvas.height (); 
-
-    if (options.width && options.center) {
-        var half_width = options.width / 2;
-        var half_height = half_width / ratio;
-        var world_half = new vect (half_width, half_height);
-        options.min = vect.sub (options.center, world_half);
-        options.max = vect.add (options.center, world_half);
+    if (options.width && !options.height) {
+        options.height = options.width;
+    }
+    else if (!options.width && options.height) {
+        options.width = options.height;
     }
 
-    default_model (options, {
-        min: new vect (0, 0),
-        max: new vect (1, 1)
-    });
+    var aspect = canvas.height () / canvas.width (); 
 
-    var center = vect.add (options.max, options.min).scale (.5);
+    if (options.min) {
+        options.center = vect.add (options.min, new vect (options.width, options.height * aspect).scale (.5));
+    }
+    else if (!options.center) {
+        options.center = new vect (0, 0);
+    }
 
+
+    // These four parameters (along with the viewport aspect ratio) completely determine the
+    // transformation matrices.
+    var worldWidth = options.width;
+    var worldHeight = options.height
+    var worldRatio = options.height / options.width;
+    var center = options.center.clone ();
     var level = 1.0;
 
+    // The three transformation matrices: One that goes from world space to pixel space
+    // One that goes from pixel space to screen space, and one that does both for efficency
     this.worldToPx = new Float32Array (9);
     this.pxToScreen = new Float32Array (9);
     this.worldToScreen = new Float32Array (9);
 
-    // Legacy access for backwards compatibility
+    // Deprecated: Legacy access for backwards compatibility
     this.mat3 = this.worldToScreen;
 
+
+    // Rebuild the matrices. Needs to be called everytime any of the above mentioned parameters
+    // Changes
     this.reconfigure = function () {
-        var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
+
+        var aspectRatio = canvas.height () / canvas.width (); 
+        var worldRatio = worldHeight / worldWidth;
+
+        //var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
+
+        var half_size = new vect (worldWidth / level, (worldWidth * worldRatio * aspectRatio) / level).scale (.5);
 
         var world_max = vect.add (center, half_size);
         var world_min = vect.sub (center, half_size);
         
-        //var world_max = vect.add (options.max, translate).scale (level);
-        //var world_min = vect.add (options.min, translate).scale (level);
-
         var width = canvas.width ();
         var height = canvas.height ();
         var world_range = vect.sub (world_max, world_min);
@@ -1326,8 +1340,10 @@ function derived_style (engine, feature, layer, key) {
 
     };
 
+    // Initial call to setup the matrices
     this.reconfigure ();
 
+    // Coverts a screen coordinate (in pixels) to a point in the world
     this.project = function (v) {
 	var c = new vect (
             2.0 * (v.x - canvas.offset ().left) / canvas.width () - 1.0,
@@ -1337,6 +1353,7 @@ function derived_style (engine, feature, layer, key) {
 	return c;
     };
     
+    // Converts a world coordinate to a screen coordinate
     this.screen = function (v) {
         var c = new vect (
 	    v.x * this.mat3[0] + this.mat3[6],
@@ -1346,26 +1363,50 @@ function derived_style (engine, feature, layer, key) {
         return c;
     };
 
+    // Moves the center point
     this.move = function (v) {
         center.add (v);
         this.reconfigure ();
     };
 
+    // Zooms the canvas
     this.zoom = function (scale) {
 	level *= scale;
         this.reconfigure ();
     };
 
-    this.position = function (p) {
-        if (!p)
-            return center;
+    // Sets the center point
+    // Variable length arguments:
+    // 0 for the getter, 1 to send a vector, two to send scalars
+    this.position = function (arg0, arg1) {
+        if (arg0 === undefined)
+            return center.clone ();
+        else if (arg1 === undefined)
+            center = arg0.clone ();
         else
-            center = p.clone ();
+            center = new vect (arg0, arg1);
+        this.reconfigure ();
     };
 
+    // Reset the zoom level to the original
+    this.reset = function () {
+        level = 1.0;
+        this.reconfigure ();
+    };
+
+    // Listens for aspect ratio changes
     canvas.resize (function(event) {
         camera.reconfigure ();
     });
+
+    // Scales both the width and height to a new size at zoom level 1
+    // Resets the zoom level to prevent unexpected size effects
+    this.extents = function (newWidth) {
+        worldWidth = newWidth;
+        worldHeight = newWidth * worldRatio;
+        level = 1.0;
+        this.reconfigure ();
+    };
 };
 
 /*function Camera (canvas, options) {
@@ -2281,6 +2322,8 @@ var PointQuerier = function (engine, layer, points) {
             engine.resize ();
         });
     }
+
+    var framebuffers = [];
 
     this.resize = function () {
 	this.canvas.attr ('width', $ (selector).width ());
@@ -3916,10 +3959,17 @@ function Layer (options) {
     };
 
     var props = {};
-    this.properties = function (numeric) {
+    this.properties = function () {
         var results = [];
         for (var key in props) {
-            if (!numeric || (numeric && props[key]))
+            results.push (key);
+        }
+        return results;
+    };
+    this.numeric = function () {
+        var results = [];
+        for (var key in props) {
+            if (props[key])
                 results.push (key);
         }
         return results;
@@ -4032,7 +4082,7 @@ var Feature = function (prop, layer) {
 
     // Attribute getter and setter
     this.attr = function (key, value) {
-        if (arguments.length < 2) {
+        if (value === undefined) {
             return attr[key];
         }
         else {

@@ -26,6 +26,8 @@ function BaseEngine (selector, options) {
         });
     }
 
+    var framebuffers = [];
+
     this.resize = function () {
 	this.canvas.attr ('width', $ (selector).width ());
 	this.canvas.attr ('height', $ (selector).height ());	

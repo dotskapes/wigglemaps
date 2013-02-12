@@ -37,10 +37,17 @@ function Layer (options) {
     };
 
     var props = {};
-    this.properties = function (numeric) {
+    this.properties = function () {
         var results = [];
         for (var key in props) {
-            if (!numeric || (numeric && props[key]))
+            results.push (key);
+        }
+        return results;
+    };
+    this.numeric = function () {
+        var results = [];
+        for (var key in props) {
+            if (props[key])
                 results.push (key);
         }
         return results;

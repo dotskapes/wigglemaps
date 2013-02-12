@@ -10,8 +10,7 @@
         wiggle.ready (function () {
 	    var map = new wiggle.Map ();
 	    map.center (-55, -10);
-	    layer = new wiggle.layer.PointLayer ();
-	    map.append (layer);
+	    layer = new wiggle.layer.Layer ();
 	    for (var i = 0; i < 50000; i ++) {
 		var x = Math.random () * 360 - 180;
 		var y = Math.random () * 180 - 90;
@@ -19,10 +18,12 @@
 		    geom: [[x, y]],
 		    attr: {
 			rand: Math.random ()
-		    }
+		    },
+                    type: 'Point'
 		};
 		layer.append (p);
 	    }
+	    map.append (layer);
 	});
     </script>
 

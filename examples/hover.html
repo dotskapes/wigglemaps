@@ -10,7 +10,8 @@
     <script type="text/javascript">
     wiggle.ready (function () {
 	var map = new wiggle.Map ();
-	//map.center (-55, -10);
+	map.camera.position (-55, -10);
+        map.camera.extents (180);
 	$.ajax ({
 	    url: 'data/subunits.json',
 	    dataType: 'json',

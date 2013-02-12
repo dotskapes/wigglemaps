@@ -18,7 +18,7 @@ var Feature = function (prop, layer) {
 
     // Attribute getter and setter
     this.attr = function (key, value) {
-        if (arguments.length < 2) {
+        if (value === undefined) {
             return attr[key];
         }
         else {
