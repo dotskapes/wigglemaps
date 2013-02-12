@@ -48,16 +48,15 @@ function BaseEngine (selector, options) {
     this.camera = new Camera (this.canvas, options);
     this.scroller = new Scroller (this);
 
-    this.extents = function (width, height) {
-	this.camera.extents (width, height);
+    this.extents = function (width) {
+	this.camera.extents (width);
     };
 
-    this.center = function (x, y) {
-	this.camera.position (new vect (x, y));
-    };
-
-    this.vcenter = function (v) {
-	this.center (v.x, v.y);
+    this.center = function (arg0, arg1) {
+        if (arg1 === undefined)
+	    this.camera.position (arg0);
+        else
+	    this.camera.position (new vect (arg0, arg1));
     };
 
     this.pxW = 1 / this.canvas.attr ('width');

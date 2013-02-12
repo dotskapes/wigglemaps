@@ -42,12 +42,15 @@
                 
                 var map = new wiggle.Map ('#map');
 
-                layer.features ()
-                    .style (graph, 'stroke', wiggle.util.icolor (51, 51, 51, 255));
+                var nodata = wiggle.util.icolor (75, 75, 75, 255)
+                var white = wiggle.util.icolor (255, 255, 255, 255);
 
                 layer.features ()
-                    .style (map, 'fill', wiggle.util.icolor (51, 51, 51, 255))
-                    .style (map, 'stroke', wiggle.util.icolor (255, 255, 255, 255))
+                    .style (graph, 'stroke', nodata);
+
+                layer.features ()
+                    .style (map, 'fill', nodata)
+                    .style (map, 'stroke', white)
                     .style (map, 'fill-opacity', .9);
 
 
