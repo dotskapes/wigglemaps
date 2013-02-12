@@ -21,9 +21,10 @@
                 map.select (function (box) {
 		    if (current)
 			current.style ('fill', null);
-		    current = br_precip.search (box);
+		    current = map.search (br_precip, box);
 		    current.style ('fill', wiggle.util.icolor (204, 85, 0, 255));
 		});
+                map.enableSelect ();
 	    }
 	});
     });

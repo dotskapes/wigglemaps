@@ -1,7 +1,7 @@
 var Querier = function (engine, layer) {
     queryTypes = {
         'Point': PointQuerier,
-        //'Polygon': PolygonQuerier,
+        'Polygon': PolygonQuerier,
         //'Line': lineQuerier
     };
 
@@ -19,7 +19,7 @@ var Querier = function (engine, layer) {
         return results;
     };
 
-    this.pointSearch = function (engine, p) {
+    this.pointSearch = function (p) {
         var results = new LayerSelector ([]);
         for (var key in queriers) {
             var search_results = queriers[key].pointSearch (p);

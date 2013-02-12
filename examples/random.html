@@ -10,6 +10,7 @@
         wiggle.ready (function () {
 	    var map = new wiggle.Map ();
 	    map.center (-55, -10);
+            map.extents (75);
 	    layer = new wiggle.layer.Layer ();
 	    for (var i = 0; i < 50000; i ++) {
 		var x = Math.random () * 360 - 180;

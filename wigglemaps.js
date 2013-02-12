@@ -1363,6 +1363,17 @@ function derived_style (engine, feature, layer, key) {
         return c;
     };
 
+    this.percent = function (v) {
+	return new vect (
+	    2 * ((v.x - canvas.offset ().left) / canvas.width ()) - 1,
+	    -(2 * ((v.y - canvas.offset ().top) / canvas.height ()) - 1));
+    };
+
+    this.pixel = function (v) {
+	return new vect (canvas.offset ().left + ((v.x + 1) / 2) * canvas.width (),
+			 canvas.offset ().top + ((-v.y + 1) / 2) * canvas.height ());
+    };
+
     // Moves the center point
     this.move = function (v) {
         center.add (v);
@@ -2222,7 +2233,7 @@ function PolygonRenderer (engine, layer) {
     var Querier = function (engine, layer) {
     queryTypes = {
         'Point': PointQuerier,
-        //'Polygon': PolygonQuerier,
+        'Polygon': PolygonQuerier,
         //'Line': lineQuerier
     };
 
@@ -2240,7 +2251,7 @@ function PolygonRenderer (engine, layer) {
         return results;
     };
 
-    this.pointSearch = function (engine, p) {
+    this.pointSearch = function (p) {
         var results = new LayerSelector ([]);
         for (var key in queriers) {
             var search_results = queriers[key].pointSearch (p);
@@ -2293,6 +2304,53 @@ var PointQuerier = function (engine, layer, points) {
             }
 	}
         return new LayerSelector ([]);
+    };
+};
+    var PolygonQuerier = function (engine, layer) {
+    var r_points = [];
+    layer.features ().each (function (n, polygon) {
+	$.each (polygon.geom, function (i, poly) {
+	    $.each (poly, function (j, ring) {
+		$.each (ring, function (k, pair) {
+		    r_points.push ({
+                        ref: polygon,
+			x: pair[0],
+			y: pair[1]
+		    });			
+		});
+	    });
+	});
+    });
+    var tree = new RangeTree (r_points);
+
+    this.boxSearch = function (box) {
+        // Range search on the vertices of the polygon
+	var elem = tree.search (box);
+	var keys = {};
+	$.each (elem, function (i, p) {
+	    keys[p.ref.id] = p.ref;
+	});
+        // Check to see if one of the corners of the box are in the polygon
+        layer.features ().each (function (i, polygon) {
+            for (var j = 0; j < 4; j ++) {
+                if (polygon.contains (box.vertex (j)))
+                    keys[polygon.id] = polygon;
+            }
+        });
+	var results = [];
+	for (var k in keys) {
+	    results.push (keys[k]);
+	}
+	return new LayerSelector (results);
+
+    };
+    this.pointSearch = function (p) {
+        var results = [];
+        layer.feature ().each (function (i, polygon) {
+            if (polygon.contains (p))
+                results.push (polygon);
+        });
+        return new LayerSelector (results);
     };
 };
     function BaseEngine (selector, options) {
@@ -2438,6 +2496,10 @@ var PointQuerier = function (engine, layer, points) {
         layer.fixed = true;
     };
 
+    this.search = function (layer, box) {
+        return this.queriers[layer.id].boxSearch (box);
+    };
+
     this.style = function (object, key, value) {
         if (this.styles[object.id] === undefined)
             this.styles[object.id] = {};
@@ -2462,7 +2524,23 @@ var PointQuerier = function (engine, layer, points) {
         } 
     };
 
-    this.sel = new SelectionBox (this);
+    var sel = new SelectionBox (this);
+
+    this.select = function (func)  {
+	sel.select (func);
+    };
+
+    var selectEnabled = false;
+    this.enableSelect = function () {
+	this.scroller.disable ();
+	sel.enable ();
+        selectEnabled = true;
+    };
+    this.disableSelect = function () {
+	this.scroller.enable ();
+	sel.disable ();
+        selectEnabled = false;
+    };
 
     var old_time =  new Date ().getTime ();
     var fps_window = [];
@@ -2516,7 +2594,9 @@ var PointQuerier = function (engine, layer, points) {
 
 	requestAnimationFrame (draw);
 
-	this.sel.draw (this, dt);
+        if (selectEnabled) {
+	    sel.draw (this, dt);
+        }
 
     };
 
@@ -3034,10 +3114,8 @@ function Engine (selector, map, options) {
 	}
     };
 };
-    var sel_box_shader = null;
-function SelectionBox (engine) {
-    if (!sel_box_shader)
-	sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
+    function SelectionBox (engine) {
+    var sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
     var start = null;
@@ -3107,6 +3185,7 @@ function SelectionBox (engine) {
     }
     
     this.draw = function (engine, dt) {
+        var gl = engine.gl;
 	if (dragging) {
 	    gl.useProgram (sel_box_shader);
 	    

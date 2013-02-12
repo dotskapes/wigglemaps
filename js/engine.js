@@ -141,6 +141,10 @@ function BaseEngine (selector, options) {
         layer.fixed = true;
     };
 
+    this.search = function (layer, box) {
+        return this.queriers[layer.id].boxSearch (box);
+    };
+
     this.style = function (object, key, value) {
         if (this.styles[object.id] === undefined)
             this.styles[object.id] = {};
@@ -165,7 +169,23 @@ function BaseEngine (selector, options) {
         } 
     };
 
-    this.sel = new SelectionBox (this);
+    var sel = new SelectionBox (this);
+
+    this.select = function (func)  {
+	sel.select (func);
+    };
+
+    var selectEnabled = false;
+    this.enableSelect = function () {
+	this.scroller.disable ();
+	sel.enable ();
+        selectEnabled = true;
+    };
+    this.disableSelect = function () {
+	this.scroller.enable ();
+	sel.disable ();
+        selectEnabled = false;
+    };
 
     var old_time =  new Date ().getTime ();
     var fps_window = [];
@@ -219,7 +239,9 @@ function BaseEngine (selector, options) {
 
 	requestAnimationFrame (draw);
 
-	this.sel.draw (this, dt);
+        if (selectEnabled) {
+	    sel.draw (this, dt);
+        }
 
     };
 

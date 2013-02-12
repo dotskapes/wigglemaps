@@ -22,6 +22,7 @@
     // #include 'time_renderer.js'
     // #include 'query/Querier.js'
     // #include 'query/PointQuerier.js'
+    // #include 'query/PolygonQuerier.js'
     // #include 'engine.js'
     // #include 'time_engine.js'
     // #include 'buffer.js'

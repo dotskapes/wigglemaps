@@ -1,7 +1,5 @@
-var sel_box_shader = null;
 function SelectionBox (engine) {
-    if (!sel_box_shader)
-	sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
+    var sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
     var start = null;
@@ -71,6 +69,7 @@ function SelectionBox (engine) {
     }
     
     this.draw = function (engine, dt) {
+        var gl = engine.gl;
 	if (dragging) {
 	    gl.useProgram (sel_box_shader);
 	    

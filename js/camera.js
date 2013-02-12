@@ -121,6 +121,17 @@ function Camera (canvas, options) {
         return c;
     };
 
+    this.percent = function (v) {
+	return new vect (
+	    2 * ((v.x - canvas.offset ().left) / canvas.width ()) - 1,
+	    -(2 * ((v.y - canvas.offset ().top) / canvas.height ()) - 1));
+    };
+
+    this.pixel = function (v) {
+	return new vect (canvas.offset ().left + ((v.x + 1) / 2) * canvas.width (),
+			 canvas.offset ().top + ((-v.y + 1) / 2) * canvas.height ());
+    };
+
     // Moves the center point
     this.move = function (v) {
         center.add (v);
