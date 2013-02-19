@@ -42,10 +42,11 @@
     // #include 'src/range.js'
 
     // #include 'src/model/Feature.js'
-    // #include 'src/model/Layer.js'
     // #include 'src/model/Point.js'
     // #include 'src/model/Polygon.js'
     // #include 'src/model/Line.js'
+
+    // #include 'src/model/Layer.js'
 
     // #include 'src/grid.js'
     // #include 'src/ascii.js'
@@ -67,7 +68,8 @@
             Layer: Layer,
 	    Grid: Grid,
 	    Hillshade: Hillshade,
-	    Elevation: Elevation
+	    Elevation: Elevation,
+            Raster: Raster
 	},
 	io: {
 	    Shapefile: Shapefile,

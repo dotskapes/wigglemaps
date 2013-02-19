@@ -9,17 +9,38 @@ function KML (data) {
 };
 
 function Raster (url, min, max) {
-    if (!raster_shader)
-	raster_shader = makeProgram (BASE_DIR + 'shaders/raster');
+    var raster_shader;
+    var tex_buffer, pos_buffer;
 
-    this.image = getTexture (url);
-    
-    var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (rectv (min, max), 2);
+    var layer_initialized = false;
+
+    this.id = new_feature_id ();
+
+    var tex_ready = false;
+
+    this.initialize = function (engine) {
+        if (!raster_shader)
+	    raster_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/raster');
+
+        this.image = getTexture (engine.gl, url, function () {
+            tex_ready = true;
+        });
+        
+        tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
+        pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
+        
+        layer_initialized = true;
+    };
 
     this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
+        var gl = engine.gl;
+
+        if (!layer_initialized)
+            this.initialize (engine);
+
+        if (!tex_ready)
+            return;
+
 	gl.useProgram (raster_shader);
 
 	raster_shader.data ('screen', engine.camera.mat3);

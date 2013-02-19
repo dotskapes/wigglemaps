@@ -67,6 +67,8 @@ var load_shp = function (data, indices, options) {
 	    var y = ldbl64 (data, offset + 16 * i + 8);
 	    ring.push ([x, y]);
 	}
+        //if (ring.length <= 3)
+        //    return [];
 	return ring;
     };
 

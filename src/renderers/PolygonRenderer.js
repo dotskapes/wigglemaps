@@ -9,6 +9,7 @@ function PolygonRenderer (engine, layer) {
     var poly_shader = engine.shaders['polygon'];
 
     var line_renderer = new LineRenderer (engine, layer);
+    this.children.push (line_renderer);
 
     var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
@@ -19,6 +20,7 @@ function PolygonRenderer (engine, layer) {
         FeatureView.call (this, feature, layer, engine);
 
         var lines = line_renderer.create (feature);
+        this.children.push (lines);
 
         var fill_start;
 
@@ -50,8 +52,10 @@ function PolygonRenderer (engine, layer) {
 		    count ++;
 		}
 	    }
-	    if (count == 100)
-                throw "Rendering Polygon Failed";
+	    if (count == 100) {
+                console.log ("Rendering Polygon Failed: Skipping Interior");
+                p = [];
+            }
             
             // End temp error handling code
             

@@ -8,6 +8,7 @@ var DEBUG = false;
 
 
 function setContext (canvas) {
+    var gl;
     if (!DEBUG) 
 	gl = canvas.get (0).getContext ('experimental-webgl', {
 	    alpha: false,

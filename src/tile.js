@@ -16,6 +16,8 @@ function MultiTileLayer (options) {
     var engine = null;
     var gl = null;
 
+    this.id = new_feature_id ();
+
     for (var i = 0; i < options.levels; i ++) {
 	var settings = copy (options);
 	if (settings.source == 'file')

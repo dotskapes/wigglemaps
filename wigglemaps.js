@@ -658,6 +658,7 @@ var DEBUG = false;
 
 
 function setContext (canvas) {
+    var gl;
     if (!DEBUG) 
 	gl = canvas.get (0).getContext ('experimental-webgl', {
 	    alpha: false,
@@ -2008,6 +2009,8 @@ function Slider (pos, size, units) {
 };
     function FeatureView (feature, layer, engine) {
     this.style_map = {};
+
+    this.children = [];
     
     // Update the buffers for a specific property
     this.update = function (key) {
@@ -2017,12 +2020,18 @@ function Slider (pos, size, units) {
         if (key in this.style_map) {
             this.style_map[key] (value);
         }
+        for (var i = 0; i < this.children.length; i ++) {
+            this.children[i].update (key);
+        }
     };
         
     // Update all buffers for all properties
     this.update_all = function () {
         for (var key in this.style_map) {
             this.update (key);
+        }
+        for (var i = 0; i < this.children.length; i ++) {
+            this.children[i].update_all ();
         }
     };
 };
@@ -2032,10 +2041,16 @@ function Slider (pos, size, units) {
     // A list of views of the object
     this.views = [];
 
+    // The children renderers of this, used to recursively update
+    this.children = [];
+
     // Update all features with a style property
     this.update = function (key) {
         for (var i = 0; i < views.length; i ++) {
             this.views[i].update (key);
+        }
+        for (var i = 0; i < this.children.length; i ++) {
+            this.children[i].update (key);
         }
     };
 
@@ -2351,6 +2366,7 @@ function PolygonRenderer (engine, layer) {
     var poly_shader = engine.shaders['polygon'];
 
     var line_renderer = new LineRenderer (engine, layer);
+    this.children.push (line_renderer);
 
     var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
@@ -2361,6 +2377,7 @@ function PolygonRenderer (engine, layer) {
         FeatureView.call (this, feature, layer, engine);
 
         var lines = line_renderer.create (feature);
+        this.children.push (lines);
 
         var fill_start;
 
@@ -2392,8 +2409,10 @@ function PolygonRenderer (engine, layer) {
 		    count ++;
 		}
 	    }
-	    if (count == 100)
-                throw "Rendering Polygon Failed";
+	    if (count == 100) {
+                console.log ("Rendering Polygon Failed: Skipping Interior");
+                p = [];
+            }
             
             // End temp error handling code
             
@@ -3528,16 +3547,33 @@ function Engine (selector, map, options) {
 };
     var triangulate_polygon = function (elem) {
     var poly = [];
+    var tri = [];
     for (var k = 0; k < elem.length; k++) {
 	var p = [];
 	//for (var i = elem[k].length - 1; i >= 1; i --) {
-	for (var i = 1; i < elem[k].length; i ++) {
-	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
-	}
+        if (elem[k].length <= 3) {
+            tri.push (elem[k]);
+        }
+        else {
+	    for (var i = 1; i < elem[k].length; i ++) {
+	        p.push (rand_map (elem[k][i][0], elem[k][i][1]));
+	    }
+        }
 	p.push (poly[0]);
 	poly.push (p);
     }
-    return trapezoid_polygon (poly); 
+    var triangles = trapezoid_polygon (poly);
+    for (var i = 0; i < tri.length; i ++) {
+        triangles.push (tri[i][0][0]);
+        triangles.push (tri[i][0][1]);
+
+        triangles.push (tri[i][1][0]);
+        triangles.push (tri[i][1][1]);
+
+        triangles.push (tri[i][2][0]);
+        triangles.push (tri[i][2][1]);
+    }
+    return triangles;
 };
 
 function circle (index, length) {
@@ -4351,165 +4387,6 @@ var rand_map = (function () {
 	return new vect (xmap[key], ymap[key]);
     };
 }) ();
-    var geom_types = {
-    'Point': Point,
-    'Polygon': Polygon,
-    'Line': Line
-};
-
-function Layer (options) {
-    if (!options)
-        options = {};
-
-    this.id = new_feature_id ();
-    this.type = 'Layer';
-
-    // The layer's style properties
-    var layer_style = {};
-
-    // Lookup for each geometry type
-    var features = {};
-
-    // Copy over the defined styles
-    if (options.style) {
-        throw "Not Implemeneted";
-    }
-
-    this.style = function (arg0, arg1, arg2) {
-        var engine, key, value;
-        if (!arg0 || arg0.type == 'Engine') {
-            engine = arg0;
-            key = arg1;
-            value = arg2;
-        }
-        else {
-            engine = null;
-            key = arg0;
-            value = arg1;
-        }
-        if (value === undefined) {
-            return StyleManager.getStyle (this, engine, key);
-        }
-        else {
-            StyleManager.setStyle (this, engine, key, value);
-            return this;
-        }
-    };
-
-    this.bounds = null;
-
-    this.features = function () {
-        var elem = [];
-        for (var id in features) {
-            elem.push (features[id]);
-        }
-        return new LayerSelector (elem);
-    };
-
-    var props = {};
-    this.properties = function () {
-        var results = [];
-        for (var key in props) {
-            results.push (key);
-        }
-        return results;
-    };
-    this.numeric = function () {
-        var results = [];
-        for (var key in props) {
-            if (props[key])
-                results.push (key);
-        }
-        return results;
-    };
-
-    var layer_attr = {};
-    this.attr = function (key, value) {
-        // Getter if only one argument passed
-        if (arguments.length < 2) {
-            if (layer_attr[key] !== undefined)
-                return layer_attr[key];
-            else
-                return null;
-        }
-        // Otherwise, set property
-        else {
-            layer_attr[key] = value;
-        }
-    };
-
-    this.fixed = false;
-    
-    this.append = function (feature) {
-        if (this.fixed)
-            throw "Layers are currently immutable once added to a map";
-        var f = new geom_types[feature.type] (feature, this);
-        features[f.id] = f;
-
-        // Update the layer bounding box
-	if (this.bounds)
-	    this.bounds.union (f.bounds);
-	else
-	    this.bounds = f.bounds.clone ();
-
-        for (var key in feature.attr) {
-            if (props[key] === undefined) { 
-                if (!isNaN (feature.attr[key]))
-                    props[key] = true;
-                else
-                    props[key] = false;
-            }
-            else {
-                if (!isNaN (feature.attr[key]) && props[key])
-                    props[key] = true;
-                else
-                    props[key] = false;
-            }
-        };
-
-        dirty = true;
-    };
-
-    // User defined event handler functions
-    var over_func = null, out_func = null;
-    this.mouseover = function (func) {
-	over_func = func;
-    };
-
-    this.mouseout = function (func) {
-        out_func = func;
-    };
-
-    // Receive low level mouse position handlers from the bound engine
-    var current_over = {};
-    this.update_move = function (engine, p) {
-	if (over_func || out_func) {
-	    var c = this.map_contains (engine, p);
-	    var new_over = {};
-	    if (c) {
-		c.each (function (i, f) {
-		    new_over[f.id] = f;
-		});
-	    }
-	    for (var key in current_over) {
-		if (!(key in new_over) && out_func) 
-		    out_func (current_over[key]);
-	    }
-	    for (var key in new_over) {
-		if (!(key in current_over) && over_func) 
-		    over_func (new_over[key]);
-	    }
-	    current_over = new_over;    
-        }
-    };
-    this.force_out = function () {
-	for (var key in current_over) {
-	    if (out_func)
-		out_func (current_over[key]);
-	}
-	current_over = {};
-    };
-};
     // A point for the layer. A point is actually a multi-point, so it can be
 // made up of many "spatial" points. The geometry format for the point type is:
 // [[lon, lat], [lon, lat], [lon, lat], ...]
@@ -4914,6 +4791,166 @@ function LineCollection (lines) {
 
     this.contains = function (p) {
         return new LayerSelector ([]);
+    };
+};
+
+    var geom_types = {
+    'Point': Point,
+    'Polygon': Polygon,
+    'Line': Line
+};
+
+function Layer (options) {
+    if (!options)
+        options = {};
+
+    this.id = new_feature_id ();
+    this.type = 'Layer';
+
+    // The layer's style properties
+    var layer_style = {};
+
+    // Lookup for each geometry type
+    var features = {};
+
+    // Copy over the defined styles
+    if (options.style) {
+        throw "Not Implemeneted";
+    }
+
+    this.style = function (arg0, arg1, arg2) {
+        var engine, key, value;
+        if (!arg0 || arg0.type == 'Engine') {
+            engine = arg0;
+            key = arg1;
+            value = arg2;
+        }
+        else {
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+        if (value === undefined) {
+            return StyleManager.getStyle (this, engine, key);
+        }
+        else {
+            StyleManager.setStyle (this, engine, key, value);
+            return this;
+        }
+    };
+
+    this.bounds = null;
+
+    this.features = function () {
+        var elem = [];
+        for (var id in features) {
+            elem.push (features[id]);
+        }
+        return new LayerSelector (elem);
+    };
+
+    var props = {};
+    this.properties = function () {
+        var results = [];
+        for (var key in props) {
+            results.push (key);
+        }
+        return results;
+    };
+    this.numeric = function () {
+        var results = [];
+        for (var key in props) {
+            if (props[key])
+                results.push (key);
+        }
+        return results;
+    };
+
+    var layer_attr = {};
+    this.attr = function (key, value) {
+        // Getter if only one argument passed
+        if (arguments.length < 2) {
+            if (layer_attr[key] !== undefined)
+                return layer_attr[key];
+            else
+                return null;
+        }
+        // Otherwise, set property
+        else {
+            layer_attr[key] = value;
+        }
+    };
+
+    this.fixed = false;
+    
+    this.append = function (feature) {
+        if (this.fixed)
+            throw "Layers are currently immutable once added to a map";
+        var f = new geom_types[feature.type] (feature, this);
+        features[f.id] = f;
+
+        // Update the layer bounding box
+	if (this.bounds)
+	    this.bounds.union (f.bounds);
+	else
+	    this.bounds = f.bounds.clone ();
+
+        for (var key in feature.attr) {
+            if (props[key] === undefined) { 
+                if (!isNaN (feature.attr[key]))
+                    props[key] = true;
+                else
+                    props[key] = false;
+            }
+            else {
+                if (!isNaN (feature.attr[key]) && props[key])
+                    props[key] = true;
+                else
+                    props[key] = false;
+            }
+        };
+
+        dirty = true;
+    };
+
+    // User defined event handler functions
+    var over_func = null, out_func = null;
+    this.mouseover = function (func) {
+	over_func = func;
+    };
+
+    this.mouseout = function (func) {
+        out_func = func;
+    };
+
+    // Receive low level mouse position handlers from the bound engine
+    var current_over = {};
+    this.update_move = function (engine, p) {
+	if (over_func || out_func) {
+	    var c = this.map_contains (engine, p);
+	    var new_over = {};
+	    if (c) {
+		c.each (function (i, f) {
+		    new_over[f.id] = f;
+		});
+	    }
+	    for (var key in current_over) {
+		if (!(key in new_over) && out_func) 
+		    out_func (current_over[key]);
+	    }
+	    for (var key in new_over) {
+		if (!(key in current_over) && over_func) 
+		    over_func (new_over[key]);
+	    }
+	    current_over = new_over;    
+        }
+    };
+    this.force_out = function () {
+	for (var key in current_over) {
+	    if (out_func)
+		out_func (current_over[key]);
+	}
+	current_over = {};
     };
 };
 
@@ -5448,17 +5485,38 @@ function KML (data) {
 };
 
 function Raster (url, min, max) {
-    if (!raster_shader)
-	raster_shader = makeProgram (BASE_DIR + 'shaders/raster');
+    var raster_shader;
+    var tex_buffer, pos_buffer;
 
-    this.image = getTexture (url);
-    
-    var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (rectv (min, max), 2);
+    var layer_initialized = false;
+
+    this.id = new_feature_id ();
+
+    var tex_ready = false;
+
+    this.initialize = function (engine) {
+        if (!raster_shader)
+	    raster_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/raster');
+
+        this.image = getTexture (engine.gl, url, function () {
+            tex_ready = true;
+        });
+        
+        tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
+        pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
+        
+        layer_initialized = true;
+    };
 
     this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
+        var gl = engine.gl;
+
+        if (!layer_initialized)
+            this.initialize (engine);
+
+        if (!tex_ready)
+            return;
+
 	gl.useProgram (raster_shader);
 
 	raster_shader.data ('screen', engine.camera.mat3);
@@ -5560,7 +5618,8 @@ function Elevation (data) {
 	
 	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
-};    var OMEGA = Math.PI / 4;
+};
+    var OMEGA = Math.PI / 4;
 
 var hillshade_shader = null;
 function Hillshade (data) {
@@ -5640,6 +5699,8 @@ function MultiTileLayer (options) {
 
     var engine = null;
     var gl = null;
+
+    this.id = new_feature_id ();
 
     for (var i = 0; i < options.levels; i ++) {
 	var settings = copy (options);
@@ -6698,6 +6759,8 @@ var load_shp = function (data, indices, options) {
 	    var y = ldbl64 (data, offset + 16 * i + 8);
 	    ring.push ([x, y]);
 	}
+        //if (ring.length <= 3)
+        //    return [];
 	return ring;
     };
 
@@ -6789,7 +6852,8 @@ var load_shp = function (data, indices, options) {
             Layer: Layer,
 	    Grid: Grid,
 	    Hillshade: Hillshade,
-	    Elevation: Elevation
+	    Elevation: Elevation,
+            Raster: Raster
 	},
 	io: {
 	    Shapefile: Shapefile,

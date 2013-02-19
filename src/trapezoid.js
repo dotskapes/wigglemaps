@@ -1,15 +1,32 @@
 var triangulate_polygon = function (elem) {
     var poly = [];
+    var tri = [];
     for (var k = 0; k < elem.length; k++) {
 	var p = [];
 	//for (var i = elem[k].length - 1; i >= 1; i --) {
-	for (var i = 1; i < elem[k].length; i ++) {
-	    p.push (rand_map (elem[k][i][0], elem[k][i][1]));
-	}
+        if (elem[k].length <= 3) {
+            tri.push (elem[k]);
+        }
+        else {
+	    for (var i = 1; i < elem[k].length; i ++) {
+	        p.push (rand_map (elem[k][i][0], elem[k][i][1]));
+	    }
+        }
 	p.push (poly[0]);
 	poly.push (p);
     }
-    return trapezoid_polygon (poly); 
+    var triangles = trapezoid_polygon (poly);
+    for (var i = 0; i < tri.length; i ++) {
+        triangles.push (tri[i][0][0]);
+        triangles.push (tri[i][0][1]);
+
+        triangles.push (tri[i][1][0]);
+        triangles.push (tri[i][1][1]);
+
+        triangles.push (tri[i][2][0]);
+        triangles.push (tri[i][2][1]);
+    }
+    return triangles;
 };
 
 function circle (index, length) {
