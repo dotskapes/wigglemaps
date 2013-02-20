@@ -86,52 +86,17 @@ function BaseEngine (selector, options) {
         
     };
 
-    // Used as a callback when the StyleManager changes a feature
-    var update_feature = function (f, key) {
-        engine.views[f.id].update (key);
-    };
-
     EventManager.manage (this);
 
     this.append = function (layer) {
         // Legacy layer drawing code
         if ('draw' in layer) {
-            this.scene[layer.id] = layer;
+            this.scene.push (layer);
             return;
         }
-        // An engine can only draw a layer once
-        if (layer.id in this.renderers)
-            throw "Added layer to Engine twice";
 
-        EventManager.manage (layer);
-        EventManager.linkParent (this, layer);
+        this.scene.push (new LayerController (engine, layer, options));
 
-        this.renderers[layer.id] = {};
-        layer.features ().each (function (i, f) {
-            var key;
-            if (f.type in engine.Renderers) {
-                key = f.type;
-            }
-            else {
-                key = 'default';
-            }
-            if (!(key in engine.renderers[layer.id])) {
-                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer, options);
-            }
-            var view = engine.renderers[layer.id][key].create (f);
-            view.update_all ();
-
-            if (engine.views[f.id] !== undefined)
-                throw "Cannot add a feature twice to the same Engine";
-
-            engine.views[f.id] = view;
-            
-            //StyleManager.registerCallback (engine, f, update_feature);
-            EventManager.manage (f);
-            EventManager.linkParent (layer, f);
-            EventManager.addEventHandler (f, 'style', update_feature);
-            //f.change (handle_change);
-        });
         //this.scene[layer.id] = this.renderers;
         this.layers[layer.id] = layer;
         this.queriers[layer.id] = new Querier (this, layer);
@@ -198,7 +163,7 @@ function BaseEngine (selector, options) {
 
     this.shaders = {};
 
-    this.scene = {};
+    this.scene = [];
     this.layers = {};
     this.queriers = {};
 
@@ -225,16 +190,15 @@ function BaseEngine (selector, options) {
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
 
-        // Legacy drawing code
         $.each (this.scene, function (i, layer) {
             layer.draw (engine, dt);
         });
         
-        $.each (this.renderers, function (i, layer_renderers) {
+        /*$.each (this.renderers, function (i, layer_renderers) {
             $.each (layer_renderers, function (j, renderer) {
                     renderer.draw (dt);
             });
-        });
+        });*/
 
 	requestAnimationFrame (draw);
 

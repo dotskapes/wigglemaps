@@ -1,22 +1,27 @@
-function FeatureView (feature, layer, engine) {
+function FeatureView (geom) {
     this.style_map = {};
 
-    this.children = [];
+    this.geom = geom;
     
     // Update the buffers for a specific property
-    this.update = function (key) {
-        var value = StyleManager.derivedStyle (feature, layer, engine, key);
+    this.update = function (key, value) {
+        //var value = StyleManager.derivedStyle (feature, layer, engine, key);
         if (value === null)
             throw "Style property does not exist";
         if (key in this.style_map) {
             this.style_map[key] (value);
         }
-        for (var i = 0; i < this.children.length; i ++) {
-            this.children[i].update (key);
-        }
+    };
+
+    this.keys = function () {
+        var items = {};
+        for (key in this.style_map) {
+            items[key] = true;
+        }        
+        return items;
     };
         
-    // Update all buffers for all properties
+    /*// Update all buffers for all properties
     this.update_all = function () {
         for (var key in this.style_map) {
             this.update (key);
@@ -24,5 +29,5 @@ function FeatureView (feature, layer, engine) {
         for (var i = 0; i < this.children.length; i ++) {
             this.children[i].update_all ();
         }
-    };
+    };*/
 };

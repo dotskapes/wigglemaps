@@ -2,7 +2,7 @@ function TimeSeries (selector, options) {
     if (options === undefined)
         options = {};
     BaseEngine.call (this, selector, options);
-   
+
     default_model (options, {
         'range': new Box (new vect (0, 0), new vect (1, 1))
     });
@@ -16,10 +16,7 @@ function TimeSeries (selector, options) {
             'stroke-width': 2.0,
         }
     };
-
-    //this.extents (1, 1);
-    //this.center (.5, .5);
-
+    
     this.Renderers = {
         'default': TimeSeriesRenderer
     };

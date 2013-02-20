@@ -8,19 +8,16 @@ function PolygonRenderer (engine, layer) {
     }
     var poly_shader = engine.shaders['polygon'];
 
-    var line_renderer = new LineRenderer (engine, layer);
-    this.children.push (line_renderer);
-
     var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
 
-    var PolygonView = function (feature) {
-        FeatureView.call (this, feature, layer, engine);
+    var PolygonView = function (feature_geom) {
+        FeatureView.call (this, feature_geom);
 
-        var lines = line_renderer.create (feature);
-        this.children.push (lines);
+        //var lines = line_renderer.create (feature_geom);
+        //this.children.push (lines);
 
         var fill_start;
 
@@ -34,8 +31,6 @@ function PolygonRenderer (engine, layer) {
 	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
             }
         };
-
-        var feature_geom = feature.geom;
 
 	var simple = [];
 	fill_count = 0;
@@ -73,13 +68,9 @@ function PolygonRenderer (engine, layer) {
 	    fill_buffers.write ('vert', p, current, count);
 	    current += count;
 	});
-
-        this.update_all ();
     };
 
-    this.view_factory = function (feature) {
-        return new PolygonView (feature);
-    };
+    this.View = PolygonView;
 
     this.draw = function () {
         var gl = engine.gl;
@@ -93,7 +84,5 @@ function PolygonRenderer (engine, layer) {
 	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
 	
 	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
-
-        line_renderer.draw ();
     };
 };

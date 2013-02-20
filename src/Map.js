@@ -20,7 +20,7 @@ var Map = function (selector, options) {
 
     this.Renderers = {
         'Point': PointRenderer,
-        'Polygon': PolygonRenderer,
+        'Polygon': multiRendererFactory ([PolygonRenderer, LineRenderer]),
         'Line': LineRenderer,
     };
 
@@ -90,7 +90,7 @@ var Map = function (selector, options) {
 	}
         if (base) {
             base.initialize (engine);
-            engine.scene[base.id] = base;
+            engine.scene.push (base);
         };
     };
     setBase ();

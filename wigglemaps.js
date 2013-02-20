@@ -2007,25 +2007,30 @@ function Slider (pos, size, units) {
     });
     
 };
-    function FeatureView (feature, layer, engine) {
+    function FeatureView (geom) {
     this.style_map = {};
 
-    this.children = [];
+    this.geom = geom;
     
     // Update the buffers for a specific property
-    this.update = function (key) {
-        var value = StyleManager.derivedStyle (feature, layer, engine, key);
+    this.update = function (key, value) {
+        //var value = StyleManager.derivedStyle (feature, layer, engine, key);
         if (value === null)
             throw "Style property does not exist";
         if (key in this.style_map) {
             this.style_map[key] (value);
         }
-        for (var i = 0; i < this.children.length; i ++) {
-            this.children[i].update (key);
-        }
+    };
+
+    this.keys = function () {
+        var items = {};
+        for (key in this.style_map) {
+            items[key] = true;
+        }        
+        return items;
     };
         
-    // Update all buffers for all properties
+    /*// Update all buffers for all properties
     this.update_all = function () {
         for (var key in this.style_map) {
             this.update (key);
@@ -2033,7 +2038,7 @@ function Slider (pos, size, units) {
         for (var i = 0; i < this.children.length; i ++) {
             this.children[i].update_all ();
         }
-    };
+    };*/
 };
     function FeatureRenderer (engine, layer) {
     this.engine = engine;
@@ -2041,28 +2046,29 @@ function Slider (pos, size, units) {
     // A list of views of the object
     this.views = [];
 
-    // The children renderers of this, used to recursively update
-    this.children = [];
-
-    // Update all features with a style property
+    /*// Update all features with a style property
     this.update = function (key) {
+        throw "Don't ever call this";
         for (var i = 0; i < views.length; i ++) {
             this.views[i].update (key);
         }
-        for (var i = 0; i < this.children.length; i ++) {
-            this.children[i].update (key);
-        }
+    };*/
+
+    this.View = function () {
+        throw "Attempt to call abstract function";
     };
 
-    this.view_factory = function () {
-        throw "Not Implemented";
-    };
-
-    this.create = function (feature, feature_geom) {
-        var view = this.view_factory (feature, feature_geom, engine);
-        view.update_all ();
+    this.create = function (feature) {
+        var view = new this.View (this.geomFunc (feature));
         this.views.push (view);
         return view;
+    };
+
+    this.draw = function () {
+    };
+
+    this.geomFunc = function (feature) {
+        return feature.geom;
     };
 };
     var INITIAL_POINTS = 1024;
@@ -2093,8 +2099,8 @@ function PointRenderer (engine, layer) {
     buffers.create ('alpha', 1);
 
     // Rendering class for an individual point
-    var PointView = function (feature) {
-        FeatureView.call (this, feature, layer, engine);
+    var PointView = function (feature_geom) {
+        FeatureView.call (this, feature_geom);
 
         // The start index of the buffer
         var start;
@@ -2134,8 +2140,6 @@ function PointRenderer (engine, layer) {
             }
         };
         
-        var feature_geom = feature.geom;
-
 	var total_points = feature_geom.length;
 	count = 6 * total_points;
 	start = buffers.alloc (count);
@@ -2144,13 +2148,9 @@ function PointRenderer (engine, layer) {
 	    buffers.repeat ('vert', point, start + index * 6, 6);
 	    buffers.write ('unit', unit, start + index * 6, 6);
 	});
-
-        this.update_all ();
     };
 
-    this.view_factory = function (feature) {
-        return new PointView (feature);
-    };
+    this.View = PointView;
 
     this.draw = function () {
         var gl = engine.gl;
@@ -2287,8 +2287,8 @@ function LineRenderer (engine, layer) {
 
     //stroke_buffers.create ('unit', 2);
 
-    var LineView = function (feature, feature_geom) {
-        FeatureView.call (this, feature, layer, engine);
+    var LineView = function (feature_geom) {
+        FeatureView.call (this, feature_geom);
 
 	var stroke_start = stroke_buffers.count ();
         var stroke_count = 0;
@@ -2309,9 +2309,6 @@ function LineRenderer (engine, layer) {
             return ((p1[0] == p2[0]) && (p1[1] == p2[1]));
         };
 
-        if (!feature_geom)
-            feature_geom = feature.geom;
-
 	$.each (feature_geom, function (i, poly) {
 	    for (var i = 0; i < poly.length; i ++) {
 		//stroke_count += poly[i].length * 6;
@@ -2323,13 +2320,9 @@ function LineRenderer (engine, layer) {
 		    draw_graph_lines (stroke_buffers, poly[i]);*/
 	    }
 	});
-
-        this.update_all ();
     };
 
-    this.view_factory = function (feature, feature_geom, draw_func) {
-        return new LineView (feature, feature_geom, draw_func);
-    };
+    this.View = LineView;
 
     this.draw = function () {
         var gl = engine.gl;
@@ -2365,19 +2358,16 @@ function PolygonRenderer (engine, layer) {
     }
     var poly_shader = engine.shaders['polygon'];
 
-    var line_renderer = new LineRenderer (engine, layer);
-    this.children.push (line_renderer);
-
     var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
 
-    var PolygonView = function (feature) {
-        FeatureView.call (this, feature, layer, engine);
+    var PolygonView = function (feature_geom) {
+        FeatureView.call (this, feature_geom);
 
-        var lines = line_renderer.create (feature);
-        this.children.push (lines);
+        //var lines = line_renderer.create (feature_geom);
+        //this.children.push (lines);
 
         var fill_start;
 
@@ -2391,8 +2381,6 @@ function PolygonRenderer (engine, layer) {
 	        fill_buffers.repeat ('alpha', [opacity], fill_start, fill_count);
             }
         };
-
-        var feature_geom = feature.geom;
 
 	var simple = [];
 	fill_count = 0;
@@ -2430,13 +2418,9 @@ function PolygonRenderer (engine, layer) {
 	    fill_buffers.write ('vert', p, current, count);
 	    current += count;
 	});
-
-        this.update_all ();
     };
 
-    this.view_factory = function (feature) {
-        return new PolygonView (feature);
-    };
+    this.View = PolygonView;
 
     this.draw = function () {
         var gl = engine.gl;
@@ -2450,19 +2434,17 @@ function PolygonRenderer (engine, layer) {
 	poly_shader.data ('alpha_in', fill_buffers.get ('alpha'));  
 	
 	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
-
-        line_renderer.draw ();
     };
 };
     function TimeSeriesRenderer (engine, layer, options) {
-    FeatureRenderer.call (this, engine, layer, options);
+    LineRenderer.call (this, engine, layer, options);
     
-    var line_renderer = new LineRenderer (engine, layer);
+    var order = layer.attr ('order');
 
-    this.view_factory = function (feature) {
+    this.geomFunc = function (feature) {
         var linestrings = [];
         var linestring = [];
-        var order = layer.attr ('order');
+
         for (var i = 0; i < order.length; i ++) {
             var y = feature.attr (order[i]);
 
@@ -2474,23 +2456,58 @@ function PolygonRenderer (engine, layer) {
                 }
             }
             else {
-                //linestring.push ([(i - options.range.min.x) / (options.range.width ()), (y - options.range.min.y) / (options.range.height ())]);
                 linestring.push ([i, y]);
             }
         }
         if (linestring.length > 0)
             linestrings.push (linestring);
-        //linestring = [[.25, .75], [.3,0], [.35, .75], [1.5, .5]];
-        //linestring = linestring.slice (20, 25);
+
         var feature_geom = [linestrings];
-
-        return line_renderer.create (feature, feature_geom);
+        return feature_geom;
     };
+};
+    function multiRendererFactory (Renderers) {
+    return function (engine, layer, options) {
+        var renderers = [];
+        
+        var MultiView = function (views) {
+            this.update = function (key, value) {
+                $.each (views, function (i, view) {
+                    view.update (key, value);
+                });
+            };
 
-    this.draw = function () {
-        line_renderer.draw ();
+            this.keys = function () {
+                var items = {};
+                $.each (views, function (i, view) {
+                    for (key in view.style_map) {
+                        items[key] = true;
+                    }        
+                });
+                return items;
+            };
+        };
+
+        $.each (Renderers, function (i, Renderer) {
+            renderers.push (new Renderer (engine, layer, options));
+        });
+
+        this.views = [];
+
+        this.create = function (key) {
+            var views = [];
+            $.each (renderers, function (i, renderer) {
+                views.push (renderer.create (key));
+            });
+            return new MultiView (views);
+        };
+
+        this.draw = function () {
+            $.each (renderers, function (i, renderer) {
+                renderer.draw ();
+            });
+        };
     };
-
 };
 
     var Querier = function (engine, layer) {
@@ -2617,6 +2634,60 @@ var PointQuerier = function (engine, layer, points) {
     };
 };
 
+    function LayerController (engine, layer, geomFunc, options) {
+    var controller = this;
+
+    // Set this as the parent of the layer in the event hierarchy
+    EventManager.manage (layer);
+    EventManager.linkParent (engine, layer);
+
+    // All the renderers for this layer
+    this.renderers = {};
+
+    // A flat view of all views in all renderers
+    this.views = {};
+
+    // Used as a callback when the StyleManager changes a feature
+    var update_feature = function (f, key) {
+        var value = StyleManager.derivedStyle (f, layer, engine, key);
+        controller.views[f.id].update (key, value);
+    };
+
+    layer.features ().each (function (i, f) {
+        var key;
+        if (f.type in engine.Renderers) {
+            key = f.type;
+        }
+        else {
+            key = 'default';
+        }
+        if (!(key in controller.renderers)) {
+            controller.renderers[key] = new engine.Renderers[key] (engine, layer, options);
+        }
+        var view = controller.renderers[key].create (f);
+
+        controller.views[f.id] = view;
+
+        // Update all style properties
+        for (var key in view.keys ()) {
+            update_feature (f, key);
+        }
+
+        //StyleManager.registerCallback (engine, f, update_feature);
+        EventManager.manage (f);
+        EventManager.linkParent (layer, f);
+        EventManager.addEventHandler (f, 'style', update_feature);
+        //f.change (handle_change);
+    });
+
+    this.draw = function (engine, dt) {
+        for (var key in this.renderers) {
+            this.renderers[key].draw (dt);
+        }
+    };
+
+};
+
     function BaseEngine (selector, options) {
     var engine = this;
 
@@ -2705,52 +2776,17 @@ var PointQuerier = function (engine, layer, points) {
         
     };
 
-    // Used as a callback when the StyleManager changes a feature
-    var update_feature = function (f, key) {
-        engine.views[f.id].update (key);
-    };
-
     EventManager.manage (this);
 
     this.append = function (layer) {
         // Legacy layer drawing code
         if ('draw' in layer) {
-            this.scene[layer.id] = layer;
+            this.scene.push (layer);
             return;
         }
-        // An engine can only draw a layer once
-        if (layer.id in this.renderers)
-            throw "Added layer to Engine twice";
 
-        EventManager.manage (layer);
-        EventManager.linkParent (this, layer);
+        this.scene.push (new LayerController (engine, layer, options));
 
-        this.renderers[layer.id] = {};
-        layer.features ().each (function (i, f) {
-            var key;
-            if (f.type in engine.Renderers) {
-                key = f.type;
-            }
-            else {
-                key = 'default';
-            }
-            if (!(key in engine.renderers[layer.id])) {
-                engine.renderers[layer.id][key] = new engine.Renderers[key] (engine, layer, options);
-            }
-            var view = engine.renderers[layer.id][key].create (f);
-            view.update_all ();
-
-            if (engine.views[f.id] !== undefined)
-                throw "Cannot add a feature twice to the same Engine";
-
-            engine.views[f.id] = view;
-            
-            //StyleManager.registerCallback (engine, f, update_feature);
-            EventManager.manage (f);
-            EventManager.linkParent (layer, f);
-            EventManager.addEventHandler (f, 'style', update_feature);
-            //f.change (handle_change);
-        });
         //this.scene[layer.id] = this.renderers;
         this.layers[layer.id] = layer;
         this.queriers[layer.id] = new Querier (this, layer);
@@ -2817,7 +2853,7 @@ var PointQuerier = function (engine, layer, points) {
 
     this.shaders = {};
 
-    this.scene = {};
+    this.scene = [];
     this.layers = {};
     this.queriers = {};
 
@@ -2844,16 +2880,15 @@ var PointQuerier = function (engine, layer, points) {
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.clearDepth (0.0);
 
-        // Legacy drawing code
         $.each (this.scene, function (i, layer) {
             layer.draw (engine, dt);
         });
         
-        $.each (this.renderers, function (i, layer_renderers) {
+        /*$.each (this.renderers, function (i, layer_renderers) {
             $.each (layer_renderers, function (j, renderer) {
                     renderer.draw (dt);
             });
-        });
+        });*/
 
 	requestAnimationFrame (draw);
 
@@ -3277,7 +3312,7 @@ function Engine (selector, map, options) {
 
     this.Renderers = {
         'Point': PointRenderer,
-        'Polygon': PolygonRenderer,
+        'Polygon': multiRendererFactory ([PolygonRenderer, LineRenderer]),
         'Line': LineRenderer,
     };
 
@@ -3347,7 +3382,7 @@ function Engine (selector, map, options) {
 	}
         if (base) {
             base.initialize (engine);
-            engine.scene[base.id] = base;
+            engine.scene.push (base);
         };
     };
     setBase ();
@@ -3440,7 +3475,7 @@ function Engine (selector, map, options) {
     if (options === undefined)
         options = {};
     BaseEngine.call (this, selector, options);
-   
+
     default_model (options, {
         'range': new Box (new vect (0, 0), new vect (1, 1))
     });
@@ -3454,10 +3489,7 @@ function Engine (selector, map, options) {
             'stroke-width': 2.0,
         }
     };
-
-    //this.extents (1, 1);
-    //this.center (.5, .5);
-
+    
     this.Renderers = {
         'default': TimeSeriesRenderer
     };

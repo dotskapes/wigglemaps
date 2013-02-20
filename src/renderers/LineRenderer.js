@@ -101,8 +101,8 @@ function LineRenderer (engine, layer) {
 
     //stroke_buffers.create ('unit', 2);
 
-    var LineView = function (feature, feature_geom) {
-        FeatureView.call (this, feature, layer, engine);
+    var LineView = function (feature_geom) {
+        FeatureView.call (this, feature_geom);
 
 	var stroke_start = stroke_buffers.count ();
         var stroke_count = 0;
@@ -123,9 +123,6 @@ function LineRenderer (engine, layer) {
             return ((p1[0] == p2[0]) && (p1[1] == p2[1]));
         };
 
-        if (!feature_geom)
-            feature_geom = feature.geom;
-
 	$.each (feature_geom, function (i, poly) {
 	    for (var i = 0; i < poly.length; i ++) {
 		//stroke_count += poly[i].length * 6;
@@ -137,13 +134,9 @@ function LineRenderer (engine, layer) {
 		    draw_graph_lines (stroke_buffers, poly[i]);*/
 	    }
 	});
-
-        this.update_all ();
     };
 
-    this.view_factory = function (feature, feature_geom, draw_func) {
-        return new LineView (feature, feature_geom, draw_func);
-    };
+    this.View = LineView;
 
     this.draw = function () {
         var gl = engine.gl;

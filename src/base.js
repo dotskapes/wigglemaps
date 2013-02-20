@@ -27,10 +27,13 @@
     // #include 'src/renderers/LineRenderer.js'
     // #include 'src/renderers/PolygonRenderer.js'
     // #include 'src/renderers/TimeRenderer.js'
+    // #include 'src/renderers/MultiRenderer.js'
 
     // #include 'src/query/Querier.js'
     // #include 'src/query/PointQuerier.js'
     // #include 'src/query/PolygonQuerier.js'
+
+    // #include 'src/LayerController.js'
 
     // #include 'src/Engine.js'
     // #include 'src/Map.js'

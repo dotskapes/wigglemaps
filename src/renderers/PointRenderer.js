@@ -26,8 +26,8 @@ function PointRenderer (engine, layer) {
     buffers.create ('alpha', 1);
 
     // Rendering class for an individual point
-    var PointView = function (feature) {
-        FeatureView.call (this, feature, layer, engine);
+    var PointView = function (feature_geom) {
+        FeatureView.call (this, feature_geom);
 
         // The start index of the buffer
         var start;
@@ -67,8 +67,6 @@ function PointRenderer (engine, layer) {
             }
         };
         
-        var feature_geom = feature.geom;
-
 	var total_points = feature_geom.length;
 	count = 6 * total_points;
 	start = buffers.alloc (count);
@@ -77,13 +75,9 @@ function PointRenderer (engine, layer) {
 	    buffers.repeat ('vert', point, start + index * 6, 6);
 	    buffers.write ('unit', unit, start + index * 6, 6);
 	});
-
-        this.update_all ();
     };
 
-    this.view_factory = function (feature) {
-        return new PointView (feature);
-    };
+    this.View = PointView;
 
     this.draw = function () {
         var gl = engine.gl;
