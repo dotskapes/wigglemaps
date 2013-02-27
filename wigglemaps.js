@@ -1385,10 +1385,12 @@ function derived_style (engine, feature, layer, key) {
     this.reconfigure = function () {
         var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1;  
         var worldRatio = worldHeight / worldWidth;
+        var xlevel = options.xlock ? 1 : level;
+        var ylevel = options.ylock ? 1 : level;
 
         //var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
 
-        var half_size = new vect (worldWidth / level, (worldWidth * worldRatio * aspectRatio) / level).scale (.5);
+        var half_size = new vect (worldWidth / xlevel, (worldWidth * worldRatio * aspectRatio) / ylevel).scale (.5);
 
         var world_max = vect.add (center, half_size);
         var world_min = vect.sub (center, half_size);
@@ -1523,8 +1525,10 @@ function derived_style (engine, feature, layer, key) {
     this.size = function () {
         var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
         var worldRatio = worldHeight / worldWidth;
+        var xlevel = options.xlock ? 1 : level;
+        var ylevel = options.ylock ? 1 : level;
 
-        return new vect (worldWidth / level, (worldWidth * worldRatio * aspectRatio) / level);
+        return new vect (worldWidth / xlevel, (worldWidth * worldRatio * aspectRatio) / ylevel);
     };
 };
     function Scroller (engine, options) {
@@ -3425,8 +3429,6 @@ function Engine (selector, map, options) {
             bounds = unionBounds (bounds, stepBounds);
     });
 
-    console.log (bounds);
-
     default_model (options, {
         'range': {
             'min': bounds.min,
@@ -3440,7 +3442,8 @@ function Engine (selector, map, options) {
         'width': options.order.length - 1,
         'height': bounds.max - bounds.min,
         'worldMin': new vect (0, bounds.min),
-        'worldMax': new vect (options.order.length - 1, bounds.max)
+        'worldMax': new vect (options.order.length - 1, bounds.max),
+        'ylock': true
     });
 
     var order = options.order;

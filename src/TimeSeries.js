@@ -36,8 +36,6 @@ function TimeSeries (selector, layer, options) {
             bounds = unionBounds (bounds, stepBounds);
     });
 
-    console.log (bounds);
-
     default_model (options, {
         'range': {
             'min': bounds.min,
@@ -51,7 +49,8 @@ function TimeSeries (selector, layer, options) {
         'width': options.order.length - 1,
         'height': bounds.max - bounds.min,
         'worldMin': new vect (0, bounds.min),
-        'worldMax': new vect (options.order.length - 1, bounds.max)
+        'worldMax': new vect (options.order.length - 1, bounds.max),
+        'ylock': true
     });
 
     var order = options.order;
