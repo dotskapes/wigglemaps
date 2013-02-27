@@ -139,7 +139,9 @@ function Camera (canvas, options) {
 
     // Zooms the canvas
     this.zoom = function (scale) {
-	level *= scale;
+        if (scale === undefined)
+            return level;
+	level = scale;
         this.reconfigure ();
     };
 

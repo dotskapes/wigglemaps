@@ -1481,7 +1481,9 @@ function derived_style (engine, feature, layer, key) {
 
     // Zooms the canvas
     this.zoom = function (scale) {
-	level *= scale;
+        if (scale === undefined)
+            return level;
+	level = scale;
         this.reconfigure ();
     };
 
@@ -1569,7 +1571,9 @@ function derived_style (engine, feature, layer, key) {
 	else {
 	    delta += 1.0;
 	}
-	engine.camera.zoom (delta);
+        var zoom = engine.camera.zoom ();
+	engine.camera.zoom (zoom * delta);
+        readjustWorld ();
 	event.preventDefault ();
     });
     
@@ -1590,6 +1594,7 @@ function derived_style (engine, feature, layer, key) {
 	    var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
             var currentPos = engine.camera.position ();
             newPos = vect.add (currentPos, m);
+            engine.camera.position (newPos);
 
 	    start = pos;
 	    speed = m.length () / dt;
@@ -1602,29 +1607,55 @@ function derived_style (engine, feature, layer, key) {
 		var m = vect.scale (dir, speed * dt);
                 var currentPos = engine.camera.position ();
                 newPos = vect.add (currentPos, m);
+                engine.camera.position (newPos);
 		speed -= 3.0 * dt * speed;
                 change = true;
             }
 	}
 
-        if (change) {
-            var halfSize = engine.camera.size ().scale (.5);
-            if (options.worldMin) {
-                if (newPos.x - halfSize.x < options.worldMin.x)
-                    newPos.x = options.worldMin.x + halfSize.x;
-                if (newPos.y - halfSize.y < options.worldMin.y)
-                    newPos.y = options.worldMin.y + halfSize.y;
-            }
-            if (options.worldMax) {
-                if (newPos.x + halfSize.x > options.worldMax.x)
-                    newPos.x = options.worldMax.x - halfSize.x;
-                if (newPos.y + halfSize.y > options.worldMax.y)
-                    newPos.y = options.worldMax.y - halfSize.y;
+        if (change)
+            readjustWorld ();
+    };
+
+    var readjustWorld = function () {
+        if (options.worldMin && options.worldMax) {
+            var newPos = engine.camera.position ();
+            var size = engine.camera.size ();
+            var worldMaxWidth = options.worldMax.x - options.worldMin.x;
+
+            if (size.x > worldMaxWidth) {
+                var worldWidth = size.x * engine.camera.zoom ();
+                engine.camera.zoom (worldMaxWidth / worldWidth);
             }
 
-            engine.camera.position (newPos);
+            newPos = engine.camera.position ();
+            size = engine.camera.size ();
+            var worldMaxHeight = options.worldMax.y - options.worldMin.y;
+            if (size.y > worldMaxHeight) {
+                var worldHeight = size.y * engine.camera.zoom ();
+                engine.camera.zoom (worldMaxHeight / worldHeight);
+            }
         }
-    };
+        var newPos = engine.camera.position ();
+        var halfSize = engine.camera.size ().scale (.5);
+        var change = false;
+        if (options.worldMin) {
+            if (newPos.x - halfSize.x < options.worldMin.x)
+                newPos.x = options.worldMin.x + halfSize.x;
+            if (newPos.y - halfSize.y < options.worldMin.y)
+                newPos.y = options.worldMin.y + halfSize.y;
+            change = true;
+        }
+        if (options.worldMax) {
+            if (newPos.x + halfSize.x > options.worldMax.x)
+                newPos.x = options.worldMax.x - halfSize.x;
+            if (newPos.y + halfSize.y > options.worldMax.y)
+                newPos.y = options.worldMax.y - halfSize.y;
+            change = true;
+        }
+        if (change)
+            engine.camera.position (newPos);
+    }
 };
     var EventManager = new function () {
     this.listeners = {};
