@@ -406,6 +406,7 @@ function handler(event) {
             clearTimeout(id);
         };
 }());
+
     var PI = 3.14159265;
 
 /*if (! ('requestAnimationFrame' in window)) {
@@ -1140,7 +1141,7 @@ function getImage (path, callback) {
                 value = this.getStyle (layer, engine, key);                
                 // Fourth is an  orphaned layer style
                 if (value === null) {
-                    value = this.getStyle (layer, engine, key);     
+                    value = this.getStyle (layer, null, key);     
                     // Fifth is the engine type default
                     if (value === null) {
                         value = engine.defaultStyle (feature.type, key);
@@ -1351,7 +1352,7 @@ function derived_style (engine, feature, layer, key) {
         options.width = options.height;
     }
 
-    var aspect = canvas.height () / canvas.width (); 
+    var aspect = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
 
     if (options.min) {
         options.center = vect.add (options.min, new vect (options.width, options.height * aspect).scale (.5));
@@ -1364,7 +1365,7 @@ function derived_style (engine, feature, layer, key) {
     // These four parameters (along with the viewport aspect ratio) completely determine the
     // transformation matrices.
     var worldWidth = options.width;
-    var worldHeight = options.height
+    var worldHeight = options.height;
     var worldRatio = options.height / options.width;
     var center = options.center.clone ();
     var level = 1.0;
@@ -1382,8 +1383,7 @@ function derived_style (engine, feature, layer, key) {
     // Rebuild the matrices. Needs to be called everytime any of the above mentioned parameters
     // Changes
     this.reconfigure = function () {
-
-        var aspectRatio = canvas.height () / canvas.width (); 
+        var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1;  
         var worldRatio = worldHeight / worldWidth;
 
         //var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
@@ -1392,7 +1392,7 @@ function derived_style (engine, feature, layer, key) {
 
         var world_max = vect.add (center, half_size);
         var world_min = vect.sub (center, half_size);
-        
+
         var width = canvas.width ();
         var height = canvas.height ();
         var world_range = vect.sub (world_max, world_min);
@@ -1517,115 +1517,15 @@ function derived_style (engine, feature, layer, key) {
         level = 1.0;
         this.reconfigure ();
     };
+
+    this.size = function () {
+        var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
+        var worldRatio = worldHeight / worldWidth;
+
+        return new vect (worldWidth / level, (worldWidth * worldRatio * aspectRatio) / level);
+    };
 };
-
-/*function Camera (canvas, options) {
-    if (!options)
-	options = {};
-
-    var ratio = canvas.width () / canvas.height (); 
-
-    if (!('center' in options))
-	options.center = new vect (0, 0);
-    if (!('extents' in options))
-	options.extents = 180.0;
-    if (!('v_extents' in options))
-	options.v_extents = options.extents / ratio;
-
-    this.mat3 = new Float32Array (9);
-    //this.mat3[0] = 2.0 / canvas.width ();
-    //this.mat3[5] = 2.0 / canvas.height ();
-
-    this.mat3[0] = 2.0 / options.extents;
-    this.mat3[4] = 2.0 / options.v_extents;
-    this.mat3[8] = 1.0;
-    
-    this.mat3[6] = 0.0;
-    this.mat3[7] = 0.0;
-    
-    this.level = 1.0;
-
-    this.project = function (v) {
-	var c = new vect (
-            2.0 * (v.x - canvas.offset ().left) / canvas.width () - 1.0,
-		-(2.0 * (v.y - canvas.offset ().top) / canvas.height () - 1.0));
-        c.x = c.x / this.mat3[0] - this.mat3[6] / this.mat3[0];
-        c.y = c.y / this.mat3[4] - this.mat3[7] / this.mat3[4];
-	return c;
-    };
-    
-    this.screen = function (v) {
-        var c = new vect (
-	    v.x * this.mat3[0] + this.mat3[6],
-            v.y * this.mat3[4] + this.mat3[7]);
-        c.x = canvas.offset ().left + canvas.width () * (c.x + 1.0) / 2.0;
-        c.y = canvas.offset ().top + canvas.height () * (-c.y + 1.0) / 2.0;
-        return c;
-    };
-
-    this.percent = function (v) {
-	return new vect (
-	    2 * ((v.x - canvas.offset ().left) / canvas.width ()) - 1,
-	    -(2 * ((v.y - canvas.offset ().top) / canvas.height ()) - 1));
-    };
-
-    this.pixel = function (v) {
-	return new vect (canvas.offset ().left + ((v.x + 1) / 2) * canvas.width (),
-			 canvas.offset ().top + ((-v.y + 1) / 2) * canvas.height ());
-    };
-    
-    this.move = function (v) {
-        this.mat3[6] -= v.x * this.mat3[0];
-        this.mat3[7] -= v.y * this.mat3[4];
-    };
-    
-    this.position = function (v) {
-	if (!v) {
-	    return new vect (-this.mat3[6] / this.mat3[0], -this.mat3[7] / this.mat3[4]);
-	}
-        this.mat3[6] = -v.x * this.mat3[0];
-        this.mat3[7] = -v.y * this.mat3[4];		
-    };
-    this.position (options.center);
-
-    this.extents = function (width, height) {
-	options.extents = width;
-        if (!height)
-            options.v_extents = options.extents / ratio;
-        else
-            options.v_extents = height;
-
-	var pos = this.position ();
-	this.level = 1.0;
-
-	this.mat3[0] = 2.0 / options.extents;
-	this.mat3[4] = 2.0 / options.v_extents;
-
-	this.position (pos);
-    };
-    
-    this.zoom = function (scale) {
-	var pos = new vect (this.mat3[6] / this.mat3[0], this.mat3[7] / this.mat3[4]);
-	this.mat3[0] *= scale;
-	this.mat3[4] *= scale;
-	this.mat3[6] = pos.x * this.mat3[0];
-	this.mat3[7] = pos.y * this.mat3[4];
-	this.level *= scale;
-    };
-    
-    this.reset = function () {
-	this.zoom (1.0 / this.level);
-    };
-
-    this.reconfigure = function () {
-	var p = this.position ();
-	this.mat3[4] /= ratio;
-	ratio = canvas.width () / canvas.height (); 
-	this.mat3[4] *= ratio;
-	this.position (p);
-    };
-};*/
-    function Scroller (engine) {
+    function Scroller (engine, options) {
     var drag = false;
     var start = new vect (0, 0);
     var pos = new vect (0, 0);
@@ -1684,22 +1584,49 @@ function derived_style (engine, feature, layer, key) {
 
     this.update = function (dt) {
 	pos = new vect (Mouse.x, Mouse.y);
+        var change = false;
+        var newPos;
 	if (drag && enabled) {
 	    var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
-	    engine.camera.move (m);
+            var currentPos = engine.camera.position ();
+            newPos = vect.add (currentPos, m);
+
 	    start = pos;
 	    speed = m.length () / dt;
 	    dir = m;
 	    dir.normalize ();
+            change = true;
 	}
 	else if (speed > .01) {
 	    if (dir) {
-		engine.camera.move (vect.scale (dir, speed * dt));
+		var m = vect.scale (dir, speed * dt);
+                var currentPos = engine.camera.position ();
+                newPos = vect.add (currentPos, m);
 		speed -= 3.0 * dt * speed;
+                change = true;
             }
 	}
+
+        if (change) {
+            var halfSize = engine.camera.size ().scale (.5);
+            if (options.worldMin) {
+                if (newPos.x - halfSize.x < options.worldMin.x)
+                    newPos.x = options.worldMin.x + halfSize.x;
+                if (newPos.y - halfSize.y < options.worldMin.y)
+                    newPos.y = options.worldMin.y + halfSize.y;
+            }
+            if (options.worldMax) {
+                if (newPos.x + halfSize.x > options.worldMax.x)
+                    newPos.x = options.worldMax.x - halfSize.x;
+                if (newPos.y + halfSize.y > options.worldMax.y)
+                    newPos.y = options.worldMax.y - halfSize.y;
+            }
+
+            engine.camera.position (newPos);
+        }
     };
-};    var EventManager = new function () {
+};
+    var EventManager = new function () {
     this.listeners = {};
 
     this.manage = function (object) {
@@ -2007,18 +1934,50 @@ function Slider (pos, size, units) {
     });
     
 };
-    function FeatureView (geom) {
+    function FeatureView (geom, styleFunc) {
     this.style_map = {};
 
     this.geom = geom;
-    
-    // Update the buffers for a specific property
-    this.update = function (key, value) {
-        //var value = StyleManager.derivedStyle (feature, layer, engine, key);
-        if (value === null)
-            throw "Style property does not exist";
+
+    var style = {};
+
+    this.updateMany = function (styleObject) {
+        for (var key in styleObject) {
+            this.updateOne (key, styleObject[value]);
+        };
+    };
+
+    // Update the buffers for a specific property    
+    this.updateOne = function (key, value) {
+        // If the value is not defined, there is problem
+        if (value === undefined)
+            throw "No value for style defined";
+
+        if (style[key] == value)
+            return;
+
+        style[key] = value;
+
         if (key in this.style_map) {
             this.style_map[key] (value);
+        }
+    };
+
+    this.updateDefault = function (key) {
+        var value = styleFunc (key);
+        this.updateOne (key, value);
+    };
+    
+    // Overloaded function to update the view
+    this.update = function (arg0, arg1) {
+        if (typeof arg0 == "string") {
+            if (arg1 === undefined)
+                this.updateDefault (arg0);
+            else
+                this.updateOne (arg0, arg1);
+        }
+        else {
+            this.updateMany (arg0);
         }
     };
 
@@ -2030,46 +1989,57 @@ function Slider (pos, size, units) {
         return items;
     };
         
-    /*// Update all buffers for all properties
-    this.update_all = function () {
+    // Update all buffers for all properties
+    this.updateAll = function () {
         for (var key in this.style_map) {
-            this.update (key);
+            this.updateDefault (key);
         }
-        for (var i = 0; i < this.children.length; i ++) {
-            this.children[i].update_all ();
-        }
-    };*/
+    };
 };
-    function FeatureRenderer (engine, layer) {
+    function FeatureRenderer (engine) {
+    var renderer = this;
+
     this.engine = engine;
 
     // A list of views of the object
     this.views = [];
 
-    /*// Update all features with a style property
+    // Update all features with a style property
     this.update = function (key) {
-        throw "Don't ever call this";
         for (var i = 0; i < views.length; i ++) {
             this.views[i].update (key);
         }
-    };*/
+    };
 
     this.View = function () {
         throw "Attempt to call abstract function";
     };
 
-    this.create = function (feature) {
-        var view = new this.View (this.geomFunc (feature));
+    this.create = function (geom, style) {
+        //var view = new this.View (this.geomFunc (feature), styleFuncFactory (feature));
+        var view = new this.View (geom, style);
         this.views.push (view);
+        view.updateAll ();
         return view;
     };
 
     this.draw = function () {
+        throw "Attempt to call abstract function";
     };
 
-    this.geomFunc = function (feature) {
+    /*this.geomFunc = function (feature) {
         return feature.geom;
     };
+
+    var styleFuncFactory = function (feature) {
+        return function (key) {
+            return renderer.styleFunc (feature, key);
+        };
+    };
+    
+    this.styleFunc = function (feature, key) {
+        return StyleManager.derivedStyle (feature, layer, engine, key);
+    };*/
 };
     var INITIAL_POINTS = 1024;
 
@@ -2099,8 +2069,8 @@ function PointRenderer (engine, layer) {
     buffers.create ('alpha', 1);
 
     // Rendering class for an individual point
-    var PointView = function (feature_geom) {
-        FeatureView.call (this, feature_geom);
+    var PointView = function (feature_geom, feature_style) {
+        FeatureView.call (this, feature_geom, feature_style);
 
         // The start index of the buffer
         var start;
@@ -2265,8 +2235,8 @@ function draw_lines (stroke_buffers, geom) {
     return vertCount;
 };
 
-function LineRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
+function LineRenderer (engine) {
+    FeatureRenderer.call (this, engine);
 
     if (!(engine.shaders['line'])) {
         engine.shaders['line'] = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
@@ -2287,8 +2257,8 @@ function LineRenderer (engine, layer) {
 
     //stroke_buffers.create ('unit', 2);
 
-    var LineView = function (feature_geom) {
-        FeatureView.call (this, feature_geom);
+    var LineView = function (feature_geom, feature_style) {
+        FeatureView.call (this, feature_geom, feature_style);
 
 	var stroke_start = stroke_buffers.count ();
         var stroke_count = 0;
@@ -2350,8 +2320,8 @@ function LineRenderer (engine, layer) {
 };
     var INITIAL_POLYGONS = 1024;
 
-function PolygonRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
+function PolygonRenderer (engine) {
+    FeatureRenderer.call (this, engine);
 
     if (!(engine.shaders['polygon'])) {
         engine.shaders['polygon'] = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
@@ -2363,8 +2333,8 @@ function PolygonRenderer (engine, layer) {
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
 
-    var PolygonView = function (feature_geom) {
-        FeatureView.call (this, feature_geom);
+    var PolygonView = function (feature_geom, style_func) {
+        FeatureView.call (this, feature_geom, style_func);
 
         //var lines = line_renderer.create (feature_geom);
         //this.children.push (lines);
@@ -2439,9 +2409,9 @@ function PolygonRenderer (engine, layer) {
     function TimeSeriesRenderer (engine, layer, options) {
     LineRenderer.call (this, engine, layer, options);
     
-    var order = layer.attr ('order');
+    var order = options.order;
 
-    this.geomFunc = function (feature) {
+    this.View = function (feature) {
         var linestrings = [];
         var linestring = [];
 
@@ -2494,10 +2464,10 @@ function PolygonRenderer (engine, layer) {
 
         this.views = [];
 
-        this.create = function (key) {
+        this.create = function (key, style) {
             var views = [];
             $.each (renderers, function (i, renderer) {
-                views.push (renderer.create (key));
+                views.push (renderer.create (key, style));
             });
             return new MultiView (views);
         };
@@ -2634,7 +2604,7 @@ var PointQuerier = function (engine, layer, points) {
     };
 };
 
-    function LayerController (engine, layer, geomFunc, options) {
+    function LayerController (engine, layer, options) {
     var controller = this;
 
     // Set this as the parent of the layer in the event hierarchy
@@ -2647,6 +2617,16 @@ var PointQuerier = function (engine, layer, points) {
     // A flat view of all views in all renderers
     this.views = {};
 
+    var geomFunc;
+    if (options.geomFunc) {
+        geomFunc = options.geomFunc;
+    }
+    else {
+        geomFunc = function (f) {
+            return f.geom;
+        };
+    }
+
     // Used as a callback when the StyleManager changes a feature
     var update_feature = function (f, key) {
         var value = StyleManager.derivedStyle (f, layer, engine, key);
@@ -2654,24 +2634,23 @@ var PointQuerier = function (engine, layer, points) {
     };
 
     layer.features ().each (function (i, f) {
-        var key;
+        var renderKey;
         if (f.type in engine.Renderers) {
-            key = f.type;
+            renderKey = f.type;
         }
         else {
-            key = 'default';
+            renderKey = 'default';
         }
-        if (!(key in controller.renderers)) {
-            controller.renderers[key] = new engine.Renderers[key] (engine, layer, options);
+        if (!(renderKey in controller.renderers)) {
+            controller.renderers[renderKey] = new engine.Renderers[renderKey] (engine, layer, options);
         }
-        var view = controller.renderers[key].create (f);
+        var view = controller.renderers[renderKey].create (geomFunc (f), (function (feature) {
+            return function (key) {
+                return StyleManager.derivedStyle (feature, layer, engine, key);
+            }
+        }) (f));
 
         controller.views[f.id] = view;
-
-        // Update all style properties
-        for (var key in view.keys ()) {
-            update_feature (f, key);
-        }
 
         //StyleManager.registerCallback (engine, f, update_feature);
         EventManager.manage (f);
@@ -2736,7 +2715,7 @@ var PointQuerier = function (engine, layer, points) {
     gl.enable (gl.BLEND);
 
     this.camera = new Camera (this.canvas, options);
-    this.scroller = new Scroller (this);
+    this.scroller = new Scroller (this, options);
 
     this.extents = function (width) {
 	this.camera.extents (width);
@@ -2777,23 +2756,6 @@ var PointQuerier = function (engine, layer, points) {
     };
 
     EventManager.manage (this);
-
-    this.append = function (layer) {
-        // Legacy layer drawing code
-        if ('draw' in layer) {
-            this.scene.push (layer);
-            return;
-        }
-
-        this.scene.push (new LayerController (engine, layer, options));
-
-        //this.scene[layer.id] = this.renderers;
-        this.layers[layer.id] = layer;
-        this.queriers[layer.id] = new Querier (this, layer);
-
-        // Temporary for dev: Make the layer immutable
-        layer.fixed = true;
-    };
 
     this.search = function (layer, box) {
         return this.queriers[layer.id].boxSearch (box);
@@ -2854,7 +2816,6 @@ var PointQuerier = function (engine, layer, points) {
     this.shaders = {};
 
     this.scene = [];
-    this.layers = {};
     this.queriers = {};
 
     this.draw = function () {
@@ -3298,17 +3259,13 @@ function Engine (selector, map, options) {
 
     default_model (options, {
         'width': 360,
-        'center': new vect (0, 0)
-    });
-
-    BaseEngine.call (this, selector, options);    
-
-    default_model (options, {
+        'center': new vect (0, 0),
         'base': 'default',
         'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps',
-        'min': new vect (-180, -90),
-        'max': new vect (180, 90),
+        'preserveAspectRatio': true
     });
+
+    BaseEngine.call (this, selector, options); 
 
     this.Renderers = {
         'Point': PointRenderer,
@@ -3344,7 +3301,6 @@ function Engine (selector, map, options) {
             'stroke-width': 1.0            
         }
     };
-
     var base = null;
     var setBase = function () {
 	if (options.base == 'default' || options.base == 'nasa') {
@@ -3385,100 +3341,105 @@ function Engine (selector, map, options) {
             engine.scene.push (base);
         };
     };
+
+    
     setBase ();
-};
-/*var Map = function (selector, options) {
-    this.center = function (x, y) {
-	engine.camera.position (new vect (x, y));
-    };
-
-    this.vcenter = function (v) {
-	this.center (v.x, v.y);
-    };
-
-    this.extents = function (width) {
-	engine.camera.extents (width);
-    };
 
     this.append = function (layer) {
-        layer.initialize (engine);
-	engine.scene.push (layer);
+        // Legacy layer drawing code for old-school type layers
+        if ('draw' in layer) {
+            this.scene.push (layer);
+            return;
+        }
+
+        this.scene.push (new LayerController (engine, layer, options));
+        this.queriers[layer.id] = new Querier (this, layer);
     };
-
-    this.remove = function (layer) {
-	for (var i = 0; i < engine.scene.length; i ++) {
-	    if (engine.scene[i] == layer) {
-		engine.scene.splice (i, 1);
-		return true;
-	    }
-	}
-	return false;
-    };
-
-    this.shade = function (data) {
-	var shade = new Hillshade (data);
-	engine.shade = shade;
-    };
-
-    this.select = function (func)  {
-	if (!func)
-	    engine.select (false);
-	else {
-	    engine.sel.select (func);
-	    engine.select (true);
-	}
-    };
-
-    this.resize = function () {
-	engine.resize ();
-    }
-
-    this.attr = function (key, value) {
-	engine.attr (key, value);
-    };
-
-    this.png = function () {
-	var data = engine.canvas.get (0).toDataURL ();
-
-	$.ajax ({
-	    url: '../server/export.png',
-	    type: 'POST',
-	    data: data
-	});
-    };
-
-    this.width = function () {
-	return engine.canvas.innerWidth ();
-    };
-
-    this.height = function () {
-	return engine.canvas.innerHeight ();
-    };
-
-    var click_func = null;
-    this.click = function (func) {
-	click_func = func;
-    };
-
-    engine = new Engine (selector, this, options);
-
-    engine.canvas.click (function (event) {
-	if (click_func) {
-	    var v = new vect (event.pageX, event.pageY);
-	    var p = engine.camera.project (v);
-	    click_func (p);
-	}
-    });
 };
-*/
-    function TimeSeries (selector, options) {
+    function TimeSeries (selector, layer, options) {
+    var engine = this;
     if (options === undefined)
         options = {};
-    BaseEngine.call (this, selector, options);
+
+    if (!options.order) {
+        options.order = layer.numeric ();
+        options.order.sort ();
+    }
+
+    var unionBounds = function (bound1, bound2) {
+        var min, max;
+
+        if (bound1.min < bound2.min)
+            min = bound1.min;
+        else 
+            min = bound2.min;
+
+        if (bound1.max > bound2.max)
+            max = bound1.max;
+        else 
+            max = bound2.max;
+        return {
+            'min': min,
+            'max': max
+        };
+    };
+
+    var features = layer.features ();
+    var bounds = null;
+    $.each (options.order, function (i, timeStep) {
+        var stepBounds = features.range (timeStep);
+        if (!bounds)
+            bounds = stepBounds;
+        else
+            bounds = unionBounds (bounds, stepBounds);
+    });
+
+    console.log (bounds);
 
     default_model (options, {
-        'range': new Box (new vect (0, 0), new vect (1, 1))
+        'range': {
+            'min': bounds.min,
+            'max': bounds.max
+        },
+        'domain': {
+            'min': 0,
+            'max': options.order.length - 1,
+        },
+        'min': new vect (0, bounds.min),
+        'width': options.order.length - 1,
+        'height': bounds.max - bounds.min,
+        'worldMin': new vect (0, bounds.min),
+        'worldMax': new vect (options.order.length - 1, bounds.max)
     });
+
+    var order = options.order;
+
+    options.geomFunc = function (feature) {
+        var linestrings = [];
+        var linestring = [];
+
+        for (var i = 0; i < order.length; i ++) {
+            var y = feature.attr (order[i]);
+
+            // End this linestring and start a new one if the point is undefined
+            if (isNaN (y)) {
+                if (linestring.length > 0) {
+                    linestrings.push (linestring);
+                    linestring = [];
+                }
+            }
+            else {
+                linestring.push ([i, y]);
+            }
+        }
+        if (linestring.length > 0)
+            linestrings.push (linestring);
+
+        var feature_geom = [linestrings];
+        return feature_geom;
+    };
+
+    BaseEngine.call (this, selector, options);
 
     this.styles = {
         'default': {
@@ -3489,10 +3450,60 @@ function Engine (selector, map, options) {
             'stroke-width': 2.0,
         }
     };
-    
+
     this.Renderers = {
-        'default': TimeSeriesRenderer
+        'default': LineRenderer
     };
+
+    var grid_style = {
+        'stroke': new Color (.25, .25, .25, 1.0),
+        'stroke-width': .75,
+        'stroke-opacity': 1.0
+    };
+    var gridStyleFunc = function (key) {
+        return grid_style[key];
+    };
+    var drawGrid = function () {
+
+        var grid_renderer = new LineRenderer (engine);
+
+        $.each (options.order, function (i, key) {
+            var line = [[[ 
+                [i, options.range.min], 
+                [i, options.range.max] 
+            ]]];
+            grid_renderer.create (line, gridStyleFunc);
+        });
+
+        var rect = [[[ 
+            [options.domain.min, options.range.min], 
+            [options.domain.max, options.range.min], 
+            [options.domain.max, options.range.max], 
+            [options.domain.min, options.range.max], 
+            [options.domain.min, options.range.min] 
+        ]]];
+        grid_renderer.create (rect, gridStyleFunc);
+
+        engine.scene.push (grid_renderer);
+
+        if (options.ticks) {
+            var currentTick = 0;
+            while (currentTick > options.range.min)
+                currentTick -= options.ticks;
+            while (currentTick < options.range.max) {
+                var line = [[[
+                    [options.domain.min, currentTick],
+                    [options.domain.max, currentTick]
+                ]]];
+                grid_renderer.create (line, gridStyleFunc);
+                currentTick += options.ticks
+            }
+        }
+    };
+    drawGrid ();
+
+    this.scene.push (new LayerController (engine, layer, options));
+    this.queriers[layer.id] = new Querier (this, layer);
 };
 
     function SelectionBox (engine) {
@@ -4943,6 +4954,8 @@ function Layer (options) {
         };
 
         dirty = true;
+
+        return f;
     };
 
     // User defined event handler functions

@@ -1,4 +1,4 @@
-function LayerController (engine, layer, geomFunc, options) {
+function LayerController (engine, layer, options) {
     var controller = this;
 
     // Set this as the parent of the layer in the event hierarchy
@@ -11,6 +11,16 @@ function LayerController (engine, layer, geomFunc, options) {
     // A flat view of all views in all renderers
     this.views = {};
 
+    var geomFunc;
+    if (options.geomFunc) {
+        geomFunc = options.geomFunc;
+    }
+    else {
+        geomFunc = function (f) {
+            return f.geom;
+        };
+    }
+
     // Used as a callback when the StyleManager changes a feature
     var update_feature = function (f, key) {
         var value = StyleManager.derivedStyle (f, layer, engine, key);
@@ -18,24 +28,23 @@ function LayerController (engine, layer, geomFunc, options) {
     };
 
     layer.features ().each (function (i, f) {
-        var key;
+        var renderKey;
         if (f.type in engine.Renderers) {
-            key = f.type;
+            renderKey = f.type;
         }
         else {
-            key = 'default';
+            renderKey = 'default';
         }
-        if (!(key in controller.renderers)) {
-            controller.renderers[key] = new engine.Renderers[key] (engine, layer, options);
+        if (!(renderKey in controller.renderers)) {
+            controller.renderers[renderKey] = new engine.Renderers[renderKey] (engine, layer, options);
         }
-        var view = controller.renderers[key].create (f);
+        var view = controller.renderers[renderKey].create (geomFunc (f), (function (feature) {
+            return function (key) {
+                return StyleManager.derivedStyle (feature, layer, engine, key);
+            }
+        }) (f));
 
         controller.views[f.id] = view;
-
-        // Update all style properties
-        for (var key in view.keys ()) {
-            update_feature (f, key);
-        }
 
         //StyleManager.registerCallback (engine, f, update_feature);
         EventManager.manage (f);

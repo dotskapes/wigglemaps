@@ -1,9 +1,9 @@
 function TimeSeriesRenderer (engine, layer, options) {
     LineRenderer.call (this, engine, layer, options);
     
-    var order = layer.attr ('order');
+    var order = options.order;
 
-    this.geomFunc = function (feature) {
+    this.View = function (feature) {
         var linestrings = [];
         var linestring = [];
 

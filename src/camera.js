@@ -10,7 +10,7 @@ function Camera (canvas, options) {
         options.width = options.height;
     }
 
-    var aspect = canvas.height () / canvas.width (); 
+    var aspect = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
 
     if (options.min) {
         options.center = vect.add (options.min, new vect (options.width, options.height * aspect).scale (.5));
@@ -23,7 +23,7 @@ function Camera (canvas, options) {
     // These four parameters (along with the viewport aspect ratio) completely determine the
     // transformation matrices.
     var worldWidth = options.width;
-    var worldHeight = options.height
+    var worldHeight = options.height;
     var worldRatio = options.height / options.width;
     var center = options.center.clone ();
     var level = 1.0;
@@ -41,8 +41,7 @@ function Camera (canvas, options) {
     // Rebuild the matrices. Needs to be called everytime any of the above mentioned parameters
     // Changes
     this.reconfigure = function () {
-
-        var aspectRatio = canvas.height () / canvas.width (); 
+        var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1;  
         var worldRatio = worldHeight / worldWidth;
 
         //var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
@@ -51,7 +50,7 @@ function Camera (canvas, options) {
 
         var world_max = vect.add (center, half_size);
         var world_min = vect.sub (center, half_size);
-        
+
         var width = canvas.width ();
         var height = canvas.height ();
         var world_range = vect.sub (world_max, world_min);
@@ -176,111 +175,11 @@ function Camera (canvas, options) {
         level = 1.0;
         this.reconfigure ();
     };
+
+    this.size = function () {
+        var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
+        var worldRatio = worldHeight / worldWidth;
+
+        return new vect (worldWidth / level, (worldWidth * worldRatio * aspectRatio) / level);
+    };
 };
-
-/*function Camera (canvas, options) {
-    if (!options)
-	options = {};
-
-    var ratio = canvas.width () / canvas.height (); 
-
-    if (!('center' in options))
-	options.center = new vect (0, 0);
-    if (!('extents' in options))
-	options.extents = 180.0;
-    if (!('v_extents' in options))
-	options.v_extents = options.extents / ratio;
-
-    this.mat3 = new Float32Array (9);
-    //this.mat3[0] = 2.0 / canvas.width ();
-    //this.mat3[5] = 2.0 / canvas.height ();
-
-    this.mat3[0] = 2.0 / options.extents;
-    this.mat3[4] = 2.0 / options.v_extents;
-    this.mat3[8] = 1.0;
-    
-    this.mat3[6] = 0.0;
-    this.mat3[7] = 0.0;
-    
-    this.level = 1.0;
-
-    this.project = function (v) {
-	var c = new vect (
-            2.0 * (v.x - canvas.offset ().left) / canvas.width () - 1.0,
-		-(2.0 * (v.y - canvas.offset ().top) / canvas.height () - 1.0));
-        c.x = c.x / this.mat3[0] - this.mat3[6] / this.mat3[0];
-        c.y = c.y / this.mat3[4] - this.mat3[7] / this.mat3[4];
-	return c;
-    };
-    
-    this.screen = function (v) {
-        var c = new vect (
-	    v.x * this.mat3[0] + this.mat3[6],
-            v.y * this.mat3[4] + this.mat3[7]);
-        c.x = canvas.offset ().left + canvas.width () * (c.x + 1.0) / 2.0;
-        c.y = canvas.offset ().top + canvas.height () * (-c.y + 1.0) / 2.0;
-        return c;
-    };
-
-    this.percent = function (v) {
-	return new vect (
-	    2 * ((v.x - canvas.offset ().left) / canvas.width ()) - 1,
-	    -(2 * ((v.y - canvas.offset ().top) / canvas.height ()) - 1));
-    };
-
-    this.pixel = function (v) {
-	return new vect (canvas.offset ().left + ((v.x + 1) / 2) * canvas.width (),
-			 canvas.offset ().top + ((-v.y + 1) / 2) * canvas.height ());
-    };
-    
-    this.move = function (v) {
-        this.mat3[6] -= v.x * this.mat3[0];
-        this.mat3[7] -= v.y * this.mat3[4];
-    };
-    
-    this.position = function (v) {
-	if (!v) {
-	    return new vect (-this.mat3[6] / this.mat3[0], -this.mat3[7] / this.mat3[4]);
-	}
-        this.mat3[6] = -v.x * this.mat3[0];
-        this.mat3[7] = -v.y * this.mat3[4];		
-    };
-    this.position (options.center);
-
-    this.extents = function (width, height) {
-	options.extents = width;
-        if (!height)
-            options.v_extents = options.extents / ratio;
-        else
-            options.v_extents = height;
-
-	var pos = this.position ();
-	this.level = 1.0;
-
-	this.mat3[0] = 2.0 / options.extents;
-	this.mat3[4] = 2.0 / options.v_extents;
-
-	this.position (pos);
-    };
-    
-    this.zoom = function (scale) {
-	var pos = new vect (this.mat3[6] / this.mat3[0], this.mat3[7] / this.mat3[4]);
-	this.mat3[0] *= scale;
-	this.mat3[4] *= scale;
-	this.mat3[6] = pos.x * this.mat3[0];
-	this.mat3[7] = pos.y * this.mat3[4];
-	this.level *= scale;
-    };
-    
-    this.reset = function () {
-	this.zoom (1.0 / this.level);
-    };
-
-    this.reconfigure = function () {
-	var p = this.position ();
-	this.mat3[4] /= ratio;
-	ratio = canvas.width () / canvas.height (); 
-	this.mat3[4] *= ratio;
-	this.position (p);
-    };
-};*/

@@ -1,4 +1,4 @@
-function Scroller (engine) {
+function Scroller (engine, options) {
     var drag = false;
     var start = new vect (0, 0);
     var pos = new vect (0, 0);
@@ -57,19 +57,45 @@ function Scroller (engine) {
 
     this.update = function (dt) {
 	pos = new vect (Mouse.x, Mouse.y);
+        var change = false;
+        var newPos;
 	if (drag && enabled) {
 	    var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
-	    engine.camera.move (m);
+            var currentPos = engine.camera.position ();
+            newPos = vect.add (currentPos, m);
+
 	    start = pos;
 	    speed = m.length () / dt;
 	    dir = m;
 	    dir.normalize ();
+            change = true;
 	}
 	else if (speed > .01) {
 	    if (dir) {
-		engine.camera.move (vect.scale (dir, speed * dt));
+		var m = vect.scale (dir, speed * dt);
+                var currentPos = engine.camera.position ();
+                newPos = vect.add (currentPos, m);
 		speed -= 3.0 * dt * speed;
+                change = true;
             }
 	}
+
+        if (change) {
+            var halfSize = engine.camera.size ().scale (.5);
+            if (options.worldMin) {
+                if (newPos.x - halfSize.x < options.worldMin.x)
+                    newPos.x = options.worldMin.x + halfSize.x;
+                if (newPos.y - halfSize.y < options.worldMin.y)
+                    newPos.y = options.worldMin.y + halfSize.y;
+            }
+            if (options.worldMax) {
+                if (newPos.x + halfSize.x > options.worldMax.x)
+                    newPos.x = options.worldMax.x - halfSize.x;
+                if (newPos.y + halfSize.y > options.worldMax.y)
+                    newPos.y = options.worldMax.y - halfSize.y;
+            }
+
+            engine.camera.position (newPos);
+        }
     };
 };

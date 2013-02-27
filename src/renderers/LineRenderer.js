@@ -79,8 +79,8 @@ function draw_lines (stroke_buffers, geom) {
     return vertCount;
 };
 
-function LineRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
+function LineRenderer (engine) {
+    FeatureRenderer.call (this, engine);
 
     if (!(engine.shaders['line'])) {
         engine.shaders['line'] = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
@@ -101,8 +101,8 @@ function LineRenderer (engine, layer) {
 
     //stroke_buffers.create ('unit', 2);
 
-    var LineView = function (feature_geom) {
-        FeatureView.call (this, feature_geom);
+    var LineView = function (feature_geom, feature_style) {
+        FeatureView.call (this, feature_geom, feature_style);
 
 	var stroke_start = stroke_buffers.count ();
         var stroke_count = 0;

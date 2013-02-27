@@ -115,6 +115,8 @@ function Layer (options) {
         };
 
         dirty = true;
+
+        return f;
     };
 
     // User defined event handler functions

@@ -23,7 +23,7 @@ var StyleManager = new function () {
                 value = this.getStyle (layer, engine, key);                
                 // Fourth is an  orphaned layer style
                 if (value === null) {
-                    value = this.getStyle (layer, engine, key);     
+                    value = this.getStyle (layer, null, key);     
                     // Fifth is the engine type default
                     if (value === null) {
                         value = engine.defaultStyle (feature.type, key);

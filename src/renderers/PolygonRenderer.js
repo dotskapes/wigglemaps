@@ -1,7 +1,7 @@
 var INITIAL_POLYGONS = 1024;
 
-function PolygonRenderer (engine, layer) {
-    FeatureRenderer.call (this, engine, layer);
+function PolygonRenderer (engine) {
+    FeatureRenderer.call (this, engine);
 
     if (!(engine.shaders['polygon'])) {
         engine.shaders['polygon'] = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
@@ -13,8 +13,8 @@ function PolygonRenderer (engine, layer) {
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
 
-    var PolygonView = function (feature_geom) {
-        FeatureView.call (this, feature_geom);
+    var PolygonView = function (feature_geom, style_func) {
+        FeatureView.call (this, feature_geom, style_func);
 
         //var lines = line_renderer.create (feature_geom);
         //this.children.push (lines);

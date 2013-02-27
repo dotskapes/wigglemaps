@@ -26,10 +26,10 @@ function multiRendererFactory (Renderers) {
 
         this.views = [];
 
-        this.create = function (key) {
+        this.create = function (key, style) {
             var views = [];
             $.each (renderers, function (i, renderer) {
-                views.push (renderer.create (key));
+                views.push (renderer.create (key, style));
             });
             return new MultiView (views);
         };

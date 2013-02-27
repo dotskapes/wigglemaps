@@ -46,7 +46,7 @@ function BaseEngine (selector, options) {
     gl.enable (gl.BLEND);
 
     this.camera = new Camera (this.canvas, options);
-    this.scroller = new Scroller (this);
+    this.scroller = new Scroller (this, options);
 
     this.extents = function (width) {
 	this.camera.extents (width);
@@ -87,23 +87,6 @@ function BaseEngine (selector, options) {
     };
 
     EventManager.manage (this);
-
-    this.append = function (layer) {
-        // Legacy layer drawing code
-        if ('draw' in layer) {
-            this.scene.push (layer);
-            return;
-        }
-
-        this.scene.push (new LayerController (engine, layer, options));
-
-        //this.scene[layer.id] = this.renderers;
-        this.layers[layer.id] = layer;
-        this.queriers[layer.id] = new Querier (this, layer);
-
-        // Temporary for dev: Make the layer immutable
-        layer.fixed = true;
-    };
 
     this.search = function (layer, box) {
         return this.queriers[layer.id].boxSearch (box);
@@ -164,7 +147,6 @@ function BaseEngine (selector, options) {
     this.shaders = {};
 
     this.scene = [];
-    this.layers = {};
     this.queriers = {};
 
     this.draw = function () {

@@ -26,8 +26,8 @@ function PointRenderer (engine, layer) {
     buffers.create ('alpha', 1);
 
     // Rendering class for an individual point
-    var PointView = function (feature_geom) {
-        FeatureView.call (this, feature_geom);
+    var PointView = function (feature_geom, feature_style) {
+        FeatureView.call (this, feature_geom, feature_style);
 
         // The start index of the buffer
         var start;

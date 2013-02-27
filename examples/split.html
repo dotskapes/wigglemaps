@@ -27,17 +27,18 @@
      	    async: false,			
 	    success: function (data) {
                 var layer = wiggle.io.GeoJSON (data);
-                var order = layer.numeric ();
-                order.sort ();
-                layer.attr ('order', order);
+                //var order = layer.numeric ();
+                //order.sort ();
+                //layer.attr ('order', order);
 
-                var graph = new wiggle.TimeSeries ('#time', {
+                var graph = new wiggle.TimeSeries ('#time', layer, {
                     //'background': wiggle.util.icolor (250, 250, 250, 255),
                     'background': wiggle.util.icolor (0, 0, 0, 255),
                     //'range': new wiggle.util.Box (new vect (0, 0), new vect (52, 6500))
-                    'min': new vect (0, 0),
-                    'width': 51,
-                    'height': 4000
+                    //'min': new vect (0, 0),
+                    //'width': 51,
+                    //'height': 4000
+                    'ticks': 500,
                 });
                 
                 var map = new wiggle.Map ('#map');
@@ -68,7 +69,7 @@
                         .style (map, 'fill', settings['ramp'][i]);
                 }
 
-                graph.append (layer);                
+                //graph.append (layer);                
                 map.append (layer);
             }
         });
