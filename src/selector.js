@@ -15,7 +15,7 @@ var LayerSelector = function (elem) {
     this.type = function (key) {
         var result = [];
         for (var i = 0; i < elem.length; i ++) {
-            if (elem[i].type == key)
+            if (key == '*' || elem[i].type == key)
                 result.push (elem[i]);
         }
         return new LayerSelector (result);

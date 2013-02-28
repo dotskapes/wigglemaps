@@ -32,6 +32,7 @@
     // #include 'src/query/Querier.js'
     // #include 'src/query/PointQuerier.js'
     // #include 'src/query/PolygonQuerier.js'
+    // #include 'src/query/TimeSeriesQuerier.js'
 
     // #include 'src/LayerController.js'
 

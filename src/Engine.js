@@ -63,6 +63,7 @@ function BaseEngine (selector, options) {
     this.pxH = 1 / this.canvas.attr ('height');
 
     this.Renderers = {};
+    this.Queriers = {};
 
     this.renderers = {};
     this.views = {};

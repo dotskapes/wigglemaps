@@ -50,7 +50,7 @@ function TimeSeries (selector, layer, options) {
         'height': bounds.max - bounds.min,
         'worldMin': new vect (0, bounds.min),
         'worldMax': new vect (options.order.length - 1, bounds.max),
-        'ylock': true
+        'ylock': true 
     });
 
     var order = options.order;
@@ -94,6 +94,10 @@ function TimeSeries (selector, layer, options) {
 
     this.Renderers = {
         'default': LineRenderer
+    };
+
+    this.Queriers = {
+        '*': TimeSeriesQuerier
     };
 
     var grid_style = {
@@ -144,5 +148,5 @@ function TimeSeries (selector, layer, options) {
     drawGrid ();
 
     this.scene.push (new LayerController (engine, layer, options));
-    this.queriers[layer.id] = new Querier (this, layer);
+    this.queriers[layer.id] = new Querier (this, layer, options);
 };

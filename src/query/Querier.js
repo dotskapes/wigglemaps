@@ -1,13 +1,7 @@
-var Querier = function (engine, layer) {
-    queryTypes = {
-        'Point': PointQuerier,
-        'Polygon': PolygonQuerier,
-        //'Line': lineQuerier
-    };
-
+var Querier = function (engine, layer, options) {
     var queriers = {};
-    $.each (queryTypes, function (geomType, GeomQuerier) {
-        queriers[geomType] = new GeomQuerier (engine, layer, layer.features ().type (geomType));
+    $.each (engine.Queriers, function (geomType, GeomQuerier) {
+        queriers[geomType] = new GeomQuerier (engine, layer, options);
     });
 
      this.boxSearch = function (box) {

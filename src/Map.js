@@ -4,6 +4,10 @@ var Map = function (selector, options) {
     if (options === undefined)
         options = {};
 
+    options.geomFunc = function (f) {
+        return f.geom;
+    };
+
     default_model (options, {
         'width': 360,
         'center': new vect (0, 0),
@@ -18,6 +22,12 @@ var Map = function (selector, options) {
         'Point': PointRenderer,
         'Polygon': multiRendererFactory ([PolygonRenderer, LineRenderer]),
         'Line': LineRenderer,
+    };
+
+    this.Queriers = {
+        'Point': PointQuerier,
+        'Polygon': PolygonQuerier,
+        //'Line': lineQuerier
     };
 
     this.styles = {
@@ -100,6 +110,6 @@ var Map = function (selector, options) {
         }
 
         this.scene.push (new LayerController (engine, layer, options));
-        this.queriers[layer.id] = new Querier (this, layer);
+        this.queriers[layer.id] = new Querier (this, layer, options);
     };
 };

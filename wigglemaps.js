@@ -2515,16 +2515,10 @@ function PolygonRenderer (engine) {
     };
 };
 
-    var Querier = function (engine, layer) {
-    queryTypes = {
-        'Point': PointQuerier,
-        'Polygon': PolygonQuerier,
-        //'Line': lineQuerier
-    };
-
+    var Querier = function (engine, layer, options) {
     var queriers = {};
-    $.each (queryTypes, function (geomType, GeomQuerier) {
-        queriers[geomType] = new GeomQuerier (engine, layer, layer.features ().type (geomType));
+    $.each (engine.Queriers, function (geomType, GeomQuerier) {
+        queriers[geomType] = new GeomQuerier (engine, layer, options);
     });
 
      this.boxSearch = function (box) {
@@ -2638,6 +2632,41 @@ var PointQuerier = function (engine, layer, points) {
         return new LayerSelector (results);
     };
 };
+    var TimeSeriesQuerier = function (engine, layer, options) {
+    var r_points = [];
+    layer.features ().each (function (n, polygon) {
+	$.each (options.geomFunc (polygon), function (i, poly) {
+	    $.each (poly, function (j, ring) {
+		$.each (ring, function (k, pair) {
+		    r_points.push ({
+                        ref: polygon,
+			x: pair[0],
+			y: pair[1]
+		    });			
+		});
+	    });
+	});
+    });
+    var tree = new RangeTree (r_points);
+
+    this.boxSearch = function (box) {
+        // Range search on the vertices of the polygon
+	var elem = tree.search (box);
+	var keys = {};
+	$.each (elem, function (i, p) {
+	    keys[p.ref.id] = p.ref;
+	});
+	var results = [];
+	for (var k in keys) {
+	    results.push (keys[k]);
+	}
+	return new LayerSelector (results);
+    };
+
+    this.pointSearch = function (p) {
+        return new LayerSelector ([]);
+    };
+};
 
     function LayerController (engine, layer, options) {
     var controller = this;
@@ -2651,16 +2680,6 @@ var PointQuerier = function (engine, layer, points) {
 
     // A flat view of all views in all renderers
     this.views = {};
-
-    var geomFunc;
-    if (options.geomFunc) {
-        geomFunc = options.geomFunc;
-    }
-    else {
-        geomFunc = function (f) {
-            return f.geom;
-        };
-    }
 
     // Used as a callback when the StyleManager changes a feature
     var update_feature = function (f, key) {
@@ -2679,7 +2698,7 @@ var PointQuerier = function (engine, layer, points) {
         if (!(renderKey in controller.renderers)) {
             controller.renderers[renderKey] = new engine.Renderers[renderKey] (engine, layer, options);
         }
-        var view = controller.renderers[renderKey].create (geomFunc (f), (function (feature) {
+        var view = controller.renderers[renderKey].create (options.geomFunc (f), (function (feature) {
             return function (key) {
                 return StyleManager.derivedStyle (feature, layer, engine, key);
             }
@@ -2767,6 +2786,7 @@ var PointQuerier = function (engine, layer, points) {
     this.pxH = 1 / this.canvas.attr ('height');
 
     this.Renderers = {};
+    this.Queriers = {};
 
     this.renderers = {};
     this.views = {};
@@ -3292,6 +3312,10 @@ function Engine (selector, map, options) {
     if (options === undefined)
         options = {};
 
+    options.geomFunc = function (f) {
+        return f.geom;
+    };
+
     default_model (options, {
         'width': 360,
         'center': new vect (0, 0),
@@ -3306,6 +3330,12 @@ function Engine (selector, map, options) {
         'Point': PointRenderer,
         'Polygon': multiRendererFactory ([PolygonRenderer, LineRenderer]),
         'Line': LineRenderer,
+    };
+
+    this.Queriers = {
+        'Point': PointQuerier,
+        'Polygon': PolygonQuerier,
+        //'Line': lineQuerier
     };
 
     this.styles = {
@@ -3388,7 +3418,7 @@ function Engine (selector, map, options) {
         }
 
         this.scene.push (new LayerController (engine, layer, options));
-        this.queriers[layer.id] = new Querier (this, layer);
+        this.queriers[layer.id] = new Querier (this, layer, options);
     };
 };
     function TimeSeries (selector, layer, options) {
@@ -3443,7 +3473,7 @@ function Engine (selector, map, options) {
         'height': bounds.max - bounds.min,
         'worldMin': new vect (0, bounds.min),
         'worldMax': new vect (options.order.length - 1, bounds.max),
-        'ylock': true
+        'ylock': true 
     });
 
     var order = options.order;
@@ -3487,6 +3517,10 @@ function Engine (selector, map, options) {
 
     this.Renderers = {
         'default': LineRenderer
+    };
+
+    this.Queriers = {
+        '*': TimeSeriesQuerier
     };
 
     var grid_style = {
@@ -3537,7 +3571,7 @@ function Engine (selector, map, options) {
     drawGrid ();
 
     this.scene.push (new LayerController (engine, layer, options));
-    this.queriers[layer.id] = new Querier (this, layer);
+    this.queriers[layer.id] = new Querier (this, layer, options);
 };
 
     function SelectionBox (engine) {
@@ -5369,7 +5403,7 @@ function Grid (options) {
     this.type = function (key) {
         var result = [];
         for (var i = 0; i < elem.length; i ++) {
-            if (elem[i].type == key)
+            if (key == '*' || elem[i].type == key)
                 result.push (elem[i]);
         }
         return new LayerSelector (result);
