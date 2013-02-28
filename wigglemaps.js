@@ -2587,8 +2587,9 @@ var PointQuerier = function (engine, layer, options) {
     };
 };
     var PolygonQuerier = function (engine, layer, options) {
+    var polygons = layer.features ().type ('Polygon');
     var r_points = [];
-    layer.features ().each (function (n, polygon) {
+    polygons.each (function (n, polygon) {
 	$.each (polygon.geom, function (i, poly) {
 	    $.each (poly, function (j, ring) {
 		$.each (ring, function (k, pair) {
@@ -2611,7 +2612,7 @@ var PointQuerier = function (engine, layer, options) {
 	    keys[p.ref.id] = p.ref;
 	});
         // Check to see if one of the corners of the box are in the polygon
-        layer.features ().each (function (i, polygon) {
+        polygons.each (function (i, polygon) {
             for (var j = 0; j < 4; j ++) {
                 if (polygon.contains (box.vertex (j)))
                     keys[polygon.id] = polygon;
