@@ -1,6 +1,7 @@
 // A controller for point specific operations, particualrly to perform geometric queries
 // on points faster. 
-var PointQuerier = function (engine, layer, points) {
+var PointQuerier = function (engine, layer, options) {
+    var points = layer.features ().type ('Point');
     var search_points = [];
     var max_radius = 0;
     points.each (function (i, point) {

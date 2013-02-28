@@ -2541,7 +2541,8 @@ function PolygonRenderer (engine) {
 };
     // A controller for point specific operations, particualrly to perform geometric queries
 // on points faster. 
-var PointQuerier = function (engine, layer, points) {
+var PointQuerier = function (engine, layer, options) {
+    var points = layer.features ().type ('Point');
     var search_points = [];
     var max_radius = 0;
     points.each (function (i, point) {
@@ -2585,7 +2586,7 @@ var PointQuerier = function (engine, layer, points) {
         return new LayerSelector ([]);
     };
 };
-    var PolygonQuerier = function (engine, layer) {
+    var PolygonQuerier = function (engine, layer, options) {
     var r_points = [];
     layer.features ().each (function (n, polygon) {
 	$.each (polygon.geom, function (i, poly) {

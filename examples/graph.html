@@ -45,6 +45,17 @@
                     'ticks': 250,
                     'lockYZoom': true
                 });
+
+	        var current = null;
+                graph.select (function (box) {
+		    if (current)
+			current.style ('stroke', null);
+		    current = graph.search (layer, box);
+		    current.style ('stroke', wiggle.util.icolor (204, 85, 0, 255));
+		});
+                graph.enableSelect ();
+                //graph.append (layer);
+
             }
         });
         //graph.append (time_series);

@@ -1,4 +1,4 @@
-var PolygonQuerier = function (engine, layer) {
+var PolygonQuerier = function (engine, layer, options) {
     var r_points = [];
     layer.features ().each (function (n, polygon) {
 	$.each (polygon.geom, function (i, poly) {
