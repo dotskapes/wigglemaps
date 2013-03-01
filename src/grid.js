@@ -29,7 +29,7 @@ function Grid (options) {
 	tex_data[i * 4 + 3] = parseInt (c.a * 255);
     };
 
-    var buffers = new Buffers (engine.gl, 6);
+    var buffers = new Buffers (engine, 6);
     buffers.create ('vert', 2);
     buffers.create ('screen', 2);
     buffers.create ('tex', 2);

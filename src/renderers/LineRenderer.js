@@ -87,7 +87,7 @@ function LineRenderer (engine) {
     }
     var line_shader = engine.shaders['line'];
 
-    var stroke_buffers = new Buffers (engine.gl, 1024);
+    var stroke_buffers = new Buffers (engine, 1024);
     //stroke_buffers.create ('vert', 2);
     //stroke_buffers.create ('norm', 2);
     stroke_buffers.create ('prev', 2);
@@ -137,6 +137,10 @@ function LineRenderer (engine) {
     };
 
     this.View = LineView;
+
+    this.update = function () {
+	stroke_buffers.update ();
+    };
 
     this.draw = function () {
         var gl = engine.gl;

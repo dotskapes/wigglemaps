@@ -1,4 +1,5 @@
-function Buffers (gl, initial_size) {
+function Buffers (engine, initial_size) {
+    var gl = engine.gl;
     var data = {};
     
     var size;
@@ -90,6 +91,7 @@ function Buffers (gl, initial_size) {
 		if (data[name].buffer)
 		    data[name].buffer.update (data[name].array, 0);
 		data[name].dirty = false;
+                engine.dirty = true;
 	    }
 	}
     };

@@ -8,7 +8,7 @@ function PolygonRenderer (engine) {
     }
     var poly_shader = engine.shaders['polygon'];
 
-    var fill_buffers = new Buffers (engine.gl, INITIAL_POLYGONS);
+    var fill_buffers = new Buffers (engine, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
     fill_buffers.create ('color', 3);
     fill_buffers.create ('alpha', 1);
@@ -71,6 +71,10 @@ function PolygonRenderer (engine) {
     };
 
     this.View = PolygonView;
+
+    this.update = function (dt) {
+	fill_buffers.update ();
+    };
 
     this.draw = function () {
         var gl = engine.gl;

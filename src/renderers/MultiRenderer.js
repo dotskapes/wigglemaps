@@ -34,6 +34,12 @@ function multiRendererFactory (Renderers) {
             return new MultiView (views);
         };
 
+        this.update = function () {
+            $.each (renderers, function (i, renderer) {
+                renderer.update ();
+            });
+        };
+
         this.draw = function () {
             $.each (renderers, function (i, renderer) {
                 renderer.draw ();

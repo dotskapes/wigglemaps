@@ -45,14 +45,14 @@ function MultiTileLayer (options) {
 
         gl = engine.gl;
 
-        buffers = new Buffers (engine.gl, NUM_TILES * 6);
+        buffers = new Buffers (engine, NUM_TILES * 6);
         buffers.create ('vert', 3);
         buffers.create ('tex', 2);
         buffers.create ('lookup', 1);
         buffers.alloc (NUM_TILES * 6);
 
         for (var i = 0; i < 25; i ++) {
-	    available.push (new Texture (engine.gl));
+	    available.push (new Texture (engine));
         }
 
         for (var i = 0; i < layers.length; i ++) {
@@ -275,7 +275,7 @@ function MultiTileLayer (options) {
 	          }) (tiles[i][j]))*/
 	        tiles[i][j].tex = options.available.pop ();
 	        if (!tiles[i][j].tex)
-		    tiles[i][j].tex = new Texture (gl);
+		    tiles[i][j].tex = new Texture (engine);
 	        getImage (path, (function (tile) {
 		    return function (img) {
 		        if (tile.tex) {

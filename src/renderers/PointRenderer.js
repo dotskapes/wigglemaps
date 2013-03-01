@@ -14,7 +14,7 @@ function PointRenderer (engine, layer) {
     var max_rad = 10.0;
 
     // The required buffers for rendering
-    var buffers = new Buffers (engine.gl, INITIAL_POINTS);
+    var buffers = new Buffers (engine, INITIAL_POINTS);
     buffers.create ('vert', 2);
     buffers.create ('unit', 2);
     buffers.create ('stroke_width', 1);
@@ -79,10 +79,12 @@ function PointRenderer (engine, layer) {
 
     this.View = PointView;
 
+    this.update = function () {
+	buffers.update ();
+    };
+
     this.draw = function () {
         var gl = engine.gl;
-
-	buffers.update ();
 
 	gl.useProgram (point_shader);
         

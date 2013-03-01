@@ -1,57 +1,51 @@
-function vect (x, y, z) {
+function Vector2D (x, y) {
     this.x = x;
     this.y = y;
-    if (!z)
-	this.z = 0.0;
-    else
-	this.z = z;
+
     this.add = function (v) {
 	this.x += v.x;
 	this.y += v.y;
-	this.z += v.z;
+        return this;
     };
     this.sub = function (v) {
 	this.x -= v.x;
 	this.y -= v.y;
-	this.z -= v.z;
+        return this;
     };
     this.scale = function (s) {
 	this.x *= s;
 	this.y *= s;
-	this.z *= s;
         return this;
     };
     this.length = function () {
-	return Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
+	return Math.sqrt (this.x * this.x + this.y * this.y);
     };
     this.normalize = function () {
-	var scale = Math.sqrt (this.x * this.x + this.y * this.y + this.z * this.z);
+        var scale = this.length ();
 	if (scale == 0)
 	    return this;
 	this.x /= scale;
 	this.y /= scale;
-	this.z /= scale;
         return this;
     };
     this.div = function (v) {
 	this.x /= v.x;
 	this.y /= v.y;
-	this.z /= v.z;
+        return this;
     };
     this.floor = function () {
 	this.x = Math.floor (this.x);
 	this.y = Math.floor (this.y);
-	this.z = Math.floor (this.z);
+        return this;
     };
     this.zero = function () {
-	return ((this.x + this.y + this.z) == 0);
+	return ((this.x + this.y) == 0);
     };
     this.dot = function (v) {
-	return (this.x * v.x) + (this.y * v.y) + (this.z * v.z);
+	return (this.x * v.x) + (this.y * v.y);
     };
     this.cross = function (v) {
-	throw 'Need to reimplement';
-	//return (this.x * v.y) - (this.y * v.x);
+	return (this.x * v.y) - (this.y * v.x);
     };
     this.rotate = function (omega) {
 	var cos = Math.cos (omega);
@@ -63,7 +57,7 @@ function vect (x, y, z) {
 	return this;
     };
     this.clone = function () {
-        return new vect (this.x, this.y, this.z); 
+        return new Vector2D (this.x, this.y); 
     };
 
     this.array = function () {
@@ -71,35 +65,31 @@ function vect (x, y, z) {
     };
 };
 
+function vect (x, y) {
+    return new Vector2D (x, y);
+};
+
 vect.scale = function (v, s) {
-    return new vect (v.x * s, v.y * s, v.z * s);
+    return v.clone ().scale (s);
 };
 
 vect.add = function (v1, v2) {
-    return new vect (v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+    return v1.clone ().add (v2);
 };
 
 vect.sub = function (v1, v2) {
-    if (!v1 || !v2) {
-	throw "Bad Vector";
-    }
-    return new vect (v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    return v1.clone ().sub (v2);
 };
 
 vect.dist = function (v1, v2) {
-    var x = v2.x - v1.x;
-    var y = v2.y - v1.y;
-    var z = v2.z - v1.z;
-    return Math.sqrt (x * x + y * y + z * z);
+    return v1.clone ().sub (v2).length ();
 };
 
 vect.dir = function (v1, v2) {
-    var v = vect.sub (v1, v2);
-    v.normalize ();
-    return v;
+    return v1.clone ().sub (v2).normalize ();
 }
 
-vect.dot2d = function (v1, v2) {
+vect.dot = function (v1, v2) {
     return (v1.x * v2.x) + (v1.y * v2.y);
 };
 
@@ -173,17 +163,10 @@ vect.rotate = function (v, omega) {
     var sin = Math.sin (omega);
     xp = cos * v.x - sin * v.y;
     yp = sin * v.x + cos * v.y;
-    var v = new vect (xp, yp, v.z);
+    var v = new vect (xp, yp);
     return v;
 };
 
-vect.normalize = function (c) {
-    var v = c.clone ();
-    var scale = Math.sqrt (v.x * v.x + v.y * v.y + v.z * v.z);
-    if (scale == 0)
-	return v;
-    v.x /= scale;
-    v.y /= scale;
-    v.z /= scale;
-    return v;
+vect.normalize = function (v) {
+    return v.clone ().normalize ();
 };

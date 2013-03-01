@@ -43,6 +43,12 @@ function LayerController (engine, layer, options) {
         //f.change (handle_change);
     });
 
+    this.update = function (engine, dt) {
+        for (var key in this.renderers) {
+            this.renderers[key].update (dt);
+        }
+    };
+
     this.draw = function (engine, dt) {
         for (var key in this.renderers) {
             this.renderers[key].draw (dt);

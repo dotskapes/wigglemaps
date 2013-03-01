@@ -1,4 +1,5 @@
-function Texture (gl, options) {
+function Texture (engine, options) {
+    var gl = engine.gl;
     var settings = copy (options);
     default_model (settings, {
 	mag_filter: gl.LINEAR,
@@ -22,6 +23,7 @@ function Texture (gl, options) {
 	if (settings.mipmap)
 	    gl.generateMipmap(gl.TEXTURE_2D);  
 	gl.bindTexture (gl.TEXTURE_2D, null);
+        engine.dirty = true;
     };
 
     this.texture = function () {

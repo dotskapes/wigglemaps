@@ -1,4 +1,5 @@
-function Camera (canvas, options) {
+function Camera (engine, options) {
+    var canvas = engine.canvas;
     var camera = this;
     if (!options)
         options = {};
@@ -97,6 +98,7 @@ function Camera (canvas, options) {
         setupPx ();
         setupProj ();
 
+        engine.dirty = true;
     };
 
     // Initial call to setup the matrices

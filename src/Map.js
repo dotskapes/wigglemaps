@@ -99,7 +99,6 @@ var Map = function (selector, options) {
         };
     };
 
-    
     setBase ();
 
     this.append = function (layer) {

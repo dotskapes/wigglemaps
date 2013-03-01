@@ -8,6 +8,7 @@ function SelectionBox (engine) {
     var bound_buffer = staticBuffer (engine.gl, rect (0, 0, 1, 1), 2);
     var reset_rect = function () {
 	sel_buffer.update (rectv (start, end), 0);
+        engine.dirty = true;
     };
     engine.canvas.bind ('mousedown', function (event) {
 	if (!enabled)
