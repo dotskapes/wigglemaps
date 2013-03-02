@@ -10,20 +10,20 @@ var DEBUG = false;
 function setContext (canvas) {
     var gl;
     if (!DEBUG) 
-	gl = canvas.get (0).getContext ('experimental-webgl', {
-	    alpha: false,
-	    antialias: true,
-	    premultipliedAlpha: false
-	});
+        gl = canvas.get (0).getContext ('experimental-webgl', {
+            alpha: false,
+            antialias: true,
+            premultipliedAlpha: false
+        });
     else {
-	function throwOnGLError(err, funcName, args) {
-	    throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;
-	};
-	gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
-	    alpha: false,
-	    antialias: true,
-	    premultipliedAlpha: false
-	}), throwOnGLError);
+        function throwOnGLError(err, funcName, args) {
+            throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;
+        };
+        gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
+            alpha: false,
+            antialias: true,
+            premultipliedAlpha: false
+        }), throwOnGLError);
     }
     return gl;
 };
@@ -33,7 +33,7 @@ function rect (x, y, w, h) {
         x - w, y + h,
         x - w, y - h,
         x + w, y + h,
-	
+
         x - w, y - h,
         x + w, y - h,
         x + w, y + h
@@ -44,33 +44,33 @@ function rect (x, y, w, h) {
 function rectv (p1, p2, z) {
     var verts;
     if (arguments.length == 2) {
-	verts = [
+        verts = [
             p1.x, p2.y,
             p1.x, p1.y,
             p2.x, p2.y,
-	    
+            
             p1.x, p1.y,
             p2.x, p1.y,
             p2.x, p2.y
-	];
+        ];
     }
     else {
-	verts = [
+        verts = [
             p1.x, p2.y, z,
             p1.x, p1.y, z,
             p2.x, p2.y, z,
-	    
+            
             p1.x, p1.y, z,
             p2.x, p1.y, z, 
             p2.x, p2.y, z
-	];
+        ];
     }
     return verts;
 };
 
 function makeProgram (gl, path) {
     if (!gl)
-	return null;
+        return null;
     var shader = gl.createProgram();
 
     var vert_shader = getShader (gl, gl.VERTEX_SHADER, path + '/vert.glsl');
@@ -90,20 +90,20 @@ function getShader (gl, type, path) {
     var shader = gl.createShader (type);
 
     $.ajax ({
-	async: false,
-	url: path,
-	dataType: 'text',
-	success: function (data) {
-	    gl.shaderSource (shader, data);
-	    gl.compileShader (shader);
-	    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		throw (gl.getShaderInfoLog(shader));
-	    }
-	    shader.source = data;
-	},
-	error: function (xhr) {
-	    console.log ("Could not load " + path);
-	}
+        async: false,
+        url: path,
+        dataType: 'text',
+        success: function (data) {
+            gl.shaderSource (shader, data);
+            gl.compileShader (shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                throw (gl.getShaderInfoLog(shader));
+            }
+            shader.source = data;
+        },
+        error: function (xhr) {
+            console.log ("Could not load " + path);
+        }
     });
     return shader;
 };
@@ -116,73 +116,73 @@ function addVars (gl, shader, vert, frag) {
     var tex_count = 0;
     gl.useProgram (shader);
     if (u) {
-	for (var i = 0; i < u.length; i ++) {
-	    var v = u[i].split (' ');
-	    uniforms[v[2]] = {
-		u: v[0],
-		type: v[1],
-		loc: null //gl.getUniformLocation (shader, v[2])
-	    };
-	    if (v[0] == 'uniform') {
-		uniforms[v[2]].loc = gl.getUniformLocation (shader, v[2]);
-	    }
-	    else {
-		var loc = gl.getAttribLocation (shader, v[2]);
-		uniforms[v[2]].loc = loc;
-	    }
-	    if (v[1] == 'sampler2D') {
-		uniforms[v[2]].tex = tex_count;
-		tex_count ++;
-	    }
-	}
-	shader.get = function (name) {
-	    return uniforms[name].loc;
-	}
-	shader.data = function (name, data) {
-	    var d = uniforms[name];
-	    if (!d)
-		throw "Could not find shader variable " + name;
-	    if (d.u == 'uniform') {
-		if (d.type == 'float')
-		    gl.uniform1f (d.loc, data);
-		else if (d.type == 'vec2')
-		    gl.uniform2fv (d.loc, data);
-		else if (d.type == 'ivec2')
-		    gl.uniform2iv (d.loc, data);
-		else if (d.type == 'vec3')
-		    gl.uniform3fv (d.loc, data);
-		else if (d.type == 'ivec3')
-		    gl.uniform3iv (d.loc, data);
-		else if (d.type == 'vec4')
-		    gl.uniform4fv (d.loc, data);
-		else if (d.type == 'ivec4')
-		    gl.uniform4iv (d.loc, data);
-		else if (d.type == 'bool')
-		    gl.uniform1i (d.loc, data);
-		else if (d.type == 'mat4')
-		    gl.uniformMatrix4fv (d.loc, false, data);	
-		else if (d.type == 'mat3')
-		    gl.uniformMatrix3fv (d.loc, false, data);	
-		else if (d.type == 'sampler2D') {
-		    if ('texture' in data)
-			data = data.texture ();
-		    gl.activeTexture (gl['TEXTURE' + d.tex]); 
-		    gl.bindTexture (gl.TEXTURE_2D, data);
-		    gl.uniform1i (d.loc, d.tex);
-		}
-		else if (d.type == 'int')
-		    gl.uniform1i (d.loc, data);
-		else
-		    throw "Unsupported Type for Shader Helper: " + d.type;
-	    }
-	    else if (d.u == 'attribute') {
-		gl.enableVertexAttribArray (d.loc);
-		gl.bindBuffer (gl.ARRAY_BUFFER, data);
-		gl.vertexAttribPointer (d.loc, data.itemSize, gl.FLOAT, false, 0, 0);
-	    }
-	    else 
-		throw "Type: " + d.u + " Recieved";
-	};
+        for (var i = 0; i < u.length; i ++) {
+            var v = u[i].split (' ');
+            uniforms[v[2]] = {
+                u: v[0],
+                type: v[1],
+                loc: null //gl.getUniformLocation (shader, v[2])
+            };
+            if (v[0] == 'uniform') {
+                uniforms[v[2]].loc = gl.getUniformLocation (shader, v[2]);
+            }
+            else {
+                var loc = gl.getAttribLocation (shader, v[2]);
+                uniforms[v[2]].loc = loc;
+            }
+            if (v[1] == 'sampler2D') {
+                uniforms[v[2]].tex = tex_count;
+                tex_count ++;
+            }
+        }
+        shader.get = function (name) {
+            return uniforms[name].loc;
+        }
+        shader.data = function (name, data) {
+            var d = uniforms[name];
+            if (!d)
+                throw "Could not find shader variable " + name;
+            if (d.u == 'uniform') {
+                if (d.type == 'float')
+                    gl.uniform1f (d.loc, data);
+                else if (d.type == 'vec2')
+                    gl.uniform2fv (d.loc, data);
+                else if (d.type == 'ivec2')
+                    gl.uniform2iv (d.loc, data);
+                else if (d.type == 'vec3')
+                    gl.uniform3fv (d.loc, data);
+                else if (d.type == 'ivec3')
+                    gl.uniform3iv (d.loc, data);
+                else if (d.type == 'vec4')
+                    gl.uniform4fv (d.loc, data);
+                else if (d.type == 'ivec4')
+                    gl.uniform4iv (d.loc, data);
+                else if (d.type == 'bool')
+                    gl.uniform1i (d.loc, data);
+                else if (d.type == 'mat4')
+                    gl.uniformMatrix4fv (d.loc, false, data);
+                else if (d.type == 'mat3')
+                    gl.uniformMatrix3fv (d.loc, false, data);
+                else if (d.type == 'sampler2D') {
+                    if ('texture' in data)
+                        data = data.texture ();
+                    gl.activeTexture (gl['TEXTURE' + d.tex]); 
+                    gl.bindTexture (gl.TEXTURE_2D, data);
+                    gl.uniform1i (d.loc, d.tex);
+                }
+                else if (d.type == 'int')
+                    gl.uniform1i (d.loc, data);
+                else
+                    throw "Unsupported Type for Shader Helper: " + d.type;
+            }
+            else if (d.u == 'attribute') {
+                gl.enableVertexAttribArray (d.loc);
+                gl.bindBuffer (gl.ARRAY_BUFFER, data);
+                gl.vertexAttribPointer (d.loc, data.itemSize, gl.FLOAT, false, 0, 0);
+            }
+            else 
+                throw "Type: " + d.u + " Recieved";
+        };
     }
 };
 
@@ -192,9 +192,9 @@ function repeats (gl, data, itemSize, count) {
     buffer.numItems = count;
     var float_data = new Float32Array (data.length * count * itemSize);
     for (var i = 0; i < count; i ++) {
-	for (var j = 0; j < data.length; j ++) {
-	    float_data[i * data.length + j] = data[j];
-	}
+        for (var j = 0; j < data.length; j ++) {
+            float_data[i * data.length + j] = data[j];
+        }
     }
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     gl.bufferData (gl.ARRAY_BUFFER, float_data, gl.STATIC_DRAW);
@@ -218,15 +218,15 @@ function staticBufferJoin (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var count = 0;
     for (var i = 0; i < data.length; i ++) {
-	count += data[i].length;
+        count += data[i].length;
     }
     var float_data = new Float32Array (count);
     var index = 0;
     for (var i = 0; i < data.length; i ++) {
-	for (var j = 0; j < data[i].length; j ++) {
-	    float_data[index] = data[i][j];
-	    index ++;
-	}
+        for (var j = 0; j < data[i].length; j ++) {
+            float_data[index] = data[i][j];
+            index ++;
+        }
     }
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     buffer.itemSize = itemSize;
@@ -239,7 +239,7 @@ function staticBufferJoin (gl, data, itemSize) {
 
 function dynamicBuffer (gl, items, itemSize) {
     if (!gl)
-	return null;
+        return null;
     var buffer = gl.createBuffer ();
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     var float_data = new Float32Array (items * itemSize);
@@ -248,9 +248,9 @@ function dynamicBuffer (gl, items, itemSize) {
     
     buffer.update = function (data, index) {
         var float_data = new Float32Array (data);
-	gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
-        gl.bufferSubData (gl.ARRAY_BUFFER, 4 * index, float_data);		
-	gl.bindBuffer (gl.ARRAY_BUFFER, null);
+        gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
+        gl.bufferSubData (gl.ARRAY_BUFFER, 4 * index, float_data);
+        gl.bindBuffer (gl.ARRAY_BUFFER, null);
     }
     
     gl.bufferData (gl.ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
@@ -267,9 +267,9 @@ function indexBuffer (gl, items, itemSize) {
     
     buffer.update = function (data, index) {
         var float_data = new Uint16Array (data);
-	gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
-        gl.bufferSubData (gl.ELEMENT_ARRAY_BUFFER, 2 * index, float_data);		
-	gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
+        gl.bufferSubData (gl.ELEMENT_ARRAY_BUFFER, 2 * index, float_data);
+        gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
     }
     
     gl.bufferData (gl.ELEMENT_ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
@@ -284,45 +284,17 @@ function getTexture (gl, path, callback) {
     tex_count ++;
     var img = new Image ();
     img.onload = function () {
-	gl.bindTexture (gl.TEXTURE_2D, tex);  
-	gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	//gl.generateMipmap(gl.TEXTURE_2D);  
-	gl.bindTexture (gl.TEXTURE_2D, null);
-	if (callback)
-	    callback ();
+        gl.bindTexture (gl.TEXTURE_2D, tex);  
+        gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //gl.generateMipmap(gl.TEXTURE_2D);  
+        gl.bindTexture (gl.TEXTURE_2D, null);
+        if (callback)
+            callback ();
     };
     img.src = path;
     return tex;
 };
-
-/*function asyncTexture (path, callback) {
-    jxhr = $.ajax ({
-	url: path,
-	success: function (img) {
-	    console.log (img);
-	    var tex = gl.createTexture ();
-	    tex.id = tex_count;
-	    tex_count ++;
-
-	    gl.bindTexture(gl.TEXTURE_2D, tex);  
-	    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	    gl.generateMipmap(gl.TEXTURE_2D);  
-	    gl.bindTexture(gl.TEXTURE_2D, null);
-	    console.log (img);
-
-	    callback (tex);
-	},
-	error: function (xhr, message) {
-	    console.log (message);
-	}
-    });
-    return jxhr;
-}*/

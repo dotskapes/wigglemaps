@@ -27,6 +27,11 @@ var PointQuerier = function (engine, layer, options) {
 	return new LayerSelector (results);
     }
 
+    // Converts geometry representation of a point to a vector
+    var geom2vect = function (geom) {
+        return new vect (geom[0], geom[1]);
+    };
+
     this.pointSearch = function (s) {
         var min = vect.add (s, new vect (-max_radius, max_radius));
         var max = vect.add (s, new vect (max_radius, -max_radius));
@@ -34,14 +39,15 @@ var PointQuerier = function (engine, layer, options) {
         var elem = range_tree.search (box);
         for (var i = 0; i < elem.length; i ++) {
             var point = elem[i].ref;
-
             var rad = StyleManager.derivedStyle (point, layer, engine, 'radius');
-            for (var i = 0; i < point.geom.length; i ++) {
-                var v = engine.camera.screen (geom2vect (point.geom[i]));
+            for (var j = 0; j < point.geom.length; j ++) {
+                var v = engine.camera.screen (geom2vect (point.geom[j]));
                 if (vect.dist (v, s) < rad)
-                    return new LayerSelector ([point.ref]);
+                    //return new LayerSelector ([point.ref]);
+                    return point;
             }
 	}
-        return new LayerSelector ([]);
+        //return new LayerSelector ([]);
+        return null;
     };
 };

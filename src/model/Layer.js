@@ -120,16 +120,16 @@ function Layer (options) {
     };
 
     // User defined event handler functions
-    var over_func = null, out_func = null;
+    //var over_func = null, out_func = null;
     this.mouseover = function (func) {
-	over_func = func;
+        EventManager.addEventHandler (this, 'mouseover', func);
     };
 
     this.mouseout = function (func) {
-        out_func = func;
+        EventManager.addEventHandler (this, 'mouseout', func);
     };
 
-    // Receive low level mouse position handlers from the bound engine
+    /*// Receive low level mouse position handlers from the bound engine
     var current_over = {};
     this.update_move = function (engine, p) {
 	if (over_func || out_func) {
@@ -157,5 +157,5 @@ function Layer (options) {
 		out_func (current_over[key]);
 	}
 	current_over = {};
-    };
+    };*/
 };

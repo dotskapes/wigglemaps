@@ -3,58 +3,58 @@ function Vector2D (x, y) {
     this.y = y;
 
     this.add = function (v) {
-	this.x += v.x;
-	this.y += v.y;
+        this.x += v.x;
+        this.y += v.y;
         return this;
     };
     this.sub = function (v) {
-	this.x -= v.x;
-	this.y -= v.y;
+        this.x -= v.x;
+        this.y -= v.y;
         return this;
     };
     this.scale = function (s) {
-	this.x *= s;
-	this.y *= s;
+        this.x *= s;
+        this.y *= s;
         return this;
     };
     this.length = function () {
-	return Math.sqrt (this.x * this.x + this.y * this.y);
+        return Math.sqrt (this.x * this.x + this.y * this.y);
     };
     this.normalize = function () {
         var scale = this.length ();
-	if (scale == 0)
-	    return this;
-	this.x /= scale;
-	this.y /= scale;
+        if (scale == 0)
+            return this;
+        this.x /= scale;
+        this.y /= scale;
         return this;
     };
     this.div = function (v) {
-	this.x /= v.x;
-	this.y /= v.y;
+        this.x /= v.x;
+        this.y /= v.y;
         return this;
     };
     this.floor = function () {
-	this.x = Math.floor (this.x);
-	this.y = Math.floor (this.y);
+        this.x = Math.floor (this.x);
+        this.y = Math.floor (this.y);
         return this;
     };
     this.zero = function () {
-	return ((this.x + this.y) == 0);
+        return ((this.x + this.y) == 0);
     };
     this.dot = function (v) {
-	return (this.x * v.x) + (this.y * v.y);
+        return (this.x * v.x) + (this.y * v.y);
     };
     this.cross = function (v) {
-	return (this.x * v.y) - (this.y * v.x);
+        return (this.x * v.y) - (this.y * v.x);
     };
     this.rotate = function (omega) {
-	var cos = Math.cos (omega);
-	var sin = Math.sin (omega);
-	xp = cos * this.x - sin * this.y;
-	yp = sin * this.x + cos * this.y;
-	this.x = xp;
-	this.y = yp;
-	return this;
+        var cos = Math.cos (omega);
+        var sin = Math.sin (omega);
+        xp = cos * this.x - sin * this.y;
+        yp = sin * this.x + cos * this.y;
+        this.x = xp;
+        this.y = yp;
+        return this;
     };
     this.clone = function () {
         return new Vector2D (this.x, this.y); 
@@ -99,7 +99,7 @@ vect.cross = function (v1, v2) {
 
 vect.left = function (a, b, c, tol) {
     if (!tol)
-	tol = 0;
+        tol = 0;
     var v1 = vect.sub (b, a);
     var v2 = vect.sub (c, a);
     return (vect.cross (v1, v2) >= -tol);
@@ -107,9 +107,9 @@ vect.left = function (a, b, c, tol) {
 
 vect.intersects = function (a, b, c, d, tol) {
     if (!tol)
-	tol = 0;
+        tol = 0;
     return (vect.left (a, b, c, tol) != vect.left (a, b, d, tol) &&
-	    vect.left (c, d, b, tol) != vect.left (c, d, a, tol));
+            vect.left (c, d, b, tol) != vect.left (c, d, a, tol));
 };
 
 vect.intersect2dt = function (a, b, c, d) {
@@ -119,7 +119,7 @@ vect.intersect2dt = function (a, b, c, d) {
         c.x * (a.y - b.y);
 
     if (denom == 0)
-	return Infinity;
+        return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
         c.x * (a.y - d.y) +
@@ -128,7 +128,7 @@ vect.intersect2dt = function (a, b, c, d) {
 
     var num_t = -(a.x * (c.y - b.y) +
                   b.x * (a.y - c.y) +
-		  c.x * (b.y - a.y));
+                  c.x * (b.y - a.y));
     var t = num_t / denom;
     
     return t;
@@ -141,7 +141,7 @@ vect.intersect2dpos = function (a, b, c, d) {
         c.x * (a.y - b.y);
 
     if (denom == 0)
-	return Infinity;
+        return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
         c.x * (a.y - d.y) +
@@ -150,7 +150,7 @@ vect.intersect2dpos = function (a, b, c, d) {
 
     /*var num_t = -(a.x * (c.y - b.y) +
                   b.x * (a.y - c.y) +
-		  c.x * (b.y - a.y));
+                  c.x * (b.y - a.y));
     var t = num_t / denom;*/
     
     var dir = vect.sub (b, a);
@@ -414,6 +414,7 @@ var Mouse = {
 $ (document).mousemove (function (event) {
     Mouse.x = event.clientX;
     Mouse.y = event.clientY;
+    Mouse.lastMove = new Date ().getTime ();
 });
 
 function make_url (base, vars) {
@@ -1663,7 +1664,7 @@ function derived_style (engine, feature, layer, key) {
     };
 
     this.linkParent = function (parent, object) {
-        this.listeners[object.id].parents.push (parent.id);
+        this.listeners[object.id].parents.push (parent);
     };
 
     this.addEventHandler = function (object, eventType, handler) {
@@ -1683,6 +1684,18 @@ function derived_style (engine, feature, layer, key) {
     this.mouseDown = function (engine) {
 
     };
+
+    var currentOver = null;
+    this.mouseOver = function (object) {
+        if (currentOver !== null && object != currentOver) {
+            this.trigger (currentOver, 'mouseout', [currentOver]);
+        }
+        if (object !== null && object != currentOver) {
+            this.trigger (object, 'mouseover', [object]);
+        }
+        currentOver = object;
+    };
+
     this.trigger = function (object, eventType, args) {
         if (object.id in this.listeners) {
             if (eventType in this.listeners[object.id].callbacks) {
@@ -2536,12 +2549,16 @@ function PolygonRenderer (engine) {
     };
 
     this.pointSearch = function (p) {
-        var results = new LayerSelector ([]);
+        //var results = new LayerSelector ([]);
         for (var key in queriers) {
-            var search_results = queriers[key].pointSearch (p);
-            results = results.join (search_results);
+            //var search_results = queriers[key].pointSearch (p);
+            //results = results.join (search_results);
+            var result = queriers[key].pointSearch (p);
+            if (result)
+                return result;
         }
-        return results;
+        //return results;
+        return null;
     };
 };
     // A controller for point specific operations, particualrly to perform geometric queries
@@ -2573,6 +2590,11 @@ var PointQuerier = function (engine, layer, options) {
 	return new LayerSelector (results);
     }
 
+    // Converts geometry representation of a point to a vector
+    var geom2vect = function (geom) {
+        return new vect (geom[0], geom[1]);
+    };
+
     this.pointSearch = function (s) {
         var min = vect.add (s, new vect (-max_radius, max_radius));
         var max = vect.add (s, new vect (max_radius, -max_radius));
@@ -2580,15 +2602,16 @@ var PointQuerier = function (engine, layer, options) {
         var elem = range_tree.search (box);
         for (var i = 0; i < elem.length; i ++) {
             var point = elem[i].ref;
-
             var rad = StyleManager.derivedStyle (point, layer, engine, 'radius');
-            for (var i = 0; i < point.geom.length; i ++) {
-                var v = engine.camera.screen (geom2vect (point.geom[i]));
+            for (var j = 0; j < point.geom.length; j ++) {
+                var v = engine.camera.screen (geom2vect (point.geom[j]));
                 if (vect.dist (v, s) < rad)
-                    return new LayerSelector ([point.ref]);
+                    //return new LayerSelector ([point.ref]);
+                    return point;
             }
 	}
-        return new LayerSelector ([]);
+        //return new LayerSelector ([]);
+        return null;
     };
 };
     var PolygonQuerier = function (engine, layer, options) {
@@ -2630,16 +2653,23 @@ var PointQuerier = function (engine, layer, options) {
 	return new LayerSelector (results);
 
     };
-    this.pointSearch = function (p) {
-        var results = [];
-        layer.feature ().each (function (i, polygon) {
+    this.pointSearch = function (s) {
+        var p = engine.camera.project (s);
+        //var results = [];
+        //polygons.each (function (i, polygon) {
+        for (var i = 0; i < polygons.count (); i ++) {
+            var polygon = polygons.get (i);
             if (polygon.contains (p))
-                results.push (polygon);
-        });
-        return new LayerSelector (results);
+                return polygon;
+            //results.push (polygon);
+        //});
+        }
+        //return new LayerSelector (results);
+        return null;
     };
 };
     var TimeSeriesQuerier = function (engine, layer, options) {
+    var lines = layer.features ();
     var r_points = [];
     layer.features ().each (function (n, polygon) {
         /*var pushPoint = function (v) {
@@ -2689,8 +2719,34 @@ var PointQuerier = function (engine, layer, options) {
 	return new LayerSelector (results);
     };
 
-    this.pointSearch = function (p) {
-        return new LayerSelector ([]);
+    this.pointSearch = function (s) {
+        var p = engine.camera.project (s);
+        var stepIndex = Math.floor (p.x);
+        if (stepIndex < 0 || stepIndex >= options.order.length)
+            return null;
+        for (var i = 0; i < lines.count (); i ++) {
+            var line = lines.get (i);
+            var v1 = line.attr (options.order[stepIndex]);
+            var v2 = line.attr (options.order[stepIndex + 1]);
+            if (isNaN (v1) || isNaN (v2))
+                continue;
+
+            var p1 = vect (stepIndex, v1);
+            var p2 = vect (stepIndex + 1, v2);
+
+            var s1 = engine.camera.screen (p1);
+            var s2 = engine.camera.screen (p2);
+
+            var v = vect.dir (s2, s1)
+            var u = vect.sub (s, s1);
+            var side1 = vect.dot (u, v);
+            var side2 = u.length ();
+            var dist2Line = Math.sqrt (Math.pow (side2, 2) - Math.pow (side1, 2));
+            if (dist2Line < StyleManager.derivedStyle (line, layer, engine, 'stroke-width'))
+                return line;
+        }
+        //return new LayerSelector ([]);
+        return null;
     };
 };
 
@@ -2909,12 +2965,14 @@ var PointQuerier = function (engine, layer, options) {
 
     var lastDraw = 0;
 
-    this.draw = function () {
+    var lastMouse = 0;
 
+    // Updates the elemenets of the engine, including styles and mouse events
+    this.update = function () {
         // Update the FPS counter
 	var current_time = new Date ().getTime ();
 	var dt = (current_time - old_time) / 1000;
-	this.scroller.update (dt);
+
 	if (fps_window.length >= 60)
 	    fps_window.splice (0, 1);
 	fps_window.push (dt);
@@ -2926,11 +2984,37 @@ var PointQuerier = function (engine, layer, options) {
 	$ ('#fps').text (Math.floor (1 / fps));
 	old_time = current_time;
 
-        // Update each layer
+        // Update the pan and zoom controller
+	this.scroller.update (dt);
+
+        // Update the mouse event
+        if (Mouse.lastMove > lastMouse) {
+            var mouse = vect (Mouse.x, Mouse.y);
+            var oneOver = false;
+            $.each (this.queriers, function (layerId, querier) {
+                var feature = querier.pointSearch (mouse);
+                if (feature) {
+                    EventManager.mouseOver (feature);
+                    oneOver = true;
+                    return false;
+                }
+            });
+            if (!oneOver) {
+                EventManager.mouseOver (null);
+            }
+        }
+        lastMouse = Mouse.lastMove;
+
+        // Update each renderer
         $.each (this.scene, function (i, layer) {
             if (layer.update)
                 layer.update (engine, dt);
         });
+
+    };
+
+    this.draw = function () {
+        this.update ();
 
         // If nothing has been done, don't redraw
         if (this.dirty) {
@@ -2941,11 +3025,11 @@ var PointQuerier = function (engine, layer, options) {
 	    gl.clearDepth (0.0);
             
             $.each (this.scene, function (i, layer) {
-                layer.draw (engine, dt);
+                layer.draw (engine);
             });
 
             if (selectEnabled) {
-	        sel.draw (this, dt);
+	        sel.draw (this);
             }
 
         }
@@ -2953,7 +3037,7 @@ var PointQuerier = function (engine, layer, options) {
         this.dirty = false;
 
 	requestAnimationFrame (draw);
-
+        
     };
 
     this.enableZ = function () {
@@ -2964,6 +3048,10 @@ var PointQuerier = function (engine, layer, options) {
     this.disableZ = function () {
 	gl.disable (gl.DEPTH_TEST);
     }
+
+    this.canvas.mouseout (function () {
+        EventManager.mouseOver (null);
+    });
 
     // Start the animation loop
     requestAnimationFrame (draw);
@@ -4689,16 +4777,16 @@ function Layer (options) {
     };
 
     // User defined event handler functions
-    var over_func = null, out_func = null;
+    //var over_func = null, out_func = null;
     this.mouseover = function (func) {
-	over_func = func;
+        EventManager.addEventHandler (this, 'mouseover', func);
     };
 
     this.mouseout = function (func) {
-        out_func = func;
+        EventManager.addEventHandler (this, 'mouseout', func);
     };
 
-    // Receive low level mouse position handlers from the bound engine
+    /*// Receive low level mouse position handlers from the bound engine
     var current_over = {};
     this.update_move = function (engine, p) {
 	if (over_func || out_func) {
@@ -4726,7 +4814,7 @@ function Layer (options) {
 		out_func (current_over[key]);
 	}
 	current_over = {};
-    };
+    };*/
 };
 
     var grid_shader = null;
@@ -5889,7 +5977,6 @@ function MultiTileLayer (options) {
 		    geom: [oriented],
 		    attr: feature.properties
 		});
-                //return layer;
 	    }
 	    if (feature.geometry.type == 'MultiPolygon') {
 		var rings = [];

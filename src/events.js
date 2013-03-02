@@ -11,7 +11,7 @@ var EventManager = new function () {
     };
 
     this.linkParent = function (parent, object) {
-        this.listeners[object.id].parents.push (parent.id);
+        this.listeners[object.id].parents.push (parent);
     };
 
     this.addEventHandler = function (object, eventType, handler) {
@@ -31,6 +31,18 @@ var EventManager = new function () {
     this.mouseDown = function (engine) {
 
     };
+
+    var currentOver = null;
+    this.mouseOver = function (object) {
+        if (currentOver !== null && object != currentOver) {
+            this.trigger (currentOver, 'mouseout', [currentOver]);
+        }
+        if (object !== null && object != currentOver) {
+            this.trigger (object, 'mouseover', [object]);
+        }
+        currentOver = object;
+    };
+
     this.trigger = function (object, eventType, args) {
         if (object.id in this.listeners) {
             if (eventType in this.listeners[object.id].callbacks) {

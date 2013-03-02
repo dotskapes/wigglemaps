@@ -154,12 +154,14 @@ function BaseEngine (selector, options) {
 
     var lastDraw = 0;
 
-    this.draw = function () {
+    var lastMouse = 0;
 
+    // Updates the elemenets of the engine, including styles and mouse events
+    this.update = function () {
         // Update the FPS counter
 	var current_time = new Date ().getTime ();
 	var dt = (current_time - old_time) / 1000;
-	this.scroller.update (dt);
+
 	if (fps_window.length >= 60)
 	    fps_window.splice (0, 1);
 	fps_window.push (dt);
@@ -171,11 +173,37 @@ function BaseEngine (selector, options) {
 	$ ('#fps').text (Math.floor (1 / fps));
 	old_time = current_time;
 
-        // Update each layer
+        // Update the pan and zoom controller
+	this.scroller.update (dt);
+
+        // Update the mouse event
+        if (Mouse.lastMove > lastMouse) {
+            var mouse = vect (Mouse.x, Mouse.y);
+            var oneOver = false;
+            $.each (this.queriers, function (layerId, querier) {
+                var feature = querier.pointSearch (mouse);
+                if (feature) {
+                    EventManager.mouseOver (feature);
+                    oneOver = true;
+                    return false;
+                }
+            });
+            if (!oneOver) {
+                EventManager.mouseOver (null);
+            }
+        }
+        lastMouse = Mouse.lastMove;
+
+        // Update each renderer
         $.each (this.scene, function (i, layer) {
             if (layer.update)
                 layer.update (engine, dt);
         });
+
+    };
+
+    this.draw = function () {
+        this.update ();
 
         // If nothing has been done, don't redraw
         if (this.dirty) {
@@ -186,11 +214,11 @@ function BaseEngine (selector, options) {
 	    gl.clearDepth (0.0);
             
             $.each (this.scene, function (i, layer) {
-                layer.draw (engine, dt);
+                layer.draw (engine);
             });
 
             if (selectEnabled) {
-	        sel.draw (this, dt);
+	        sel.draw (this);
             }
 
         }
@@ -198,7 +226,7 @@ function BaseEngine (selector, options) {
         this.dirty = false;
 
 	requestAnimationFrame (draw);
-
+        
     };
 
     this.enableZ = function () {
@@ -209,6 +237,10 @@ function BaseEngine (selector, options) {
     this.disableZ = function () {
 	gl.disable (gl.DEPTH_TEST);
     }
+
+    this.canvas.mouseout (function () {
+        EventManager.mouseOver (null);
+    });
 
     // Start the animation loop
     requestAnimationFrame (draw);

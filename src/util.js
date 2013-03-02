@@ -22,6 +22,7 @@ var Mouse = {
 $ (document).mousemove (function (event) {
     Mouse.x = event.clientX;
     Mouse.y = event.clientY;
+    Mouse.lastMove = new Date ().getTime ();
 });
 
 function make_url (base, vars) {

@@ -1,19 +1,19 @@
 function bint32 (data, offset) {
     //console.log (data.charCodeAt (offset) & 0xff, data.charCodeAt (offset + 1) & 0xff, data.charCodeAt (offset + 2) & 0xff, data.charCodeAt (offset + 3) & 0xff);
     return (
-	((data.charCodeAt (offset) & 0xff) << 24) +
-	    ((data.charCodeAt (offset + 1) & 0xff) << 16) +
-	    ((data.charCodeAt (offset + 2) & 0xff) << 8) +
-	    (data.charCodeAt (offset + 3) & 0xff)
+        ((data.charCodeAt (offset) & 0xff) << 24) +
+            ((data.charCodeAt (offset + 1) & 0xff) << 16) +
+            ((data.charCodeAt (offset + 2) & 0xff) << 8) +
+            (data.charCodeAt (offset + 3) & 0xff)
     );
 };
 
 function lint32 (data, offset) {
     return (
-	((data.charCodeAt (offset + 3) & 0xff) << 24) +
-	    ((data.charCodeAt (offset + 2) & 0xff) << 16) +
-	    ((data.charCodeAt (offset + 1) & 0xff) << 8) +
-	    (data.charCodeAt (offset) & 0xff)
+        ((data.charCodeAt (offset + 3) & 0xff) << 24) +
+            ((data.charCodeAt (offset + 2) & 0xff) << 16) +
+            ((data.charCodeAt (offset + 1) & 0xff) << 8) +
+            (data.charCodeAt (offset) & 0xff)
     );
 };
 

@@ -37,12 +37,18 @@ var PolygonQuerier = function (engine, layer, options) {
 	return new LayerSelector (results);
 
     };
-    this.pointSearch = function (p) {
-        var results = [];
-        layer.feature ().each (function (i, polygon) {
+    this.pointSearch = function (s) {
+        var p = engine.camera.project (s);
+        //var results = [];
+        //polygons.each (function (i, polygon) {
+        for (var i = 0; i < polygons.count (); i ++) {
+            var polygon = polygons.get (i);
             if (polygon.contains (p))
-                results.push (polygon);
-        });
-        return new LayerSelector (results);
+                return polygon;
+            //results.push (polygon);
+        //});
+        }
+        //return new LayerSelector (results);
+        return null;
     };
 };

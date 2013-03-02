@@ -46,6 +46,18 @@
                     'lockYZoom': true
                 });
 
+                var highlight = new wiggle.util.icolor (241, 246, 112, 255);
+
+                var colorings = {};
+                layer.mouseover (function (f) {
+                    colorings[f.id] = f.style ('stroke');
+                    f.style ('stroke', highlight);
+                });
+                
+                layer.mouseout (function (f) {
+                    f.style ('stroke', colorings[f.id]);
+                });
+
 	        /*var current = null;
                 graph.select (function (box) {
 		    if (current)
