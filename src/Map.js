@@ -60,39 +60,39 @@ var Map = function (selector, options) {
     };
     var base = null;
     var setBase = function () {
-	if (options.base == 'default' || options.base == 'nasa') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: options['tile-server'] + '/tiles/nasa_topo_bathy',
-		levels: 8,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else if (options.base == 'ne') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
-		levels: 6,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else if (options.base == 'ne1') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: TILE_SERVER + '/tiles/NE1_HR_LC',
-		levels: 6,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else {
-	    base = null;
-	}
+        if (options.base == 'default' || options.base == 'nasa') {
+            var settings = copy (options);
+            copy_to (settings, {
+                source: 'file',
+                url: options['tile-server'] + '/tiles/nasa_topo_bathy',
+                levels: 8,
+                size: 256
+            });
+            base = new MultiTileLayer (settings);
+        }
+        else if (options.base == 'ne') {
+            var settings = copy (options);
+            copy_to (settings, {
+                source: 'file',
+                url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
+                levels: 6,
+                size: 256
+            });
+            base = new MultiTileLayer (settings);
+        }
+        else if (options.base == 'ne1') {
+            var settings = copy (options);
+            copy_to (settings, {
+                source: 'file',
+                url: TILE_SERVER + '/tiles/NE1_HR_LC',
+                levels: 6,
+                size: 256
+            });
+            base = new MultiTileLayer (settings);
+        }
+        else {
+            base = null;
+        }
         if (base) {
             base.initialize (engine);
             engine.scene.push (base);

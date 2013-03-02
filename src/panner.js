@@ -6,83 +6,83 @@ function Scroller (engine, options) {
     var speed = 0;
     
     engine.canvas.mousedown (function (event) {
-	//console.log (event);
-	start = new vect (event.clientX, event.clientY);
-	drag = true;
-	//console.log ('pos', engine.camera.project (new vect (event.clientX, event.clientY)));
+        //console.log (event);
+        start = new vect (event.clientX, event.clientY);
+        drag = true;
+        //console.log ('pos', engine.camera.project (new vect (event.clientX, event.clientY)));
     });
     
     $ (window).bind ('mouseup', function () {
-	drag = false;
+        drag = false;
     });
     
     /*engine.canvas.mousemove (function (event) {
-       pos = new vect (event.clientX, event.clientY);
-   });*/
+      pos = new vect (event.clientX, event.clientY);
+      });*/
     
     $ (document).bind ('keypress', '+', function (event) {
-       engine.camera.zoom (1.1);
-   });
+        engine.camera.zoom (1.1);
+    });
     
     $ (document).bind ('keypress', '-', function (event) {
-       engine.camera.zoom (10 / 11);
-   });
+        engine.camera.zoom (10 / 11);
+    });
     
     $ (document).bind ('keypress', '0', function (event) {
-       engine.camera.reset ();
-   });
+        engine.camera.reset ();
+    });
     
     engine.canvas.bind ('mousewheel', function (event, delta) {
-	delta *= .5;
-	if (delta < 0) {
+        delta *= .5;
+        if (delta < 0) {
             delta *= -1;
             delta += 1.0;
             delta = 1.0 / delta;
-	}
-	else {
-	    delta += 1.0;
-	}
+        }
+        else {
+            delta += 1.0;
+        }
         var zoom = engine.camera.zoom ();
-	engine.camera.zoom (zoom * delta);
+        engine.camera.zoom (zoom * delta);
         readjustWorld ();
-	event.preventDefault ();
+        event.preventDefault ();
     });
     
     var enabled = true;
     this.disable = function () {
-	enabled = false;
+        enabled = false;
     };
 
     this.enable = function () {
-	enabled = true;
+        enabled = true;
     };
 
     this.update = function (dt) {
-	pos = new vect (Mouse.x, Mouse.y);
+        pos = new vect (Mouse.x, Mouse.y);
         var change = false;
         var newPos;
-	if (drag && enabled) {
-	    var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
+        if (drag && enabled) {
+            var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
             var currentPos = engine.camera.position ();
             newPos = vect.add (currentPos, m);
             engine.camera.position (newPos);
 
-	    start = pos;
-	    speed = m.length () / dt;
-	    dir = m;
-	    dir.normalize ();
+            start = pos;
+            speed = m.length () / dt;
+            dir = m;
+            dir.normalize ();
             change = true;
-	}
-	else if (speed > .01) {
-	    if (dir) {
-		var m = vect.scale (dir, speed * dt);
+        }
+        else if (speed > .01) {
+            if (dir) {
+                var m = vect.scale (dir, speed * dt);
                 var currentPos = engine.camera.position ();
                 newPos = vect.add (currentPos, m);
                 engine.camera.position (newPos);
-		speed -= 3.0 * dt * speed;
+                speed -= 3.0 * dt * speed;
                 change = true;
             }
-	}
+        }
 
         if (change)
             readjustWorld ();

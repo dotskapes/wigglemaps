@@ -2,7 +2,7 @@ function BaseEngine (selector, options) {
     var engine = this;
 
     default_model (options, {
-	background: new Color (0, 0, 0, 1),
+        background: new Color (0, 0, 0, 1),
     });
 
     this.type = 'Engine';
@@ -12,16 +12,16 @@ function BaseEngine (selector, options) {
     var gl = null;
 
     if (selector) {
-	$ (selector).append (this.canvas);
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());
+        $ (selector).append (this.canvas);
+        this.canvas.attr ('width', $ (selector).width ());
+        this.canvas.attr ('height', $ (selector).height ());
     }
     else {
-	selector = window;
-	$ ('body').append (this.canvas);
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());
-	$ (window).resize (function (event) {
+        selector = window;
+        $ ('body').append (this.canvas);
+        this.canvas.attr ('width', $ (selector).width ());
+        this.canvas.attr ('height', $ (selector).height ());
+        $ (window).resize (function (event) {
             engine.resize ();
         });
     }
@@ -29,13 +29,13 @@ function BaseEngine (selector, options) {
     var framebuffers = [];
 
     this.resize = function () {
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());	
-	gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
-	this.camera.reconfigure ();
-	for (var i = 0; i < framebuffers.length; i ++) {
-	    framebuffers[i].resize ();
-	}
+        this.canvas.attr ('width', $ (selector).width ());
+        this.canvas.attr ('height', $ (selector).height ());
+        gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+        this.camera.reconfigure ();
+        for (var i = 0; i < framebuffers.length; i ++) {
+            framebuffers[i].resize ();
+        }
     };
 
     gl = setContext (this.canvas, DEBUG);
@@ -49,14 +49,14 @@ function BaseEngine (selector, options) {
     this.scroller = new Scroller (this, options);
 
     this.extents = function (width) {
-	this.camera.extents (width);
+        this.camera.extents (width);
     };
 
     this.center = function (arg0, arg1) {
         if (arg1 === undefined)
-	    this.camera.position (arg0);
+            this.camera.position (arg0);
         else
-	    this.camera.position (new vect (arg0, arg1));
+            this.camera.position (new vect (arg0, arg1));
     };
 
     this.pxW = 1 / this.canvas.attr ('width');
@@ -122,18 +122,18 @@ function BaseEngine (selector, options) {
     var sel = new SelectionBox (this);
 
     this.select = function (func)  {
-	sel.select (func);
+        sel.select (func);
     };
 
     var selectEnabled = false;
     this.enableSelect = function () {
-	this.scroller.disable ();
-	sel.enable ();
+        this.scroller.disable ();
+        sel.enable ();
         selectEnabled = true;
     };
     this.disableSelect = function () {
-	this.scroller.enable ();
-	sel.disable ();
+        this.scroller.enable ();
+        sel.disable ();
         selectEnabled = false;
     };
 
@@ -159,22 +159,22 @@ function BaseEngine (selector, options) {
     // Updates the elemenets of the engine, including styles and mouse events
     this.update = function () {
         // Update the FPS counter
-	var current_time = new Date ().getTime ();
-	var dt = (current_time - old_time) / 1000;
+        var current_time = new Date ().getTime ();
+        var dt = (current_time - old_time) / 1000;
 
-	if (fps_window.length >= 60)
-	    fps_window.splice (0, 1);
-	fps_window.push (dt);
-	var fps = 0;
-	for (var i = 0; i < fps_window.length; i ++) {
-	    fps += fps_window[i];
-	}
-	fps /= fps_window.length;
-	$ ('#fps').text (Math.floor (1 / fps));
-	old_time = current_time;
+        if (fps_window.length >= 60)
+            fps_window.splice (0, 1);
+        fps_window.push (dt);
+        var fps = 0;
+        for (var i = 0; i < fps_window.length; i ++) {
+            fps += fps_window[i];
+        }
+        fps /= fps_window.length;
+        $ ('#fps').text (Math.floor (1 / fps));
+        old_time = current_time;
 
         // Update the pan and zoom controller
-	this.scroller.update (dt);
+        this.scroller.update (dt);
 
         // Update the mouse event
         if (Mouse.lastMove > lastMouse) {
@@ -209,33 +209,33 @@ function BaseEngine (selector, options) {
         if (this.dirty) {
 
             // Clear the old color buffer
-	    gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
-	    gl.clear(gl.COLOR_BUFFER_BIT);
-	    gl.clearDepth (0.0);
+            gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.clearDepth (0.0);
             
             $.each (this.scene, function (i, layer) {
                 layer.draw (engine);
             });
 
             if (selectEnabled) {
-	        sel.draw (this);
+                sel.draw (this);
             }
 
         }
 
         this.dirty = false;
 
-	requestAnimationFrame (draw);
+        requestAnimationFrame (draw);
         
     };
 
     this.enableZ = function () {
-	gl.depthFunc (gl.LEQUAL);
-	gl.enable (gl.DEPTH_TEST);
+        gl.depthFunc (gl.LEQUAL);
+        gl.enable (gl.DEPTH_TEST);
     };
 
     this.disableZ = function () {
-	gl.disable (gl.DEPTH_TEST);
+        gl.disable (gl.DEPTH_TEST);
     }
 
     this.canvas.mouseout (function () {

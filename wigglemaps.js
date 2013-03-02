@@ -392,20 +392,6 @@ function handler(event) {
 
     var PI = 3.14159265;
 
-/*if (! ('requestAnimationFrame' in window)) {
-    if ('mozRequestAnimationFrame' in window)
-	requestAnimationFrame = mozRequestAnimationFrame;
-    else if ('webkitRequestAnimationFrame' in window)
-	requestAnimationFrame = webkitRequestAnimationFrame;
-    else {
-	requestAnimationFrame = function (callback) {
-	    setTimeout (function () {
-		callback ();
-	    }, 1000 / 60);
-	};
-    }
-}*/
-
 var Mouse = {
     x: 0,
     y: 0
@@ -420,66 +406,66 @@ $ (document).mousemove (function (event) {
 function make_url (base, vars) {
     var items = [];
     for (var key in vars) {
-	items.push (key + '=' + vars[key]);
+        items.push (key + '=' + vars[key]);
     }
     return base + '?' + items.join ('&');
 }
 
 function default_model (options, model) {
     for (var key in model) {
-	if (!(key in options))
-	    options[key] = model[key];
+        if (!(key in options))
+            options[key] = model[key];
     }
 };
 
 function force_model (options, model) {
     for (var key in model) {
-	options[key] = model[key];
+        options[key] = model[key];
     }
 };
 
 function copy (src) {
     var dst = {};
     for (key in src)
-	dst[key] = src[key];
+        dst[key] = src[key];
     return dst;
 };
 
 function require (src, fields) {
     for (var i = 0; i < fields.length; i ++) {
-	var key = fields[i];
-	if (!(key in src))
-	    throw "Key " + key + " not found";
+        var key = fields[i];
+        if (!(key in src))
+            throw "Key " + key + " not found";
     }
 };
 
 function copy_to (dst, src) {
     for (key in src)
-	dst[key] = src[key];
+        dst[key] = src[key];
 };
 
 var default_copy = function (dst, src, key, def, cast) {
     if (key in src) {
-	if (cast)
-	    dst[key] = cast (src[key]);
-	else
-	    dst[key] = src[key];
+        if (cast)
+            dst[key] = cast (src[key]);
+        else
+            dst[key] = src[key];
     }
     else
-	dst[key] = def;
+        dst[key] = def;
 };
 
 var copy_value = function (dst, src, key, cast) {
     if (key in src) {
-	if (cast)
-	    dst[key] = cast (src[key]);
-	else
-	    dst[key] = src[key];
+        if (cast)
+            dst[key] = cast (src[key]);
+        else
+            dst[key] = src[key];
     }
 };
 
 function as_rgb (array) {
-	return 'rgb(' + Math.round (array[0] * 255) + ',' + Math.round (array[1] * 255) + ',' + Math.round (array[2] * 255) + ')'
+    return 'rgb(' + Math.round (array[0] * 255) + ',' + Math.round (array[1] * 255) + ',' + Math.round (array[2] * 255) + ')'
 };
 
 function clamp (val, min, max) {
@@ -488,26 +474,26 @@ function clamp (val, min, max) {
 
 function Color (r, g, b, a) {
     if (r <= 1 && g <= 1 && b <= 1 && a <= 1) {
-	this.r = r;
-	this.g = g;
-	this.b = b;
-	this.a = a;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
     }
     else {
-	this.r = r / 255;
-	this.g = g / 255;
-	this.b = b / 255;
-	this.a = a / 255;
+        this.r = r / 255;
+        this.g = g / 255;
+        this.b = b / 255;
+        this.a = a / 255;
     }
     
     this.array = [this.r, this.g, this.b, this.a];
 
     this.vect = function () {
-	return this.array;
+        return this.array;
     };
     
     this.rgb = function () {
-	return 'rgb(' + parseInt (this.r * 255) + ',' + parseInt (this.g * 255) + ',' + parseInt (this.b * 255) + ')';
+        return 'rgb(' + parseInt (this.r * 255) + ',' + parseInt (this.g * 255) + ',' + parseInt (this.b * 255) + ')';
     };
 };
 
@@ -528,12 +514,12 @@ function hex_to_color (hex) {
 
 function is_list (elem) {
     if (elem == null)
-	return false;
+        return false;
     if (elem.length == undefined)
-	return false;
+        return false;
     for (var i = 0; i < elem.length; i ++) {
-	if (!(i in elem))
-	    return false;
+        if (!(i in elem))
+            return false;
     }
     return true;
 };
@@ -541,42 +527,42 @@ function is_list (elem) {
 function isQuoted (value) {
     var c = value[0];
     if (c == '"' || c == "'") {
-	if (value[value.length - 1] == c)
-	    return true;
+        if (value[value.length - 1] == c)
+            return true;
     }
     return false
 };
 
 function isRGB (value) {
     if (value.match (/^rgb\(\d+,\d+,\d+\)$/))
-	return true;
+        return true;
     else
-	return false;
+        return false;
 };
 
 function isFloat (value) {
     if (value.match (/^(\+|\-)?\d*\.\d*$/) && value.length > 1)
-	return true;
+        return true;
     else if (value.match (/^(\+|\-)?\d*\.\d*e(\+|\-)?\d+$/) && value.length > 1)
-	return true;
+        return true;
     else
-	return false;
+        return false;
 };
 
 function isInt (value) {
     if (value.length == 1)
-	return value.match (/^\d$/);
+        return value.match (/^\d$/);
     else {
-	return value.match (/^(\+|\-)?\d+$/);
+        return value.match (/^(\+|\-)?\d+$/);
     }
 };
 
 function parseRGB (value) {
     var color_match = value.match (/^rgb\((\d+),(\d+),(\d+)\)$/);
     if (!color_match)
-	return null;
+        return null;
     else
-	return new Color (color_match[1], color_match[2], color_match[3], 255);
+        return new Color (color_match[1], color_match[2], color_match[3], 255);
 };
 
 function str_contains (string, c) {
@@ -585,19 +571,19 @@ function str_contains (string, c) {
     function bint32 (data, offset) {
     //console.log (data.charCodeAt (offset) & 0xff, data.charCodeAt (offset + 1) & 0xff, data.charCodeAt (offset + 2) & 0xff, data.charCodeAt (offset + 3) & 0xff);
     return (
-	((data.charCodeAt (offset) & 0xff) << 24) +
-	    ((data.charCodeAt (offset + 1) & 0xff) << 16) +
-	    ((data.charCodeAt (offset + 2) & 0xff) << 8) +
-	    (data.charCodeAt (offset + 3) & 0xff)
+        ((data.charCodeAt (offset) & 0xff) << 24) +
+            ((data.charCodeAt (offset + 1) & 0xff) << 16) +
+            ((data.charCodeAt (offset + 2) & 0xff) << 8) +
+            (data.charCodeAt (offset + 3) & 0xff)
     );
 };
 
 function lint32 (data, offset) {
     return (
-	((data.charCodeAt (offset + 3) & 0xff) << 24) +
-	    ((data.charCodeAt (offset + 2) & 0xff) << 16) +
-	    ((data.charCodeAt (offset + 1) & 0xff) << 8) +
-	    (data.charCodeAt (offset) & 0xff)
+        ((data.charCodeAt (offset + 3) & 0xff) << 24) +
+            ((data.charCodeAt (offset + 2) & 0xff) << 16) +
+            ((data.charCodeAt (offset + 1) & 0xff) << 8) +
+            (data.charCodeAt (offset) & 0xff)
     );
 };
 
@@ -633,7 +619,8 @@ function lfloat32 (data, offset) {
     var frac = (b2 & 0x7f) * Math.pow (2, 16) + b1 * Math.pow (2, 8) + b0;
 
     return sign * (1 + frac * Math.pow (2, -23)) * Math.pow (2, exp);
-}    /* Copyright 2011, Zack Krejci
+}
+    /* Copyright 2011, Zack Krejci
  * Licensed under the MIT License
  */
 
@@ -645,20 +632,20 @@ var DEBUG = false;
 function setContext (canvas) {
     var gl;
     if (!DEBUG) 
-	gl = canvas.get (0).getContext ('experimental-webgl', {
-	    alpha: false,
-	    antialias: true,
-	    premultipliedAlpha: false
-	});
+        gl = canvas.get (0).getContext ('experimental-webgl', {
+            alpha: false,
+            antialias: true,
+            premultipliedAlpha: false
+        });
     else {
-	function throwOnGLError(err, funcName, args) {
-	    throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;
-	};
-	gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
-	    alpha: false,
-	    antialias: true,
-	    premultipliedAlpha: false
-	}), throwOnGLError);
+        function throwOnGLError(err, funcName, args) {
+            throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;
+        };
+        gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
+            alpha: false,
+            antialias: true,
+            premultipliedAlpha: false
+        }), throwOnGLError);
     }
     return gl;
 };
@@ -668,7 +655,7 @@ function rect (x, y, w, h) {
         x - w, y + h,
         x - w, y - h,
         x + w, y + h,
-	
+
         x - w, y - h,
         x + w, y - h,
         x + w, y + h
@@ -679,33 +666,33 @@ function rect (x, y, w, h) {
 function rectv (p1, p2, z) {
     var verts;
     if (arguments.length == 2) {
-	verts = [
+        verts = [
             p1.x, p2.y,
             p1.x, p1.y,
             p2.x, p2.y,
-	    
+            
             p1.x, p1.y,
             p2.x, p1.y,
             p2.x, p2.y
-	];
+        ];
     }
     else {
-	verts = [
+        verts = [
             p1.x, p2.y, z,
             p1.x, p1.y, z,
             p2.x, p2.y, z,
-	    
+            
             p1.x, p1.y, z,
             p2.x, p1.y, z, 
             p2.x, p2.y, z
-	];
+        ];
     }
     return verts;
 };
 
 function makeProgram (gl, path) {
     if (!gl)
-	return null;
+        return null;
     var shader = gl.createProgram();
 
     var vert_shader = getShader (gl, gl.VERTEX_SHADER, path + '/vert.glsl');
@@ -725,20 +712,20 @@ function getShader (gl, type, path) {
     var shader = gl.createShader (type);
 
     $.ajax ({
-	async: false,
-	url: path,
-	dataType: 'text',
-	success: function (data) {
-	    gl.shaderSource (shader, data);
-	    gl.compileShader (shader);
-	    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		throw (gl.getShaderInfoLog(shader));
-	    }
-	    shader.source = data;
-	},
-	error: function (xhr) {
-	    console.log ("Could not load " + path);
-	}
+        async: false,
+        url: path,
+        dataType: 'text',
+        success: function (data) {
+            gl.shaderSource (shader, data);
+            gl.compileShader (shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                throw (gl.getShaderInfoLog(shader));
+            }
+            shader.source = data;
+        },
+        error: function (xhr) {
+            console.log ("Could not load " + path);
+        }
     });
     return shader;
 };
@@ -751,73 +738,73 @@ function addVars (gl, shader, vert, frag) {
     var tex_count = 0;
     gl.useProgram (shader);
     if (u) {
-	for (var i = 0; i < u.length; i ++) {
-	    var v = u[i].split (' ');
-	    uniforms[v[2]] = {
-		u: v[0],
-		type: v[1],
-		loc: null //gl.getUniformLocation (shader, v[2])
-	    };
-	    if (v[0] == 'uniform') {
-		uniforms[v[2]].loc = gl.getUniformLocation (shader, v[2]);
-	    }
-	    else {
-		var loc = gl.getAttribLocation (shader, v[2]);
-		uniforms[v[2]].loc = loc;
-	    }
-	    if (v[1] == 'sampler2D') {
-		uniforms[v[2]].tex = tex_count;
-		tex_count ++;
-	    }
-	}
-	shader.get = function (name) {
-	    return uniforms[name].loc;
-	}
-	shader.data = function (name, data) {
-	    var d = uniforms[name];
-	    if (!d)
-		throw "Could not find shader variable " + name;
-	    if (d.u == 'uniform') {
-		if (d.type == 'float')
-		    gl.uniform1f (d.loc, data);
-		else if (d.type == 'vec2')
-		    gl.uniform2fv (d.loc, data);
-		else if (d.type == 'ivec2')
-		    gl.uniform2iv (d.loc, data);
-		else if (d.type == 'vec3')
-		    gl.uniform3fv (d.loc, data);
-		else if (d.type == 'ivec3')
-		    gl.uniform3iv (d.loc, data);
-		else if (d.type == 'vec4')
-		    gl.uniform4fv (d.loc, data);
-		else if (d.type == 'ivec4')
-		    gl.uniform4iv (d.loc, data);
-		else if (d.type == 'bool')
-		    gl.uniform1i (d.loc, data);
-		else if (d.type == 'mat4')
-		    gl.uniformMatrix4fv (d.loc, false, data);	
-		else if (d.type == 'mat3')
-		    gl.uniformMatrix3fv (d.loc, false, data);	
-		else if (d.type == 'sampler2D') {
-		    if ('texture' in data)
-			data = data.texture ();
-		    gl.activeTexture (gl['TEXTURE' + d.tex]); 
-		    gl.bindTexture (gl.TEXTURE_2D, data);
-		    gl.uniform1i (d.loc, d.tex);
-		}
-		else if (d.type == 'int')
-		    gl.uniform1i (d.loc, data);
-		else
-		    throw "Unsupported Type for Shader Helper: " + d.type;
-	    }
-	    else if (d.u == 'attribute') {
-		gl.enableVertexAttribArray (d.loc);
-		gl.bindBuffer (gl.ARRAY_BUFFER, data);
-		gl.vertexAttribPointer (d.loc, data.itemSize, gl.FLOAT, false, 0, 0);
-	    }
-	    else 
-		throw "Type: " + d.u + " Recieved";
-	};
+        for (var i = 0; i < u.length; i ++) {
+            var v = u[i].split (' ');
+            uniforms[v[2]] = {
+                u: v[0],
+                type: v[1],
+                loc: null //gl.getUniformLocation (shader, v[2])
+            };
+            if (v[0] == 'uniform') {
+                uniforms[v[2]].loc = gl.getUniformLocation (shader, v[2]);
+            }
+            else {
+                var loc = gl.getAttribLocation (shader, v[2]);
+                uniforms[v[2]].loc = loc;
+            }
+            if (v[1] == 'sampler2D') {
+                uniforms[v[2]].tex = tex_count;
+                tex_count ++;
+            }
+        }
+        shader.get = function (name) {
+            return uniforms[name].loc;
+        }
+        shader.data = function (name, data) {
+            var d = uniforms[name];
+            if (!d)
+                throw "Could not find shader variable " + name;
+            if (d.u == 'uniform') {
+                if (d.type == 'float')
+                    gl.uniform1f (d.loc, data);
+                else if (d.type == 'vec2')
+                    gl.uniform2fv (d.loc, data);
+                else if (d.type == 'ivec2')
+                    gl.uniform2iv (d.loc, data);
+                else if (d.type == 'vec3')
+                    gl.uniform3fv (d.loc, data);
+                else if (d.type == 'ivec3')
+                    gl.uniform3iv (d.loc, data);
+                else if (d.type == 'vec4')
+                    gl.uniform4fv (d.loc, data);
+                else if (d.type == 'ivec4')
+                    gl.uniform4iv (d.loc, data);
+                else if (d.type == 'bool')
+                    gl.uniform1i (d.loc, data);
+                else if (d.type == 'mat4')
+                    gl.uniformMatrix4fv (d.loc, false, data);
+                else if (d.type == 'mat3')
+                    gl.uniformMatrix3fv (d.loc, false, data);
+                else if (d.type == 'sampler2D') {
+                    if ('texture' in data)
+                        data = data.texture ();
+                    gl.activeTexture (gl['TEXTURE' + d.tex]); 
+                    gl.bindTexture (gl.TEXTURE_2D, data);
+                    gl.uniform1i (d.loc, d.tex);
+                }
+                else if (d.type == 'int')
+                    gl.uniform1i (d.loc, data);
+                else
+                    throw "Unsupported Type for Shader Helper: " + d.type;
+            }
+            else if (d.u == 'attribute') {
+                gl.enableVertexAttribArray (d.loc);
+                gl.bindBuffer (gl.ARRAY_BUFFER, data);
+                gl.vertexAttribPointer (d.loc, data.itemSize, gl.FLOAT, false, 0, 0);
+            }
+            else 
+                throw "Type: " + d.u + " Recieved";
+        };
     }
 };
 
@@ -827,9 +814,9 @@ function repeats (gl, data, itemSize, count) {
     buffer.numItems = count;
     var float_data = new Float32Array (data.length * count * itemSize);
     for (var i = 0; i < count; i ++) {
-	for (var j = 0; j < data.length; j ++) {
-	    float_data[i * data.length + j] = data[j];
-	}
+        for (var j = 0; j < data.length; j ++) {
+            float_data[i * data.length + j] = data[j];
+        }
     }
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     gl.bufferData (gl.ARRAY_BUFFER, float_data, gl.STATIC_DRAW);
@@ -853,15 +840,15 @@ function staticBufferJoin (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var count = 0;
     for (var i = 0; i < data.length; i ++) {
-	count += data[i].length;
+        count += data[i].length;
     }
     var float_data = new Float32Array (count);
     var index = 0;
     for (var i = 0; i < data.length; i ++) {
-	for (var j = 0; j < data[i].length; j ++) {
-	    float_data[index] = data[i][j];
-	    index ++;
-	}
+        for (var j = 0; j < data[i].length; j ++) {
+            float_data[index] = data[i][j];
+            index ++;
+        }
     }
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     buffer.itemSize = itemSize;
@@ -874,7 +861,7 @@ function staticBufferJoin (gl, data, itemSize) {
 
 function dynamicBuffer (gl, items, itemSize) {
     if (!gl)
-	return null;
+        return null;
     var buffer = gl.createBuffer ();
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
     var float_data = new Float32Array (items * itemSize);
@@ -883,9 +870,9 @@ function dynamicBuffer (gl, items, itemSize) {
     
     buffer.update = function (data, index) {
         var float_data = new Float32Array (data);
-	gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
-        gl.bufferSubData (gl.ARRAY_BUFFER, 4 * index, float_data);		
-	gl.bindBuffer (gl.ARRAY_BUFFER, null);
+        gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
+        gl.bufferSubData (gl.ARRAY_BUFFER, 4 * index, float_data);
+        gl.bindBuffer (gl.ARRAY_BUFFER, null);
     }
     
     gl.bufferData (gl.ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
@@ -902,9 +889,9 @@ function indexBuffer (gl, items, itemSize) {
     
     buffer.update = function (data, index) {
         var float_data = new Uint16Array (data);
-	gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
-        gl.bufferSubData (gl.ELEMENT_ARRAY_BUFFER, 2 * index, float_data);		
-	gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
+        gl.bufferSubData (gl.ELEMENT_ARRAY_BUFFER, 2 * index, float_data);
+        gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
     }
     
     gl.bufferData (gl.ELEMENT_ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
@@ -919,48 +906,20 @@ function getTexture (gl, path, callback) {
     tex_count ++;
     var img = new Image ();
     img.onload = function () {
-	gl.bindTexture (gl.TEXTURE_2D, tex);  
-	gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	//gl.generateMipmap(gl.TEXTURE_2D);  
-	gl.bindTexture (gl.TEXTURE_2D, null);
-	if (callback)
-	    callback ();
+        gl.bindTexture (gl.TEXTURE_2D, tex);  
+        gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //gl.generateMipmap(gl.TEXTURE_2D);  
+        gl.bindTexture (gl.TEXTURE_2D, null);
+        if (callback)
+            callback ();
     };
     img.src = path;
     return tex;
 };
-
-/*function asyncTexture (path, callback) {
-    jxhr = $.ajax ({
-	url: path,
-	success: function (img) {
-	    console.log (img);
-	    var tex = gl.createTexture ();
-	    tex.id = tex_count;
-	    tex_count ++;
-
-	    gl.bindTexture(gl.TEXTURE_2D, tex);  
-	    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);  
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);  
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	    gl.generateMipmap(gl.TEXTURE_2D);  
-	    gl.bindTexture(gl.TEXTURE_2D, null);
-	    console.log (img);
-
-	    callback (tex);
-	},
-	error: function (xhr, message) {
-	    console.log (message);
-	}
-    });
-    return jxhr;
-}*/
     function Buffers (engine, initial_size) {
     var gl = engine.gl;
     var data = {};
@@ -1333,24 +1292,24 @@ function derived_style (engine, feature, layer, key) {
     var camera = this;
     if (!options)
         options = {};
-
+    
     if (options.width && !options.height) {
         options.height = options.width;
     }
     else if (!options.width && options.height) {
         options.width = options.height;
     }
-
+    
     var aspect = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
-
+    
     if (options.min) {
         options.center = vect.add (options.min, new vect (options.width, options.height * aspect).scale (.5));
     }
     else if (!options.center) {
         options.center = new vect (0, 0);
     }
-
-
+    
+    
     // These four parameters (along with the viewport aspect ratio) completely determine the
     // transformation matrices.
     var worldWidth = options.width;
@@ -1358,17 +1317,17 @@ function derived_style (engine, feature, layer, key) {
     var worldRatio = options.height / options.width;
     var center = options.center.clone ();
     var level = 1.0;
-
+    
     // The three transformation matrices: One that goes from world space to pixel space
     // One that goes from pixel space to screen space, and one that does both for efficency
     this.worldToPx = new Float32Array (9);
     this.pxToScreen = new Float32Array (9);
     this.worldToScreen = new Float32Array (9);
-
+    
     // Deprecated: Legacy access for backwards compatibility
     this.mat3 = this.worldToScreen;
-
-
+    
+    
     // Rebuild the matrices. Needs to be called everytime any of the above mentioned parameters
     // Changes
     this.reconfigure = function () {
@@ -1376,18 +1335,18 @@ function derived_style (engine, feature, layer, key) {
         var worldRatio = worldHeight / worldWidth;
         var xlevel = options.xlock ? 1 : level;
         var ylevel = options.ylock ? 1 : level;
-
+        
         //var half_size = vect.sub (options.max, options.min).scale (.5).scale (1.0 / level);
-
+        
         var half_size = new vect (worldWidth / xlevel, (worldWidth * worldRatio * aspectRatio) / ylevel).scale (.5);
-
+        
         var world_max = vect.add (center, half_size);
         var world_min = vect.sub (center, half_size);
-
+        
         var width = canvas.width ();
         var height = canvas.height ();
         var world_range = vect.sub (world_max, world_min);
-
+        
         var setupWorld = function () {
             camera.worldToPx[0] = width / world_range.x;
             camera.worldToPx[1] = 0;
@@ -1399,7 +1358,7 @@ function derived_style (engine, feature, layer, key) {
             camera.worldToPx[7] = -(world_min.y * height) / world_range.y;
             camera.worldToPx[8] = 1;
         };
-
+        
         var setupPx = function () {
             camera.pxToScreen[0] = 2.0 / width;
             camera.pxToScreen[1] = 0;
@@ -1411,7 +1370,7 @@ function derived_style (engine, feature, layer, key) {
             camera.pxToScreen[7] = -1;
             camera.pxToScreen[8] = 1;
         };
-
+        
         var setupProj = function () {
             camera.worldToScreen[0] = 2.0 / world_range.x;
             camera.worldToScreen[1] = 0;
@@ -1423,62 +1382,62 @@ function derived_style (engine, feature, layer, key) {
             camera.worldToScreen[7] = -2.0 * world_min.y / world_range.y - 1;
             camera.worldToScreen[8] = 1;
         };
-
+        
         setupWorld ();
         setupPx ();
         setupProj ();
-
+        
         engine.dirty = true;
     };
-
+    
     // Initial call to setup the matrices
     this.reconfigure ();
-
+    
     // Coverts a screen coordinate (in pixels) to a point in the world
     this.project = function (v) {
-	var c = new vect (
+        var c = new vect (
             2.0 * (v.x - canvas.offset ().left) / canvas.width () - 1.0,
-		-(2.0 * (v.y - canvas.offset ().top) / canvas.height () - 1.0));
+                -(2.0 * (v.y - canvas.offset ().top) / canvas.height () - 1.0));
         c.x = c.x / this.mat3[0] - this.mat3[6] / this.mat3[0];
         c.y = c.y / this.mat3[4] - this.mat3[7] / this.mat3[4];
-	return c;
+        return c;
     };
     
     // Converts a world coordinate to a screen coordinate
     this.screen = function (v) {
         var c = new vect (
-	    v.x * this.mat3[0] + this.mat3[6],
+            v.x * this.mat3[0] + this.mat3[6],
             v.y * this.mat3[4] + this.mat3[7]);
         c.x = canvas.offset ().left + canvas.width () * (c.x + 1.0) / 2.0;
         c.y = canvas.offset ().top + canvas.height () * (-c.y + 1.0) / 2.0;
         return c;
     };
-
+    
     this.percent = function (v) {
-	return new vect (
-	    2 * ((v.x - canvas.offset ().left) / canvas.width ()) - 1,
-	    -(2 * ((v.y - canvas.offset ().top) / canvas.height ()) - 1));
+        return new vect (
+            2 * ((v.x - canvas.offset ().left) / canvas.width ()) - 1,
+                -(2 * ((v.y - canvas.offset ().top) / canvas.height ()) - 1));
     };
-
+    
     this.pixel = function (v) {
-	return new vect (canvas.offset ().left + ((v.x + 1) / 2) * canvas.width (),
-			 canvas.offset ().top + ((-v.y + 1) / 2) * canvas.height ());
+        return new vect (canvas.offset ().left + ((v.x + 1) / 2) * canvas.width (),
+                         canvas.offset ().top + ((-v.y + 1) / 2) * canvas.height ());
     };
-
+    
     // Moves the center point
     this.move = function (v) {
         center.add (v);
         this.reconfigure ();
     };
-
+    
     // Zooms the canvas
     this.zoom = function (scale) {
         if (scale === undefined)
             return level;
-	level = scale;
+        level = scale;
         this.reconfigure ();
     };
-
+    
     // Sets the center point
     // Variable length arguments:
     // 0 for the getter, 1 to send a vector, two to send scalars
@@ -1491,18 +1450,18 @@ function derived_style (engine, feature, layer, key) {
             center = new vect (arg0, arg1);
         this.reconfigure ();
     };
-
+    
     // Reset the zoom level to the original
     this.reset = function () {
         level = 1.0;
         this.reconfigure ();
     };
-
+    
     // Listens for aspect ratio changes
     canvas.resize (function(event) {
         camera.reconfigure ();
     });
-
+    
     // Scales both the width and height to a new size at zoom level 1
     // Resets the zoom level to prevent unexpected size effects
     this.extents = function (newWidth) {
@@ -1511,13 +1470,13 @@ function derived_style (engine, feature, layer, key) {
         level = 1.0;
         this.reconfigure ();
     };
-
+    
     this.size = function () {
         var aspectRatio = options.preserveAspectRatio ? canvas.height () / canvas.width () : 1; 
         var worldRatio = worldHeight / worldWidth;
         var xlevel = options.xlock ? 1 : level;
         var ylevel = options.ylock ? 1 : level;
-
+        
         return new vect (worldWidth / xlevel, (worldWidth * worldRatio * aspectRatio) / ylevel);
     };
 };
@@ -1529,83 +1488,83 @@ function derived_style (engine, feature, layer, key) {
     var speed = 0;
     
     engine.canvas.mousedown (function (event) {
-	//console.log (event);
-	start = new vect (event.clientX, event.clientY);
-	drag = true;
-	//console.log ('pos', engine.camera.project (new vect (event.clientX, event.clientY)));
+        //console.log (event);
+        start = new vect (event.clientX, event.clientY);
+        drag = true;
+        //console.log ('pos', engine.camera.project (new vect (event.clientX, event.clientY)));
     });
     
     $ (window).bind ('mouseup', function () {
-	drag = false;
+        drag = false;
     });
     
     /*engine.canvas.mousemove (function (event) {
-       pos = new vect (event.clientX, event.clientY);
-   });*/
+      pos = new vect (event.clientX, event.clientY);
+      });*/
     
     $ (document).bind ('keypress', '+', function (event) {
-       engine.camera.zoom (1.1);
-   });
+        engine.camera.zoom (1.1);
+    });
     
     $ (document).bind ('keypress', '-', function (event) {
-       engine.camera.zoom (10 / 11);
-   });
+        engine.camera.zoom (10 / 11);
+    });
     
     $ (document).bind ('keypress', '0', function (event) {
-       engine.camera.reset ();
-   });
+        engine.camera.reset ();
+    });
     
     engine.canvas.bind ('mousewheel', function (event, delta) {
-	delta *= .5;
-	if (delta < 0) {
+        delta *= .5;
+        if (delta < 0) {
             delta *= -1;
             delta += 1.0;
             delta = 1.0 / delta;
-	}
-	else {
-	    delta += 1.0;
-	}
+        }
+        else {
+            delta += 1.0;
+        }
         var zoom = engine.camera.zoom ();
-	engine.camera.zoom (zoom * delta);
+        engine.camera.zoom (zoom * delta);
         readjustWorld ();
-	event.preventDefault ();
+        event.preventDefault ();
     });
     
     var enabled = true;
     this.disable = function () {
-	enabled = false;
+        enabled = false;
     };
 
     this.enable = function () {
-	enabled = true;
+        enabled = true;
     };
 
     this.update = function (dt) {
-	pos = new vect (Mouse.x, Mouse.y);
+        pos = new vect (Mouse.x, Mouse.y);
         var change = false;
         var newPos;
-	if (drag && enabled) {
-	    var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
+        if (drag && enabled) {
+            var m = vect.sub (engine.camera.project (start), engine.camera.project (pos));
             var currentPos = engine.camera.position ();
             newPos = vect.add (currentPos, m);
             engine.camera.position (newPos);
 
-	    start = pos;
-	    speed = m.length () / dt;
-	    dir = m;
-	    dir.normalize ();
+            start = pos;
+            speed = m.length () / dt;
+            dir = m;
+            dir.normalize ();
             change = true;
-	}
-	else if (speed > .01) {
-	    if (dir) {
-		var m = vect.scale (dir, speed * dt);
+        }
+        else if (speed > .01) {
+            if (dir) {
+                var m = vect.scale (dir, speed * dt);
                 var currentPos = engine.camera.position ();
                 newPos = vect.add (currentPos, m);
                 engine.camera.position (newPos);
-		speed -= 3.0 * dt * speed;
+                speed -= 3.0 * dt * speed;
                 change = true;
             }
-	}
+        }
 
         if (change)
             readjustWorld ();
@@ -2813,7 +2772,7 @@ var PointQuerier = function (engine, layer, options) {
     var engine = this;
 
     default_model (options, {
-	background: new Color (0, 0, 0, 1),
+        background: new Color (0, 0, 0, 1),
     });
 
     this.type = 'Engine';
@@ -2823,16 +2782,16 @@ var PointQuerier = function (engine, layer, options) {
     var gl = null;
 
     if (selector) {
-	$ (selector).append (this.canvas);
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());
+        $ (selector).append (this.canvas);
+        this.canvas.attr ('width', $ (selector).width ());
+        this.canvas.attr ('height', $ (selector).height ());
     }
     else {
-	selector = window;
-	$ ('body').append (this.canvas);
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());
-	$ (window).resize (function (event) {
+        selector = window;
+        $ ('body').append (this.canvas);
+        this.canvas.attr ('width', $ (selector).width ());
+        this.canvas.attr ('height', $ (selector).height ());
+        $ (window).resize (function (event) {
             engine.resize ();
         });
     }
@@ -2840,13 +2799,13 @@ var PointQuerier = function (engine, layer, options) {
     var framebuffers = [];
 
     this.resize = function () {
-	this.canvas.attr ('width', $ (selector).width ());
-	this.canvas.attr ('height', $ (selector).height ());	
-	gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
-	this.camera.reconfigure ();
-	for (var i = 0; i < framebuffers.length; i ++) {
-	    framebuffers[i].resize ();
-	}
+        this.canvas.attr ('width', $ (selector).width ());
+        this.canvas.attr ('height', $ (selector).height ());
+        gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
+        this.camera.reconfigure ();
+        for (var i = 0; i < framebuffers.length; i ++) {
+            framebuffers[i].resize ();
+        }
     };
 
     gl = setContext (this.canvas, DEBUG);
@@ -2860,14 +2819,14 @@ var PointQuerier = function (engine, layer, options) {
     this.scroller = new Scroller (this, options);
 
     this.extents = function (width) {
-	this.camera.extents (width);
+        this.camera.extents (width);
     };
 
     this.center = function (arg0, arg1) {
         if (arg1 === undefined)
-	    this.camera.position (arg0);
+            this.camera.position (arg0);
         else
-	    this.camera.position (new vect (arg0, arg1));
+            this.camera.position (new vect (arg0, arg1));
     };
 
     this.pxW = 1 / this.canvas.attr ('width');
@@ -2933,18 +2892,18 @@ var PointQuerier = function (engine, layer, options) {
     var sel = new SelectionBox (this);
 
     this.select = function (func)  {
-	sel.select (func);
+        sel.select (func);
     };
 
     var selectEnabled = false;
     this.enableSelect = function () {
-	this.scroller.disable ();
-	sel.enable ();
+        this.scroller.disable ();
+        sel.enable ();
         selectEnabled = true;
     };
     this.disableSelect = function () {
-	this.scroller.enable ();
-	sel.disable ();
+        this.scroller.enable ();
+        sel.disable ();
         selectEnabled = false;
     };
 
@@ -2970,22 +2929,22 @@ var PointQuerier = function (engine, layer, options) {
     // Updates the elemenets of the engine, including styles and mouse events
     this.update = function () {
         // Update the FPS counter
-	var current_time = new Date ().getTime ();
-	var dt = (current_time - old_time) / 1000;
+        var current_time = new Date ().getTime ();
+        var dt = (current_time - old_time) / 1000;
 
-	if (fps_window.length >= 60)
-	    fps_window.splice (0, 1);
-	fps_window.push (dt);
-	var fps = 0;
-	for (var i = 0; i < fps_window.length; i ++) {
-	    fps += fps_window[i];
-	}
-	fps /= fps_window.length;
-	$ ('#fps').text (Math.floor (1 / fps));
-	old_time = current_time;
+        if (fps_window.length >= 60)
+            fps_window.splice (0, 1);
+        fps_window.push (dt);
+        var fps = 0;
+        for (var i = 0; i < fps_window.length; i ++) {
+            fps += fps_window[i];
+        }
+        fps /= fps_window.length;
+        $ ('#fps').text (Math.floor (1 / fps));
+        old_time = current_time;
 
         // Update the pan and zoom controller
-	this.scroller.update (dt);
+        this.scroller.update (dt);
 
         // Update the mouse event
         if (Mouse.lastMove > lastMouse) {
@@ -3020,33 +2979,33 @@ var PointQuerier = function (engine, layer, options) {
         if (this.dirty) {
 
             // Clear the old color buffer
-	    gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
-	    gl.clear(gl.COLOR_BUFFER_BIT);
-	    gl.clearDepth (0.0);
+            gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.clearDepth (0.0);
             
             $.each (this.scene, function (i, layer) {
                 layer.draw (engine);
             });
 
             if (selectEnabled) {
-	        sel.draw (this);
+                sel.draw (this);
             }
 
         }
 
         this.dirty = false;
 
-	requestAnimationFrame (draw);
+        requestAnimationFrame (draw);
         
     };
 
     this.enableZ = function () {
-	gl.depthFunc (gl.LEQUAL);
-	gl.enable (gl.DEPTH_TEST);
+        gl.depthFunc (gl.LEQUAL);
+        gl.enable (gl.DEPTH_TEST);
     };
 
     this.disableZ = function () {
-	gl.disable (gl.DEPTH_TEST);
+        gl.disable (gl.DEPTH_TEST);
     }
 
     this.canvas.mouseout (function () {
@@ -3118,39 +3077,39 @@ var PointQuerier = function (engine, layer, options) {
     };
     var base = null;
     var setBase = function () {
-	if (options.base == 'default' || options.base == 'nasa') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: options['tile-server'] + '/tiles/nasa_topo_bathy',
-		levels: 8,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else if (options.base == 'ne') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
-		levels: 6,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else if (options.base == 'ne1') {
-	    var settings = copy (options);
-	    copy_to (settings, {
-		source: 'file',
-		url: TILE_SERVER + '/tiles/NE1_HR_LC',
-		levels: 6,
-		size: 256
-	    });
-	    base = new MultiTileLayer (settings);
-	}
-	else {
-	    base = null;
-	}
+        if (options.base == 'default' || options.base == 'nasa') {
+            var settings = copy (options);
+            copy_to (settings, {
+                source: 'file',
+                url: options['tile-server'] + '/tiles/nasa_topo_bathy',
+                levels: 8,
+                size: 256
+            });
+            base = new MultiTileLayer (settings);
+        }
+        else if (options.base == 'ne') {
+            var settings = copy (options);
+            copy_to (settings, {
+                source: 'file',
+                url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
+                levels: 6,
+                size: 256
+            });
+            base = new MultiTileLayer (settings);
+        }
+        else if (options.base == 'ne1') {
+            var settings = copy (options);
+            copy_to (settings, {
+                source: 'file',
+                url: TILE_SERVER + '/tiles/NE1_HR_LC',
+                levels: 6,
+                size: 256
+            });
+            base = new MultiTileLayer (settings);
+        }
+        else {
+            base = null;
+        }
         if (base) {
             base.initialize (engine);
             engine.scene.push (base);
@@ -5566,18 +5525,18 @@ function MultiTileLayer (options) {
     this.id = new_feature_id ();
 
     for (var i = 0; i < options.levels; i ++) {
-	var settings = copy (options);
-	if (settings.source == 'file')
-	    settings.url += '/' + options.size * Math.pow (2, (i + 1));
-	settings.min = new vect (-180, -90);
-	settings.rows = Math.pow (2, i);
-	settings.cols = settings.rows * 2;
-	settings.cellsize = 180 / settings.rows;
-	settings.z_index = 1.0 - z_base - i / 1000;
-	settings.available = available;
-	
-	var layer = new TileLayer (settings);
-	layers.push (layer);
+        var settings = copy (options);
+        if (settings.source == 'file')
+            settings.url += '/' + options.size * Math.pow (2, (i + 1));
+        settings.min = new vect (-180, -90);
+        settings.rows = Math.pow (2, i);
+        settings.cols = settings.rows * 2;
+        settings.cellsize = 180 / settings.rows;
+        settings.z_index = 1.0 - z_base - i / 1000;
+        settings.available = available;
+
+        var layer = new TileLayer (settings);
+        layers.push (layer);
     }
     var z_top = 1.0 - z_base - options.levels / 1000;
     z_base += (options.levels + 2) / 1000;
@@ -5588,7 +5547,7 @@ function MultiTileLayer (options) {
     this.initialize = function (_engine) {
         engine = _engine;
         if (!tile_shader)
-	    tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+            tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
 
         gl = engine.gl;
 
@@ -5599,7 +5558,7 @@ function MultiTileLayer (options) {
         buffers.alloc (NUM_TILES * 6);
 
         for (var i = 0; i < 25; i ++) {
-	    available.push (new Texture (engine));
+            available.push (new Texture (engine));
         }
 
         for (var i = 0; i < layers.length; i ++) {
@@ -5616,74 +5575,74 @@ function MultiTileLayer (options) {
         if (!initialized)
             initialize (engine);
         
-	gl.useProgram (tile_shader);
-	tile_shader.data ('screen', engine.camera.mat3);
+        gl.useProgram (tile_shader);
+        tile_shader.data ('screen', engine.camera.mat3);
 
-	total_drawn = 0;
-	total_calls = 0;
-	var min = Infinity
-	var current = layers[0];
+        total_drawn = 0;
+        total_calls = 0;
+        var min = Infinity
+        var current = layers[0];
 
-	var max_layer, min_layer;
-	
-	for (var i  = 0; i < layers.length; i ++) {
-	    //var ratio = Math.abs (layers[i].size ().x / (levels[i].cols * levels[i].size));
-	    var ratio = (options.size * layers[i].cols) / layers[i].size (engine).x;
-	    if (ratio < 1)
-		ratio = 1 / ratio;
-	    //ratio -= 1;
-	    if (ratio < min) {
-		min = ratio;
-		current = layers[i];
-		max_layer = i;
-	    }
-	}
-	for (var i = max_layer; i >= 0; i --) {
-	    layers[i].fetch ();
-	}
-	//current.fetch ();
-	/*for (var i = max_layer; i >= 0; i --) {
-	  min_layer = i;
-	  if (layers[i].ready ())
-	  break;
-	  }*/
-	//layers[min_layer].draw (engine, dt);
+        var max_layer, min_layer;
 
-	if (current.ready ()) {
-	    current.draw (engine, dt, buffers, 0, true);
-	}
-	else {	    
-	    engine.enableZ ();
-	    //current.draw (engine, dt, z_top);
-	    var count = 0;
-	    for (var i = max_layer; i >= 0; i --) {
-		count = layers[i].draw (engine, dt, buffers, count, i == 0);
-		//if (layers[i].ready ())
-		//    break;
-	    }
-	    engine.disableZ ();
-	}
-	$.each (layers, function (i, layer) {
-	    layer.cull ();
-	});
-	//console.log (total_drawn, total_calls);
+        for (var i  = 0; i < layers.length; i ++) {
+            //var ratio = Math.abs (layers[i].size ().x / (levels[i].cols * levels[i].size));
+            var ratio = (options.size * layers[i].cols) / layers[i].size (engine).x;
+            if (ratio < 1)
+                ratio = 1 / ratio;
+            //ratio -= 1;
+            if (ratio < min) {
+                min = ratio;
+                current = layers[i];
+                max_layer = i;
+            }
+        }
+        for (var i = max_layer; i >= 0; i --) {
+            layers[i].fetch ();
+        }
+        //current.fetch ();
+        /*for (var i = max_layer; i >= 0; i --) {
+          min_layer = i;
+          if (layers[i].ready ())
+          break;
+          }*/
+        //layers[min_layer].draw (engine, dt);
+
+        if (current.ready ()) {
+            current.draw (engine, dt, buffers, 0, true);
+        }
+        else {    
+            engine.enableZ ();
+            //current.draw (engine, dt, z_top);
+            var count = 0;
+            for (var i = max_layer; i >= 0; i --) {
+                count = layers[i].draw (engine, dt, buffers, count, i == 0);
+                //if (layers[i].ready ())
+                //    break;
+            }
+            engine.disableZ ();
+        }
+        $.each (layers, function (i, layer) {
+            layer.cull ();
+        });
+        //console.log (total_drawn, total_calls);
     };
 
     function TileLayer (options) {
         if (!options)
-	    options = {};
+            options = {};
         if (!options.desaturate)
-	    options.desaturate = 0.0;
+            options.desaturate = 0.0;
         if (!options.darken)
-	    options.darken = 0.0;
+            options.darken = 0.0;
         if (!options.hue)
-	    options.hue = 0.0;
+            options.hue = 0.0;
         if (!options.hue_color)
-	    options.hue_color = fcolor (0.0, 0.0, 0.0, 1.0);
+            options.hue_color = fcolor (0.0, 0.0, 0.0, 1.0);
         /*if (!options.available) {
-	  options.available = [];
-	  for (var i = 0; i < 8; i ++)
-	  options.available.push (new Texture (gl));
+          options.available = [];
+          for (var i = 0; i < 8; i ++)
+          options.available.push (new Texture (gl));
           }*/
 
         /*var gl = null;
@@ -5705,162 +5664,162 @@ function MultiTileLayer (options) {
         var tiles = {};
 
         var create_tile = function (i, j) {
-	    var rmin = new vect (min.x + i * cellsize, min.y + j * cellsize);
-	    var rmax = new vect (min.x + (i + 1) * cellsize, min.y + (j + 1) * cellsize);
-	    //var start = buffers.alloc (6);
-	    var tile = {
-	        vert: rectv (rmin, rmax, options.z_index),
-	        tex: null,
-	        i: i,
-	        j: j,
-	        id: (i + cols * j),
-	        ready: false,
-	        min: rmin,
-	        max: rmax
-	    };
-	    tiles[i][j] = tile;
-	    tile_ids[tile.id] = tile;
+            var rmin = new vect (min.x + i * cellsize, min.y + j * cellsize);
+            var rmax = new vect (min.x + (i + 1) * cellsize, min.y + (j + 1) * cellsize);
+            //var start = buffers.alloc (6);
+            var tile = {
+                vert: rectv (rmin, rmax, options.z_index),
+                tex: null,
+                i: i,
+                j: j,
+                id: (i + cols * j),
+                ready: false,
+                min: rmin,
+                max: rmax
+            };
+            tiles[i][j] = tile;
+            tile_ids[tile.id] = tile;
         };
 
         for (var i = 0; i < cols; i ++) {
-	    tiles[i] = {};
+            tiles[i] = {};
         }
 
         this.size = function (engine) {
-	    var smin = engine.camera.screen (min);
-	    var smax = engine.camera.screen (vect.add (min, new vect (cellsize * cols, cellsize * rows)));
-	    var v = vect.sub (smax, smin);
-	    v.y = Math.abs (v.y);
-	    return v;
+            var smin = engine.camera.screen (min);
+            var smax = engine.camera.screen (vect.add (min, new vect (cellsize * cols, cellsize * rows)));
+            var v = vect.sub (smax, smin);
+            v.y = Math.abs (v.y);
+            return v;
         }
 
         var noexpire = false;
         this.noexpire = function (flag) {
-	    noexpire = flag;
+            noexpire = flag;
         };
 
         this.cull = function () {
-	    if (!noexpire) {
-	        var time = new Date().getTime ();
-	        for (var key in current) {
-		    if (time - current[key] > TIMEOUT) {
-		        var tile = tile_ids[key];
-		        delete tile_ids[key];
+            if (!noexpire) {
+                var time = new Date().getTime ();
+                for (var key in current) {
+                    if (time - current[key] > TIMEOUT) {
+                        var tile = tile_ids[key];
+                        delete tile_ids[key];
 
-		        delete tiles[tile.i][tile.j];
-		        
-		        options.available.push (tile.tex);
-		        tile.tex = null;
-		        tile.ready = false;
-		        
-		        delete current[key];
-		    }
-	        }
-	    }	
+                        delete tiles[tile.i][tile.j];
+                        
+                        options.available.push (tile.tex);
+                        tile.tex = null;
+                        tile.ready = false;
+                        
+                        delete current[key];
+                    }
+                }
+            }
         };
 
         var get_bounds = function () {
-	    var smin = engine.camera.project (new vect (engine.canvas.offset ().left, engine.canvas.offset ().top + engine.canvas.height ()));
-	    var smax = engine.camera.project (new vect (engine.canvas.offset ().left + engine.canvas.width (), engine.canvas.offset ().top));
-	    var min_col = Math.floor ((smin.x - min.x) / cellsize);
-	    var max_col = Math.ceil ((smax.x - min.x) / cellsize);
+            var smin = engine.camera.project (new vect (engine.canvas.offset ().left, engine.canvas.offset ().top + engine.canvas.height ()));
+            var smax = engine.camera.project (new vect (engine.canvas.offset ().left + engine.canvas.width (), engine.canvas.offset ().top));
+            var min_col = Math.floor ((smin.x - min.x) / cellsize);
+            var max_col = Math.ceil ((smax.x - min.x) / cellsize);
 
-	    var min_row = Math.floor ((smin.y - min.y) / cellsize);
-	    var max_row = Math.ceil ((smax.y - min.y) / cellsize);
+            var min_row = Math.floor ((smin.y - min.y) / cellsize);
+            var max_row = Math.ceil ((smax.y - min.y) / cellsize);
 
-	    return {
-	        min_col: min_col,
-	        max_col: max_col,
-	        min_row: min_row,
-	        max_row: max_row,
-	    }
+            return {
+                min_col: min_col,
+                max_col: max_col,
+                min_row: min_row,
+                max_row: max_row,
+            }
         };
 
         var current = {};
 
         this.ready = function () {
 
-	    var bounds = get_bounds ();
+            var bounds = get_bounds ();
 
-	    for (var i = Math.max (0, bounds.min_col); i < Math.min (cols, bounds.max_col); i ++) {
-	        for (var j = Math.max (0, bounds.min_row); j < Math.min (rows,bounds. max_row); j ++) {
-		    if (!tiles[i][j])
-		        return false;
-		    if (!tiles[i][j].ready)
-		        return false;
-	        }
-	    }
-	    return true;
+            for (var i = Math.max (0, bounds.min_col); i < Math.min (cols, bounds.max_col); i ++) {
+                for (var j = Math.max (0, bounds.min_row); j < Math.min (rows,bounds. max_row); j ++) {
+                    if (!tiles[i][j])
+                        return false;
+                    if (!tiles[i][j].ready)
+                        return false;
+                }
+            }
+            return true;
         };
 
         var get_tex = function (i, j) {
-	    if (!tiles[i][j].tex) {
-	        var path;
-	        if (options.source == 'file') {
-		    var index = tiles[i][j].id;
-		    path = url + '/' + index + '.png';
-	        }
-	        else if (options.source == 'wms') {
-		    path = make_url (url, {
-		        service: 'wms',
-		        version: '1.1.0',
-		        request: 'GetMap',
-		        layers: options.layer,
-		        bbox: [tiles[i][j].min.x, tiles[i][j].min.y, tiles[i][j].max.x, tiles[i][j].max.y].join (','),
-		        width: options.size,
-		        height: options.size,
-		        srs: 'EPSG:4326',
-		        format: 'image/png',
-		        transparent: 'true'
-		    });
-	        }
-	        /*tiles[i][j].tex = getTexture (path, (function (tile) {
-	          return function () {
-	          tile.ready = true;
-	          };
-	          });
-	          }) (tiles[i][j]))*/
-	        tiles[i][j].tex = options.available.pop ();
-	        if (!tiles[i][j].tex)
-		    tiles[i][j].tex = new Texture (engine);
-	        getImage (path, (function (tile) {
-		    return function (img) {
-		        if (tile.tex) {
-			    tile.tex.image (img);
-			    tile.ready = true;
-		        }
-		    }
-	        }) (tiles[i][j]));
-	        
-	    }
+            if (!tiles[i][j].tex) {
+                var path;
+                if (options.source == 'file') {
+                    var index = tiles[i][j].id;
+                    path = url + '/' + index + '.png';
+                }
+                else if (options.source == 'wms') {
+                    path = make_url (url, {
+                        service: 'wms',
+                        version: '1.1.0',
+                        request: 'GetMap',
+                        layers: options.layer,
+                        bbox: [tiles[i][j].min.x, tiles[i][j].min.y, tiles[i][j].max.x, tiles[i][j].max.y].join (','),
+                        width: options.size,
+                        height: options.size,
+                        srs: 'EPSG:4326',
+                        format: 'image/png',
+                        transparent: 'true'
+                    });
+                }
+                /*tiles[i][j].tex = getTexture (path, (function (tile) {
+                  return function () {
+                  tile.ready = true;
+                  };
+                  });
+                  }) (tiles[i][j]))*/
+                tiles[i][j].tex = options.available.pop ();
+                if (!tiles[i][j].tex)
+                    tiles[i][j].tex = new Texture (engine);
+                getImage (path, (function (tile) {
+                    return function (img) {
+                        if (tile.tex) {
+                            tile.tex.image (img);
+                            tile.ready = true;
+                        }
+                    }
+                }) (tiles[i][j]));
+                
+            }
         };
 
         this.fetch_all = function () {
-	    var time = new Date().getTime ();
-	    for (var i = 0; i < cols; i ++) {
-	        for (var j = 0; j < rows; j ++) {
-		    if (!tiles[i][j])
-		        create_tile (i, j);
-		    if (!tiles[i][j].tex)
-		        get_tex (i, j);
-		    current[tiles[i][j].id] = time;
-	        }
-	    }
+            var time = new Date().getTime ();
+            for (var i = 0; i < cols; i ++) {
+                for (var j = 0; j < rows; j ++) {
+                    if (!tiles[i][j])
+                        create_tile (i, j);
+                    if (!tiles[i][j].tex)
+                        get_tex (i, j);
+                    current[tiles[i][j].id] = time;
+                }
+            }
         };
 
         this.fetch = function () {
-	    var bounds = get_bounds ();
+            var bounds = get_bounds ();
 
-	    var time = new Date().getTime ();
-	    for (var i = Math.max (0, bounds.min_col - 1); i < Math.min (cols, bounds.max_col + 1); i ++) {
-	        for (var j = Math.max (0, bounds.min_row - 1); j < Math.min (rows,bounds. max_row + 1); j ++) {
-		    if (!tiles[i][j])
-		        create_tile (i, j);
-		    if (!tiles[i][j].tex)
-		        get_tex (i, j);
-		    current[tiles[i][j].id] = time;
-	        }
-	    }
+            var time = new Date().getTime ();
+            for (var i = Math.max (0, bounds.min_col - 1); i < Math.min (cols, bounds.max_col + 1); i ++) {
+                for (var j = Math.max (0, bounds.min_row - 1); j < Math.min (rows,bounds. max_row + 1); j ++) {
+                    if (!tiles[i][j])
+                        create_tile (i, j);
+                    if (!tiles[i][j].tex)
+                        get_tex (i, j);
+                    current[tiles[i][j].id] = time;
+                }
+            }
         };
 
         var initialized = false;
@@ -5869,7 +5828,7 @@ function MultiTileLayer (options) {
                 throw "Not Implemented: Migrating Tile Layers to New Map";
 
             if (!tile_shader)
-	        tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+                tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
 
             //change_context (engine);
             initialized = true;
@@ -5881,53 +5840,52 @@ function MultiTileLayer (options) {
             if (!initialized)
                 this.initialize (engine);
 
-	    var do_draw = function () {
-	        total_calls ++;
-	        buffers.update ();
+            var do_draw = function () {
+                total_calls ++;
+                buffers.update ();
 
-	        tile_shader.data ('pos', buffers.get ('vert'));
-	        tile_shader.data ('tex_in', buffers.get ('tex'));
-	        tile_shader.data ('lookup_in', buffers.get ('lookup'));
-	        tile_shader.data ('desaturate', options.desaturate);
-	        tile_shader.data ('darken', options.darken);
-	        tile_shader.data ('hue', options.hue);
-	        tile_shader.data ('hue_color', options.hue_color.array);
-	        
-	        gl.drawArrays (gl.TRIANGLES, 0, count * 6);
-	    };
+                tile_shader.data ('pos', buffers.get ('vert'));
+                tile_shader.data ('tex_in', buffers.get ('tex'));
+                tile_shader.data ('lookup_in', buffers.get ('lookup'));
+                tile_shader.data ('desaturate', options.desaturate);
+                tile_shader.data ('darken', options.darken);
+                tile_shader.data ('hue', options.hue);
+                tile_shader.data ('hue_color', options.hue_color.array);
+                
+                gl.drawArrays (gl.TRIANGLES, 0, count * 6);
+            };
 
-	    var bounds = get_bounds ();
-	    
-	    var time = new Date().getTime ();
-	    for (var i = Math.max (0, bounds.min_col); i < Math.min (cols, bounds.max_col); i ++) {
-	        for (var j = Math.max (0, bounds.min_row); j < Math.min (rows, bounds.max_row); j ++) {
-		    if (tiles[i][j] && tiles[i][j].ready && tiles[i][j].tex) {
-		        
-		        buffers.write ('vert', tiles[i][j].vert, count * 6, 6);
-		        buffers.write ('tex', rectv (new vect (0, 0), new vect (1, 1)), count * 6, 6);
-		        buffers.repeat ('lookup', [count / NUM_TILES + 1 / (NUM_TILES * 2)], count * 6, 6);
-		        current[tiles[i][j].id] = time; 
+            var bounds = get_bounds ();
+            
+            var time = new Date().getTime ();
+            for (var i = Math.max (0, bounds.min_col); i < Math.min (cols, bounds.max_col); i ++) {
+                for (var j = Math.max (0, bounds.min_row); j < Math.min (rows, bounds.max_row); j ++) {
+                    if (tiles[i][j] && tiles[i][j].ready && tiles[i][j].tex) {
+                        
+                        buffers.write ('vert', tiles[i][j].vert, count * 6, 6);
+                        buffers.write ('tex', rectv (new vect (0, 0), new vect (1, 1)), count * 6, 6);
+                        buffers.repeat ('lookup', [count / NUM_TILES + 1 / (NUM_TILES * 2)], count * 6, 6);
+                        current[tiles[i][j].id] = time; 
 
-		        tile_shader.data ('sampler' + count, tiles[i][j].tex);
-		        if (tiles[i][j].tex == null)
-			    throw "badness";
-		        count ++;
-		        total_drawn ++;
+                        tile_shader.data ('sampler' + count, tiles[i][j].tex);
+                        if (tiles[i][j].tex == null)
+                            throw "badness";
+                        count ++;
+                        total_drawn ++;
 
-		        if (count >= NUM_TILES) {
-			    do_draw ();
-			    count = 0;
-		        }
-		    }
-	        }
-	    }
-	    if (flush)
-	        do_draw ();
-	    return count;
+                        if (count >= NUM_TILES) {
+                            do_draw ();
+                            count = 0;
+                        }
+                    }
+                }
+            }
+            if (flush)
+                do_draw ();
+            return count;
         };
     };
 };
-
     function WMS (options) {
     var settings = copy (options);
     require (settings, ['url', 'layer'])
