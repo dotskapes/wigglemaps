@@ -568,8 +568,11 @@ function parseRGB (value) {
 function str_contains (string, c) {
     return string.indexOf (c) != -1;
 };
-    function bint32 (data, offset) {
-    //console.log (data.charCodeAt (offset) & 0xff, data.charCodeAt (offset + 1) & 0xff, data.charCodeAt (offset + 2) & 0xff, data.charCodeAt (offset + 3) & 0xff);
+    function int8 (data, offset) {
+    return data.charCodeAt (offset);
+};
+
+function bint32 (data, offset) {
     return (
         ((data.charCodeAt (offset) & 0xff) << 24) +
             ((data.charCodeAt (offset + 1) & 0xff) << 16) +
@@ -583,6 +586,20 @@ function lint32 (data, offset) {
         ((data.charCodeAt (offset + 3) & 0xff) << 24) +
             ((data.charCodeAt (offset + 2) & 0xff) << 16) +
             ((data.charCodeAt (offset + 1) & 0xff) << 8) +
+            (data.charCodeAt (offset) & 0xff)
+    );
+};
+
+function bint16 (data, offset) {
+    return (
+        ((data.charCodeAt (offset) & 0xff) << 8) +
+            (data.charCodeAt (offset + 1) & 0xff)
+    );
+};
+
+function lint16 (data, offset) {
+    return (
+        ((data.charCodeAt (offset + 1) & 0xff) << 8) +
             (data.charCodeAt (offset) & 0xff)
     );
 };
@@ -605,7 +622,7 @@ function ldbl64 (data, offset) {
     var frac = (b6 & 0x0f) * Math.pow (2, 48) + b5 * Math.pow (2, 40) + b4 * Math.pow (2, 32) + b3 * Math.pow (2, 24) + b2 * Math.pow (2, 16) + b1 * Math.pow (2, 8) + b0;
 
     return sign * (1 + frac * Math.pow (2, -52)) * Math.pow (2, exp);
-}
+};
 
 function lfloat32 (data, offset) {
     var b0 = data.charCodeAt (offset) & 0xff;
@@ -619,7 +636,30 @@ function lfloat32 (data, offset) {
     var frac = (b2 & 0x7f) * Math.pow (2, 16) + b1 * Math.pow (2, 8) + b0;
 
     return sign * (1 + frac * Math.pow (2, -23)) * Math.pow (2, exp);
-}
+};
+
+function str (data, offset, length) {
+    var chars = [];
+    index = offset;
+    /*while (true) {
+        var c = data[index];
+        if (c.charCodeAt (0) != 0)
+            chars.push (c);
+        else
+            return chars.join ('');
+        index ++;
+    }*/
+    while (index < offset + length) {
+        var c = data[index];
+        if (c.charCodeAt (0) != 0)
+            chars.push (c);
+        else {
+            break;
+        }
+        index ++;
+    }
+    return chars.join ('');
+};
     /* Copyright 2011, Zack Krejci
  * Licensed under the MIT License
  */
@@ -1623,17 +1663,21 @@ function derived_style (engine, feature, layer, key) {
     };
 
     this.linkParent = function (parent, object) {
+        this.manage (parent);
+        this.manage (object);
         this.listeners[object.id].parents.push (parent);
     };
 
     this.addEventHandler = function (object, eventType, handler) {
+        this.manage (object);        
         if (!(this.listeners[object.id].callbacks[eventType]))
             this.listeners[object.id].callbacks[eventType] = [];
         this.listeners[object.id].callbacks[eventType].push (handler);
     };
 
-    // Maybe these low level events should be handler by the engine itself?
-    // The engine knows how to search layers for individual features
+    // The object (feature/layer/map) that the mouse is currently over
+    var currentOver = null;
+
     this.moveMouse = function (engine) {
 
     };
@@ -1644,7 +1688,6 @@ function derived_style (engine, feature, layer, key) {
 
     };
 
-    var currentOver = null;
     this.mouseOver = function (object) {
         if (currentOver !== null && object != currentOver) {
             this.trigger (currentOver, 'mouseout', [currentOver]);
@@ -2747,11 +2790,8 @@ var PointQuerier = function (engine, layer, options) {
 
         controller.views[f.id] = view;
 
-        //StyleManager.registerCallback (engine, f, update_feature);
-        EventManager.manage (f);
         EventManager.linkParent (layer, f);
         EventManager.addEventHandler (f, 'style', update_feature);
-        //f.change (handle_change);
     });
 
     this.update = function (engine, dt) {
@@ -3328,6 +3368,7 @@ var PointQuerier = function (engine, layer, options) {
 	}
 	dragging = false;
 	release_func (new Box (min, max));
+        engine.dirty = true;
     });
 
     $(document).bind ('click', function (event) {
@@ -6560,17 +6601,90 @@ var Shapefile = function (options) {
 		url: path + '.shp',
 		mimeType: 'text/plain; charset=x-user-defined',
 		success: function (data) {
-		    var layer = load_shp (data, indices, options);
-		    options.success (layer);
+	            $.ajax ({
+		        url: path + '.dbf',
+		        mimeType: 'text/plain; charset=x-user-defined',
+		        success: function (dbf_data) {
+		            var layer = load_shp (data, dbf_data, indices, options);
+		            options.success (layer);
+                        }
+                    });
 		}
 	    });
 	}
     });
 };
 
-var load_shp = function (data, indices, options) {
-    var points = [];
-    var polys = [];
+var load_dbf = function (data) {
+    var read_header = function (offset) {
+        var name = str (data, offset, 10);
+        var type = str (data, offset + 11, 1);
+        var length = int8 (data, offset + 16);
+        return {
+            name: name,
+            type: type,
+            length: length
+        };
+    };
+
+    // Level of the dBASE file
+    var level = int8 (data, 0);
+
+    if (level == 4)
+        throw "Level 7 dBASE not supported";
+
+    // Date of last update
+    var year = int8 (data, 1);
+    var month = int8 (data, 2);
+    var day = int8 (data, 3);
+
+    var num_entries = lint32 (data, 4);
+
+    var header_size = lint16 (data, 8);
+    var record_size = lint16 (data, 10);
+
+    var FIELDS_START = 32;
+    var HEADER_LENGTH = 32;
+    
+    var header_offset = FIELDS_START;
+    var headers = [];
+    while (header_offset < header_size - 1) {
+        headers.push (read_header (header_offset));
+        header_offset += HEADER_LENGTH;
+    }
+
+    var records = [];
+    var record_offset = header_size;
+    while (record_offset < header_size + num_entries * record_size) {
+        var declare = str (data, record_offset, 1)
+        if (declare == '*') {
+            // Record size in the header include the size of the delete indicator
+            record_offset += record_size;
+        }
+        else {
+            // Move offset to the start of the actual data
+            record_offset ++;
+            var record = {};
+            for (var i = 0; i < headers.length; i ++) {
+                var header = headers[i];
+                var value = undefined;
+                if (header.type == 'C') {
+                    value = str (data, record_offset, header.length).trim ();
+                }
+                else if (header.type == 'N') {
+                    value = parseFloat (str (data, record_offset, header.length));
+                }
+                record_offset += header.length;
+                record[header.name] = value;
+            }
+            records.push (record);
+        }
+    }
+    return records;
+};
+
+var load_shp = function (data, dbf_data, indices, options) {
+    var features = [];
 
     var read_ring = function (offset, start, end) {
 	var ring = [];
@@ -6600,7 +6714,7 @@ var load_shp = function (data, indices, options) {
 	    var x = ldbl64 (data, record_offset + 4);
 	    var y = ldbl64 (data, record_offset + 12);
 	    
-	    points.push ({
+	    features.push ({
                 type: 'Point',
 		attr: {},
 		geom: [[x, y]]
@@ -6626,7 +6740,7 @@ var load_shp = function (data, indices, options) {
 		var ring = read_ring (points_start, start, end);
 		rings.push (ring);
 	    }
-	    polys.push ({
+	    features.push ({
                 type: 'Polygon',
 		attr: {},
 		geom: [rings]
@@ -6638,6 +6752,8 @@ var load_shp = function (data, indices, options) {
 	//return offset + 2 * record_length + SHP_HEADER_LEN;
     };
 
+    var attr = load_dbf (dbf_data);
+
     //var offset = 100;
     //while (offset < length * 2) {
     //    offset = read_record (offset);
@@ -6647,20 +6763,15 @@ var load_shp = function (data, indices, options) {
 	read_record (offset);
     }
 
-    if (points.length > 0) {
-	var layer = new Layer (options);
-	$.each (points, function (i, v) {
-	    layer.append (v);
-	});
-	return layer;
+    var layer = new Layer ();
+
+    for (var i = 0; i < features.length; i ++) {
+        var feature = features[i];
+        feature.attr = attr[i];
+        layer.append (feature);
     }
-    else if (polys.length > 0) {
-	var layer = new Layer (options);
-	$.each (polys, function (i, v) {
-	    layer.append (v);
-	});
-	return layer;	
-    }
+
+    return layer;
 };
 
     var ready_queue = [];

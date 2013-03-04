@@ -11,17 +11,21 @@ var EventManager = new function () {
     };
 
     this.linkParent = function (parent, object) {
+        this.manage (parent);
+        this.manage (object);
         this.listeners[object.id].parents.push (parent);
     };
 
     this.addEventHandler = function (object, eventType, handler) {
+        this.manage (object);        
         if (!(this.listeners[object.id].callbacks[eventType]))
             this.listeners[object.id].callbacks[eventType] = [];
         this.listeners[object.id].callbacks[eventType].push (handler);
     };
 
-    // Maybe these low level events should be handler by the engine itself?
-    // The engine knows how to search layers for individual features
+    // The object (feature/layer/map) that the mouse is currently over
+    var currentOver = null;
+
     this.moveMouse = function (engine) {
 
     };
@@ -32,7 +36,6 @@ var EventManager = new function () {
 
     };
 
-    var currentOver = null;
     this.mouseOver = function (object) {
         if (currentOver !== null && object != currentOver) {
             this.trigger (currentOver, 'mouseout', [currentOver]);

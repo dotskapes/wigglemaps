@@ -48,17 +48,90 @@ var Shapefile = function (options) {
 		url: path + '.shp',
 		mimeType: 'text/plain; charset=x-user-defined',
 		success: function (data) {
-		    var layer = load_shp (data, indices, options);
-		    options.success (layer);
+	            $.ajax ({
+		        url: path + '.dbf',
+		        mimeType: 'text/plain; charset=x-user-defined',
+		        success: function (dbf_data) {
+		            var layer = load_shp (data, dbf_data, indices, options);
+		            options.success (layer);
+                        }
+                    });
 		}
 	    });
 	}
     });
 };
 
-var load_shp = function (data, indices, options) {
-    var points = [];
-    var polys = [];
+var load_dbf = function (data) {
+    var read_header = function (offset) {
+        var name = str (data, offset, 10);
+        var type = str (data, offset + 11, 1);
+        var length = int8 (data, offset + 16);
+        return {
+            name: name,
+            type: type,
+            length: length
+        };
+    };
+
+    // Level of the dBASE file
+    var level = int8 (data, 0);
+
+    if (level == 4)
+        throw "Level 7 dBASE not supported";
+
+    // Date of last update
+    var year = int8 (data, 1);
+    var month = int8 (data, 2);
+    var day = int8 (data, 3);
+
+    var num_entries = lint32 (data, 4);
+
+    var header_size = lint16 (data, 8);
+    var record_size = lint16 (data, 10);
+
+    var FIELDS_START = 32;
+    var HEADER_LENGTH = 32;
+    
+    var header_offset = FIELDS_START;
+    var headers = [];
+    while (header_offset < header_size - 1) {
+        headers.push (read_header (header_offset));
+        header_offset += HEADER_LENGTH;
+    }
+
+    var records = [];
+    var record_offset = header_size;
+    while (record_offset < header_size + num_entries * record_size) {
+        var declare = str (data, record_offset, 1)
+        if (declare == '*') {
+            // Record size in the header include the size of the delete indicator
+            record_offset += record_size;
+        }
+        else {
+            // Move offset to the start of the actual data
+            record_offset ++;
+            var record = {};
+            for (var i = 0; i < headers.length; i ++) {
+                var header = headers[i];
+                var value = undefined;
+                if (header.type == 'C') {
+                    value = str (data, record_offset, header.length).trim ();
+                }
+                else if (header.type == 'N') {
+                    value = parseFloat (str (data, record_offset, header.length));
+                }
+                record_offset += header.length;
+                record[header.name] = value;
+            }
+            records.push (record);
+        }
+    }
+    return records;
+};
+
+var load_shp = function (data, dbf_data, indices, options) {
+    var features = [];
 
     var read_ring = function (offset, start, end) {
 	var ring = [];
@@ -88,7 +161,7 @@ var load_shp = function (data, indices, options) {
 	    var x = ldbl64 (data, record_offset + 4);
 	    var y = ldbl64 (data, record_offset + 12);
 	    
-	    points.push ({
+	    features.push ({
                 type: 'Point',
 		attr: {},
 		geom: [[x, y]]
@@ -114,7 +187,7 @@ var load_shp = function (data, indices, options) {
 		var ring = read_ring (points_start, start, end);
 		rings.push (ring);
 	    }
-	    polys.push ({
+	    features.push ({
                 type: 'Polygon',
 		attr: {},
 		geom: [rings]
@@ -126,6 +199,8 @@ var load_shp = function (data, indices, options) {
 	//return offset + 2 * record_length + SHP_HEADER_LEN;
     };
 
+    var attr = load_dbf (dbf_data);
+
     //var offset = 100;
     //while (offset < length * 2) {
     //    offset = read_record (offset);
@@ -135,18 +210,13 @@ var load_shp = function (data, indices, options) {
 	read_record (offset);
     }
 
-    if (points.length > 0) {
-	var layer = new Layer (options);
-	$.each (points, function (i, v) {
-	    layer.append (v);
-	});
-	return layer;
+    var layer = new Layer ();
+
+    for (var i = 0; i < features.length; i ++) {
+        var feature = features[i];
+        feature.attr = attr[i];
+        layer.append (feature);
     }
-    else if (polys.length > 0) {
-	var layer = new Layer (options);
-	$.each (polys, function (i, v) {
-	    layer.append (v);
-	});
-	return layer;	
-    }
+
+    return layer;
 };

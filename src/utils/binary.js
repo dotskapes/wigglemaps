@@ -1,5 +1,8 @@
+function int8 (data, offset) {
+    return data.charCodeAt (offset);
+};
+
 function bint32 (data, offset) {
-    //console.log (data.charCodeAt (offset) & 0xff, data.charCodeAt (offset + 1) & 0xff, data.charCodeAt (offset + 2) & 0xff, data.charCodeAt (offset + 3) & 0xff);
     return (
         ((data.charCodeAt (offset) & 0xff) << 24) +
             ((data.charCodeAt (offset + 1) & 0xff) << 16) +
@@ -13,6 +16,20 @@ function lint32 (data, offset) {
         ((data.charCodeAt (offset + 3) & 0xff) << 24) +
             ((data.charCodeAt (offset + 2) & 0xff) << 16) +
             ((data.charCodeAt (offset + 1) & 0xff) << 8) +
+            (data.charCodeAt (offset) & 0xff)
+    );
+};
+
+function bint16 (data, offset) {
+    return (
+        ((data.charCodeAt (offset) & 0xff) << 8) +
+            (data.charCodeAt (offset + 1) & 0xff)
+    );
+};
+
+function lint16 (data, offset) {
+    return (
+        ((data.charCodeAt (offset + 1) & 0xff) << 8) +
             (data.charCodeAt (offset) & 0xff)
     );
 };
@@ -35,7 +52,7 @@ function ldbl64 (data, offset) {
     var frac = (b6 & 0x0f) * Math.pow (2, 48) + b5 * Math.pow (2, 40) + b4 * Math.pow (2, 32) + b3 * Math.pow (2, 24) + b2 * Math.pow (2, 16) + b1 * Math.pow (2, 8) + b0;
 
     return sign * (1 + frac * Math.pow (2, -52)) * Math.pow (2, exp);
-}
+};
 
 function lfloat32 (data, offset) {
     var b0 = data.charCodeAt (offset) & 0xff;
@@ -49,4 +66,27 @@ function lfloat32 (data, offset) {
     var frac = (b2 & 0x7f) * Math.pow (2, 16) + b1 * Math.pow (2, 8) + b0;
 
     return sign * (1 + frac * Math.pow (2, -23)) * Math.pow (2, exp);
-}
+};
+
+function str (data, offset, length) {
+    var chars = [];
+    index = offset;
+    /*while (true) {
+        var c = data[index];
+        if (c.charCodeAt (0) != 0)
+            chars.push (c);
+        else
+            return chars.join ('');
+        index ++;
+    }*/
+    while (index < offset + length) {
+        var c = data[index];
+        if (c.charCodeAt (0) != 0)
+            chars.push (c);
+        else {
+            break;
+        }
+        index ++;
+    }
+    return chars.join ('');
+};

@@ -44,6 +44,7 @@ function SelectionBox (engine) {
 	}
 	dragging = false;
 	release_func (new Box (min, max));
+        engine.dirty = true;
     });
 
     $(document).bind ('click', function (event) {

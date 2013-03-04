@@ -36,11 +36,8 @@ function LayerController (engine, layer, options) {
 
         controller.views[f.id] = view;
 
-        //StyleManager.registerCallback (engine, f, update_feature);
-        EventManager.manage (f);
         EventManager.linkParent (layer, f);
         EventManager.addEventHandler (f, 'style', update_feature);
-        //f.change (handle_change);
     });
 
     this.update = function (engine, dt) {
