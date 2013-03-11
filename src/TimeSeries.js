@@ -50,7 +50,8 @@ function TimeSeries (selector, layer, options) {
         'height': bounds.max - bounds.min,
         'worldMin': new vect (0, bounds.min),
         'worldMax': new vect (options.order.length - 1, bounds.max),
-        'ylock': true 
+        'xlock': false,
+        'ylock': false,
     });
 
     var order = options.order;

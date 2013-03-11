@@ -1,7 +1,10 @@
-all: build min
+all: npm build min
 
-build: src/*
-	python scripts/compile.py src/base.js wigglemaps.js
+npm:
+	npm install
+
+build: 
+	./node_modules/grunt/bin/grunt build
 
 min: wigglemaps.js
-	python scripts/closure.py wigglemaps.js
+	./node_modules/grunt/bin/grunt uglify

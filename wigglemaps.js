@@ -170,12 +170,9 @@ vect.rotate = function (v, omega) {
 vect.normalize = function (v) {
     return v.clone ().normalize ();
 };
-
 (function () {
 
-    var BASE_DIR = '';
-
-    /*
+/*
  * jQuery Hotkeys Plugin
  * Copyright 2010, John Resig
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -275,7 +272,7 @@ vect.normalize = function (v) {
 		jQuery.event.special[ this ] = { add: keyHandler };
 	});
 
-})( jQuery );    /*! Copyright (c) 2011 Brandon Aaron (http://brandonaaron.net)
+})( jQuery );/*! Copyright (c) 2011 Brandon Aaron (http://brandonaaron.net)
  * Licensed under the MIT License (LICENSE.txt).
  *
  * Thanks to: http://adomas.org/javascript-mouse-wheel/ for some pointers.
@@ -359,7 +356,7 @@ function handler(event) {
 }
 
 })(jQuery);
-    // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+// http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 
 // requestAnimationFrame polyfill by Erik Möller
@@ -389,8 +386,7 @@ function handler(event) {
             clearTimeout(id);
         };
 }());
-
-    var PI = 3.14159265;
+var PI = 3.14159265;
 
 var Mouse = {
     x: 0,
@@ -568,7 +564,7 @@ function parseRGB (value) {
 function str_contains (string, c) {
     return string.indexOf (c) != -1;
 };
-    function int8 (data, offset) {
+function int8 (data, offset) {
     return data.charCodeAt (offset);
 };
 
@@ -660,7 +656,7 @@ function str (data, offset, length) {
     }
     return chars.join ('');
 };
-    /* Copyright 2011, Zack Krejci
+/* Copyright 2011, Zack Krejci
  * Licensed under the MIT License
  */
 
@@ -960,7 +956,7 @@ function getTexture (gl, path, callback) {
     img.src = path;
     return tex;
 };
-    function Buffers (engine, initial_size) {
+function Buffers (engine, initial_size) {
     var gl = engine.gl;
     var data = {};
     
@@ -1058,7 +1054,7 @@ function getTexture (gl, path, callback) {
 	}
     };
 };
-    function Texture (engine, options) {
+function Texture (engine, options) {
     var gl = engine.gl;
     var settings = copy (options);
     default_model (settings, {
@@ -1102,8 +1098,7 @@ function getImage (path, callback) {
     };
     img.src = path;
 };
-
-    var StyleManager = new function () {
+var StyleManager = new function () {
     // The structure of style lookup is: Engine ids, then feature and layer ids
     // Layers and features coexist on the same level. The cascade is looked up
     // at runtime
@@ -1327,7 +1322,7 @@ function derived_style (engine, feature, layer, key) {
 	
 //     };
 // };
-    function Camera (engine, options) {
+function Camera (engine, options) {
     var canvas = engine.canvas;
     var camera = this;
     if (!options)
@@ -1520,7 +1515,7 @@ function derived_style (engine, feature, layer, key) {
         return new vect (worldWidth / xlevel, (worldWidth * worldRatio * aspectRatio) / ylevel);
     };
 };
-    function Scroller (engine, options) {
+function Scroller (engine, options) {
     var drag = false;
     var start = new vect (0, 0);
     var pos = new vect (0, 0);
@@ -1650,7 +1645,7 @@ function derived_style (engine, feature, layer, key) {
             engine.camera.position (newPos);
     }
 };
-    var EventManager = new function () {
+var EventManager = new function () {
     this.listeners = {};
 
     this.manage = function (object) {
@@ -1829,7 +1824,7 @@ function derived_style (engine, feature, layer, key) {
     };
 };
 */
-    var basic_shader = null;
+var basic_shader = null;
 
 function RangeBar (engine, colors, bottom, top, vert) {
     if (!basic_shader)
@@ -1883,97 +1878,83 @@ function RangeBar (engine, colors, bottom, top, vert) {
 
 	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
-};    var SLIDER_WIDTH = 20;
+};var SliderModel = Backbone.Model.extend ({
+    defaults: {
+        attr: [],
+        index: 0
+    },
+    setIndex: function (index) {
+        this.set ({
+            index: index 
+        });
+    }
+});
 
-function Slider (pos, size, units) {
-    var position = function (index) {
-	if (index >= units)
-	    throw "Slider index out of bounds";
-	return (size.x / (units - 1)) * index;
-    };
+var Slider = Backbone.View.extend ({
+    initialize: function (options) {
+        var slider = this;
 
-    var slider_index = function (p) {
-	if (p <= pos.x)
+        this.model = new SliderModel (options);
+
+        $ (window).on ('mouseup', function () {
+            slider.stopDrag ();
+        }).on ('mousemove', function (event) {
+            slider.doDrag (vect (event.pageX, event.pageY));
+        });
+
+        this.render ();
+    },
+    className: 'slider',
+    events: {
+        'mousedown .bar': 'startDrag',
+        //'mouseup .bar': 'stopDrag'
+    },
+    render: function () {
+        this.$el.html ('<div class="exterior"><div class="bar"></div></div>');
+        return this;
+    },
+    change: function (callback) {
+        var slider = this;
+        this.model.on ('change:index', function () {
+            callback (slider.model.get ('index'));
+            slider.moveBar ();
+        });
+    },
+    dragging: false,
+    startDrag: function () {
+        this.dragging = true;
+    },
+    stopDrag: function () {
+        this.dragging = false;
+    },
+    doDrag: function (p) {
+        if (this.dragging) {
+	    var index = this.sliderIndex (p.x);
+            this.model.set ('index', index);
+        }
+    },
+    sliderIndex: function (px) {
+        var pos = vect (this.$el.offset ().left, this.$el.offset ().top + this.$el.height ());
+        var units = this.model.get ('attr').length;
+        var bar = this.$el.find ('.bar');
+        var barWidth = bar.width ();
+        var width = this.$el.find ('.exterior').width () - barWidth / 2;
+	if (px <= pos.x)
 	    return 0;
-	if (p >= pos.x + size.x)
+	if (px >= pos.x + width)
 	    return units - 1;
-	return Math.round (((p - pos.x) / size.x) * (units - 1));
-    };
-    
-    this.dom = $ ('<div></div>')
-	.addClass ('slider-container')
-	.css ('position', 'relative')
-	.css ('left', pos.x)
-	.css ('top', pos.y)
-	.css ('width', size.x)
-	.css ('height', size.y);
-
-    var dragging = false;
-    var current = 0;
-    var bar = $ ('<div></div>')
-	.addClass ('slider-box')
-	.css ('position', 'relative')
-	.css ('left', -SLIDER_WIDTH / 2)
-	.css ('height', size.y)
-	.css ('width', SLIDER_WIDTH)
-	.mousedown (function () {
-	    dragging = true;
-	});
-
-    this.tick = function () {
-	return current;
-    };
-
-    this.count = function () {
-	return units;
-    };
-
-    var change_event = function (index) {};
-    this.change = function (func) {
-	change_event = func;
-    };
-
-    var release_event = function (index) {};
-    this.release = function (func) {
-	release_event = func;
-    };
-
-    this.dragging = function () {
-	return dragging;
-    };
-
-    this.dom.append (bar);
-
-    this.set = function (index) {
-	if (index != current)
-	    change_event (index);
-	current = index;
-	var px = position (index);
-	bar.css ('left', px - SLIDER_WIDTH / 2);
-	release_event (index);
-    };
-    
-    $ (document).bind ('mouseup', function () {
-	if (!dragging)
-	    return;
-	dragging = false;
-	var index = slider_index (event.clientX);
-	release_event (index);
-    });
-
-    $ (document).bind ('mousemove', function (event) {    
-	if (dragging) {
-	    var index = slider_index (event.clientX);
-	    if (index != current)
-		change_event (index);
-	    current = index;
-	    var px = position (index);
-	    bar.css ('left', px - SLIDER_WIDTH / 2);
-	}
-    });
-    
-};
-    function FeatureView (geom, styleFunc) {
+	return Math.round (((px - pos.x) / width) * (units - 1));        
+    },
+    moveBar: function () {
+        var bar = this.$el.find ('.bar');
+        var barWidth = bar.width ();
+        var width = this.$el.find ('.exterior').width () - barWidth;
+        var units = this.model.get ('attr').length;
+        var px = (width / (units - 1)) * this.model.get ('index');
+        bar.css ('left', px);
+    }
+});
+function FeatureView (geom, styleFunc) {
     this.style_map = {};
 
     this.geom = geom;
@@ -2035,7 +2016,7 @@ function Slider (pos, size, units) {
         }
     };
 };
-    function FeatureRenderer (engine) {
+function FeatureRenderer (engine) {
     var renderer = this;
 
     this.engine = engine;
@@ -2080,7 +2061,7 @@ function Slider (pos, size, units) {
         return StyleManager.derivedStyle (feature, layer, engine, key);
     };*/
 };
-    var INITIAL_POINTS = 1024;
+var INITIAL_POINTS = 1024;
 
 var unit = rect (0, 0, 1, 1);
 
@@ -2195,7 +2176,7 @@ function PointRenderer (engine, layer) {
 	gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
     };
 };
-    var INITIAL_LINES = 1024;
+var INITIAL_LINES = 1024;
 
 function draw_lines (stroke_buffers, geom) {
 
@@ -2363,7 +2344,7 @@ function LineRenderer (engine) {
     }
 
 };
-    var INITIAL_POLYGONS = 1024;
+var INITIAL_POLYGONS = 1024;
 
 function PolygonRenderer (engine) {
     FeatureRenderer.call (this, engine);
@@ -2455,7 +2436,7 @@ function PolygonRenderer (engine) {
 	gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
     };
 };
-    function TimeSeriesRenderer (engine, layer, options) {
+function TimeSeriesRenderer (engine, layer, options) {
     LineRenderer.call (this, engine, layer, options);
     
     var order = options.order;
@@ -2485,7 +2466,7 @@ function PolygonRenderer (engine) {
         return feature_geom;
     };
 };
-    function multiRendererFactory (Renderers) {
+function multiRendererFactory (Renderers) {
     return function (engine, layer, options) {
         var renderers = [];
         
@@ -2534,8 +2515,7 @@ function PolygonRenderer (engine) {
         };
     };
 };
-
-    var Querier = function (engine, layer, options) {
+var Querier = function (engine, layer, options) {
     var queriers = {};
     $.each (engine.Queriers, function (geomType, GeomQuerier) {
         queriers[geomType] = new GeomQuerier (engine, layer, options);
@@ -2563,7 +2543,7 @@ function PolygonRenderer (engine) {
         return null;
     };
 };
-    // A controller for point specific operations, particualrly to perform geometric queries
+// A controller for point specific operations, particualrly to perform geometric queries
 // on points faster. 
 var PointQuerier = function (engine, layer, options) {
     var points = layer.features ().type ('Point');
@@ -2616,7 +2596,7 @@ var PointQuerier = function (engine, layer, options) {
         return null;
     };
 };
-    var PolygonQuerier = function (engine, layer, options) {
+var PolygonQuerier = function (engine, layer, options) {
     var polygons = layer.features ().type ('Polygon');
     var r_points = [];
     polygons.each (function (n, polygon) {
@@ -2670,7 +2650,7 @@ var PointQuerier = function (engine, layer, options) {
         return null;
     };
 };
-    var TimeSeriesQuerier = function (engine, layer, options) {
+var TimeSeriesQuerier = function (engine, layer, options) {
     var lines = layer.features ();
     var r_points = [];
     layer.features ().each (function (n, polygon) {
@@ -2751,8 +2731,7 @@ var PointQuerier = function (engine, layer, options) {
         return null;
     };
 };
-
-    function LayerController (engine, layer, options) {
+function LayerController (engine, layer, options) {
     var controller = this;
 
     // Set this as the parent of the layer in the event hierarchy
@@ -2807,8 +2786,7 @@ var PointQuerier = function (engine, layer, options) {
     };
 
 };
-
-    function BaseEngine (selector, options) {
+function BaseEngine (selector, options) {
     var engine = this;
 
     default_model (options, {
@@ -3055,7 +3033,7 @@ var PointQuerier = function (engine, layer, options) {
     // Start the animation loop
     requestAnimationFrame (draw);
 };
-    var Map = function (selector, options) {
+var Map = function (selector, options) {
     var engine = this;
 
     if (options === undefined)
@@ -3169,7 +3147,7 @@ var PointQuerier = function (engine, layer, options) {
         this.queriers[layer.id] = new Querier (this, layer, options);
     };
 };
-    function TimeSeries (selector, layer, options) {
+function TimeSeries (selector, layer, options) {
     var engine = this;
     if (options === undefined)
         options = {};
@@ -3221,7 +3199,8 @@ var PointQuerier = function (engine, layer, options) {
         'height': bounds.max - bounds.min,
         'worldMin': new vect (0, bounds.min),
         'worldMax': new vect (options.order.length - 1, bounds.max),
-        'ylock': true 
+        'xlock': false,
+        'ylock': false,
     });
 
     var order = options.order;
@@ -3321,8 +3300,7 @@ var PointQuerier = function (engine, layer, options) {
     this.scene.push (new LayerController (engine, layer, options));
     this.queriers[layer.id] = new Querier (this, layer, options);
 };
-
-    function SelectionBox (engine) {
+function SelectionBox (engine) {
     var sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
@@ -3406,7 +3384,7 @@ var PointQuerier = function (engine, layer, options) {
 	}
     };
 };
-    var triangulate_polygon = function (elem) {
+var triangulate_polygon = function (elem) {
     var poly = [];
     var tri = [];
     for (var k = 0; k < elem.length; k++) {
@@ -3899,7 +3877,7 @@ function trapezoid_polygon (poly_in) {
     new Trapezoid (poly[index], poly[j], */
     
 };
-    function AABBNode (feature, bounds, first, second) {
+function AABBNode (feature, bounds, first, second) {
     this.bounds = bounds;
     this.feature = feature;
 
@@ -3950,7 +3928,7 @@ function AABBTree (features) {
     console.log (nodes[0]);
     
 };
-    function Box (v1, v2) {
+function Box (v1, v2) {
     this.min = v1.clone ();
     this.max = v2.clone ();
     this.contains = function (p) {
@@ -4144,8 +4122,7 @@ function RangeTree (elem) {
 	return result;
     };
 };
-
-    // Constructor for the basic geometry types that can be rendered
+// Constructor for the basic geometry types that can be rendered
 
 var STYLE = 1;
 var ATTR = 2;
@@ -4248,7 +4225,7 @@ var rand_map = (function () {
 	return new vect (xmap[key], ymap[key]);
     };
 }) ();
-    // A point for the layer. A point is actually a multi-point, so it can be
+// A point for the layer. A point is actually a multi-point, so it can be
 // made up of many "spatial" points. The geometry format for the point type is:
 // [[lon, lat], [lon, lat], [lon, lat], ...]
 var Point = function (prop, layer) {
@@ -4330,7 +4307,7 @@ var PointCollection = function (points) {
         return new LayerSelector ([]);
     };
 };
-    function Polygon (prop, layer) {
+function Polygon (prop, layer) {
     Feature.call (this, prop, layer);
     
     this.bounds = linestring_bounds (this.geom);
@@ -4419,7 +4396,7 @@ function PolygonCollection (polygons) {
         return new LayerSelector (results);
     };
 };
-    function linestring_bounds (geom) {
+function linestring_bounds (geom) {
     var min = new vect (Infinity, Infinity);
     var max = new vect (-Infinity, -Infinity);
     $.each (geom, function (i, poly) {
@@ -4654,8 +4631,7 @@ function LineCollection (lines) {
         return new LayerSelector ([]);
     };
 };
-
-    var geom_types = {
+var geom_types = {
     'Point': Point,
     'Polygon': Polygon,
     'Line': Line
@@ -4816,8 +4792,7 @@ function Layer (options) {
 	current_over = {};
     };*/
 };
-
-    var grid_shader = null;
+var grid_shader = null;
 
 function Grid (options) {
     if (!grid_shader) {
@@ -5062,7 +5037,7 @@ function Grid (options) {
 	}*/
     };
 };
-    function AsciiGrid (data, options) {
+function AsciiGrid (data, options) {
     var vals = data.split ('\n');
     var meta = vals.splice (0, 6);
     var cols = parseInt (meta[0].slice (14));
@@ -5100,7 +5075,7 @@ function Grid (options) {
 	}
     }
     return grid;
-};    function SparseGrid (data, options) {
+};function SparseGrid (data, options) {
     var xmin = lfloat32 (data, 0);
     var ymin = lfloat32 (data, 4);
 
@@ -5136,7 +5111,7 @@ function Grid (options) {
     }
     
     return grid;
-};    var LayerSelector = function (elem) {
+};var LayerSelector = function (elem) {
 
     var lookup = null;
 
@@ -5337,7 +5312,7 @@ function Grid (options) {
         }
     };
 };
-    var raster_shader = null;
+var raster_shader = null;
 
 function KML (data) {
     var bounds = $ (data).find ('LatLonBox');
@@ -5482,7 +5457,7 @@ function Elevation (data) {
 	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
 };
-    var OMEGA = Math.PI / 4;
+var OMEGA = Math.PI / 4;
 
 var hillshade_shader = null;
 function Hillshade (data) {
@@ -5545,7 +5520,7 @@ function Hillshade (data) {
 	return azimuth;
     };
 };
-    var TIMEOUT = 1000;
+var TIMEOUT = 1000;
 
 var z_base = 0;
 
@@ -5927,7 +5902,7 @@ function MultiTileLayer (options) {
         };
     };
 };
-    function WMS (options) {
+function WMS (options) {
     var settings = copy (options);
     require (settings, ['url', 'layer'])
     default_model (settings, {
@@ -5940,7 +5915,7 @@ function MultiTileLayer (options) {
 
     var layer = new MultiTileLayer (settings);
     return layer;
-};    var GeoJSON = function (data, options) {
+};var GeoJSON = function (data, options) {
     if (options === undefined)
         options = {};
     var layer = new Layer (options);
@@ -6551,7 +6526,7 @@ function Layer (data) {
 	}
     };
 };*/
-    var SHP_HEADER_LEN = 8;
+var SHP_HEADER_LEN = 8;
 
 var SHP_NULL = 0;
 var SHP_POINT = 1;
@@ -6773,7 +6748,6 @@ var load_shp = function (data, dbf_data, indices, options) {
 
     return layer;
 };
-
     var ready_queue = [];
 
     window.wiggle = {
