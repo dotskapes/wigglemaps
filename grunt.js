@@ -4,8 +4,14 @@ module.exports = function(grunt) {
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        jade: { 
+            include: [
+                'src/templates/slider.jade'
+            ]
+        },
         build: {
             include: [
+                'templates.js',
                 'src/utils/vect.js',
 
                 'src/start.js',
@@ -88,6 +94,29 @@ module.exports = function(grunt) {
         });
     });
 
+    grunt.registerTask('jade', 'Build the templates', function () {
+        var config = grunt.config.get ('jade');
+        jade = require ('jade');
+
+        var runtime = fs.readFileSync ('node_modules/jade/runtime.js');
+        fs.writeFileSync ('templates.js', runtime);
+
+        //fs.writeFileSync ('templates.js', 'var templates = {};\n');
+        var task = this;
+        config.include.forEach (function (filename, i) {
+            var buffer = fs.readFileSync (filename);
+            var fn = jade.compile (buffer, {
+                client: true
+            });
+            var done = task.async ();
+            
+            exec ('basename ' + filename + ' .jade', function (error, stdout, stderr) {
+                fs.appendFileSync ('templates.js', 'jade.templates = {};\njade.templates[\'' + stdout.trim () + '\'] = ' + fn.toString () + ';\n');
+                done (error === null);
+            });
+        });
+    });
+
     grunt.registerTask('uglify', "Minify the script", function () {
         var config = grunt.config.get ('uglify');
         var done = this.async ();
@@ -97,5 +126,5 @@ module.exports = function(grunt) {
     });
 
     
-    grunt.registerTask('default', ['build', 'uglify']);
+    grunt.registerTask('default', ['jade', 'build', 'uglify']);
 };

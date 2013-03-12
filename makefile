@@ -1,6 +1,6 @@
-all: npm build min
+all: deps build min
 
-npm:
+deps:
 	npm install
 
 build: 
