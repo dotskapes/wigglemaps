@@ -1,76 +1,116 @@
-var SliderModel = Backbone.Model.extend ({
+var SliderModel = Backbone.Model.extend({
+    initialize: function() {
+        this.on('change:pos', function() {
+            this.set('index', this.pos2Index());
+        });
+    },
     defaults: {
         attr: [],
-        index: 0
+        index: 0,
+        offset: 0,
+        playing: false,
+        pos: 0,
+        dragging: false
     },
-    setIndex: function (index) {
-        this.set ({
-            index: index 
-        });
+    pos2Index: function() {
+        var pos = this.get('pos');
+        var units = this.get('attr').length;
+        return Math.round(pos * (units - 1));
     }
 });
 
-var Slider = Backbone.View.extend ({
-    initialize: function (options) {
+var Slider = Backbone.View.extend({
+    initialize: function(options) {
         var slider = this;
 
-        this.model = new SliderModel (options);
+        this.model = new SliderModel(options);
 
-        $ (window).on ('mouseup', function () {
-            slider.stopDrag ();
-        }).on ('mousemove', function (event) {
-            slider.doDrag (vect (event.pageX, event.pageY));
+        $ (window).on('mouseup', function() {
+            slider.stopDrag();
+        }).on('mousemove', function(event) {
+            slider.doDrag(vect(event.pageX, event.pageY));
         });
 
-        this.render ();
+        this.model.on('change:playing', function() {
+            slider.toggleAnimation();
+        }).on('change:pos', function() {
+            slider.moveBar();
+        }).on('change:index', function() {
+            slider.changeLabel();
+        });
+
+        this.render();
     },
     className: 'slider',
     events: {
         'mousedown .bar': 'startDrag',
-        //'mouseup .bar': 'stopDrag'
+        'mousedown .play': 'togglePlay',
     },
-    render: function () {
-        this.$el.html ('<div class="exterior"><div class="bar"></div></div>');
+    render: function() {
+        this.$el.html(jade.templates['slider'] ({
+            step: this.model.get('attr')[0]
+        }));
+        var bar = this.$el.find('.bar');
         return this;
     },
-    change: function (callback) {
+    change: function(callback) {
         var slider = this;
-        this.model.on ('change:index', function () {
-            callback (slider.model.get ('index'));
-            slider.moveBar ();
+        this.model.on('change:index', function() {
+            var index = this.get('index');
+            callback(index);
         });
     },
-    dragging: false,
-    startDrag: function () {
-        this.dragging = true;
+    changeLabel: function() {
+        var index = this.model.get('index');
+        this.$el.find('.step').text(this.model.get('attr')[index]);
     },
-    stopDrag: function () {
-        this.dragging = false;
+    startDrag: function(event) {
+        var p = vect(event.pageX, event.pageY)
+        this.model.set('dragging', true);
+        var bar = this.$el.find('.bar');
+        var offset = p.x - bar.offset().left;
+        this.model.set('offset', offset);
     },
-    doDrag: function (p) {
-        if (this.dragging) {
-	    var index = this.sliderIndex (p.x);
-            this.model.set ('index', index);
+    stopDrag: function() {
+        this.model.set('dragging', false);
+        var units = this.model.get('attr').length - 1;
+    },
+    doDrag: function(p) {
+        if(this.model.get('dragging')) {
+            var bar = this.$el.find('.bar');
+            var left = clamp(p.x - bar.parent().offset().left - this.model.get('offset'), 0, bar.parent().width() - bar.width());
+            this.model.set('pos', left / (bar.parent().width() - bar.width()));
         }
     },
-    sliderIndex: function (px) {
-        var pos = vect (this.$el.offset ().left, this.$el.offset ().top + this.$el.height ());
-        var units = this.model.get ('attr').length;
-        var bar = this.$el.find ('.bar');
-        var barWidth = bar.width ();
-        var width = this.$el.find ('.exterior').width () - barWidth / 2;
-	if (px <= pos.x)
-	    return 0;
-	if (px >= pos.x + width)
-	    return units - 1;
-	return Math.round (((px - pos.x) / width) * (units - 1));        
+    moveBar: function() {
+        var bar = this.$el.find('.bar');
+        var left = this.model.get('pos') * (bar.parent().width() - bar.width())
+        bar.css('left', left);
     },
-    moveBar: function () {
-        var bar = this.$el.find ('.bar');
-        var barWidth = bar.width ();
-        var width = this.$el.find ('.exterior').width () - barWidth;
-        var units = this.model.get ('attr').length;
-        var px = (width / (units - 1)) * this.model.get ('index');
-        bar.css ('left', px);
+    togglePlay: function() {
+        this.model.set('playing', !this.model.get('playing'));
+    },
+    interval: null,
+    toggleAnimation: function() {
+        var slider = this;
+        var playing = this.model.get('playing');
+        var bar = this.$el.find('.bar');
+        if (playing) {
+            this.$el.find('.play').text('Pause');
+            this.interval = setInterval(function() {
+                if (!slider.model.get('dragging')) {
+                    var pos = slider.model.get('pos');
+                    var newPos = pos + 1.0 / (slider.model.get('attr').length * 25);
+                    if (newPos >= 1.0)
+                        newPos -= 1;
+                    slider.model.set('pos', newPos);
+                }
+            }, 40);
+        }
+        else {
+            this.$el.find('.play').text('Play');
+            clearInterval(this.interval);
+        }
+            
     }
 });

@@ -8,7 +8,7 @@ module.exports = function(grunt) {
             src: 'src/templates',
             dst: 'templates.js'
         },
-        cat: {
+        build: {
             dst: 'wigglemaps.js',
             include: [
                 //'templates.js',
@@ -78,7 +78,18 @@ module.exports = function(grunt) {
                 'src/Namespace.js',
 
                 'src/end.js'
-            ],
+            ]
+        },
+        'build-widget': {
+            dst: 'wigglemaps.widget.js',
+            include: [
+                'templates.js',
+                'src/util.js',
+                'src/start.js',
+                'src/widget/slider.js',
+                'src/WidgetNamespace.js',
+                'src/end.js'
+            ]
         },
         uglify: {
             src: 'wigglemaps.js',
@@ -109,9 +120,14 @@ module.exports = function(grunt) {
         });
     };
 
-    grunt.registerTask('cat', 'Concat files together', function () {
-        var config = grunt.config.get ('cat');
+    grunt.registerTask('build', 'Concat files together', function () {
+        var config = grunt.config.get ('build');
         concat (this, config, 'wigglemaps.js');
+    });
+
+    grunt.registerTask('build-widget', "Build the widgets", function () {
+        var config = grunt.config.get ('build-widget');
+        concat (this, config, 'wigglemaps.widget.js');
     });
 
     grunt.registerTask('jade', 'Build the templates', function () {
@@ -147,6 +163,7 @@ module.exports = function(grunt) {
         });
     });
 
-    
-    grunt.registerTask('default', ['jade', 'cat', 'uglify']);
+
+    grunt.registerTask('widget', ['jade', 'build-widget']);
+    grunt.registerTask('default', ['build', 'uglify']);
 };
