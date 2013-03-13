@@ -47,7 +47,7 @@ function draw_lines (stroke_buffers, geom) {
     var current_buffer = [];
     var next_buffer = [];
 
-    currentIndex = startIndex;
+    var currentIndex = startIndex;
 
     var add_vert = function (p, c, n) {
         /*prev_buffer.push (p.x);

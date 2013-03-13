@@ -13,18 +13,17 @@ function BaseEngine (selector, options) {
 
     if (selector) {
         $ (selector).append (this.canvas);
-        this.canvas.attr ('width', $ (selector).width ());
-        this.canvas.attr ('height', $ (selector).height ());
     }
     else {
         selector = window;
         $ ('body').append (this.canvas);
-        this.canvas.attr ('width', $ (selector).width ());
-        this.canvas.attr ('height', $ (selector).height ());
-        $ (window).resize (function (event) {
-            engine.resize ();
-        });
     }
+    this.canvas.attr ('width', $ (selector).width ());
+    this.canvas.attr ('height', $ (selector).height ());
+
+    $ (window).resize (function (event) {
+        engine.resize ();
+    });
 
     var framebuffers = [];
 

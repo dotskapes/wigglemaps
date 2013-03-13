@@ -34,7 +34,7 @@ function force_model (options, model) {
 
 function copy (src) {
     var dst = {};
-    for (key in src)
+    for (var key in src)
         dst[key] = src[key];
     return dst;
 };
@@ -48,7 +48,7 @@ function require (src, fields) {
 };
 
 function copy_to (dst, src) {
-    for (key in src)
+    for (var key in src)
         dst[key] = src[key];
 };
 

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Map</title>
+    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+      wiggle.ready (function () {
+	var map = new wiggle.Map ();
+	map.center (-98, 41);
+
+	$.ajax ({
+	    url: 'data/railroads.json',
+	    dataType: 'json',
+	    success: function (data) {
+		roads = wiggle.io.GeoJSON (data);
+		map.append (roads);
+
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+  </body>
+</html>

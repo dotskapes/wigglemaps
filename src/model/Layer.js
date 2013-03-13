@@ -114,8 +114,6 @@ function Layer (options) {
             }
         };
 
-        dirty = true;
-
         return f;
     };
 

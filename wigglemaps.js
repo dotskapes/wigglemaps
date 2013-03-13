@@ -1,210 +1,3 @@
-
-jade = (function(exports){
-/*!
- * Jade - runtime
- * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
- * MIT Licensed
- */
-
-/**
- * Lame Array.isArray() polyfill for now.
- */
-
-if (!Array.isArray) {
-  Array.isArray = function(arr){
-    return '[object Array]' == Object.prototype.toString.call(arr);
-  };
-}
-
-/**
- * Lame Object.keys() polyfill for now.
- */
-
-if (!Object.keys) {
-  Object.keys = function(obj){
-    var arr = [];
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        arr.push(key);
-      }
-    }
-    return arr;
-  }
-}
-
-/**
- * Merge two attribute objects giving precedence
- * to values in object `b`. Classes are special-cased
- * allowing for arrays and merging/joining appropriately
- * resulting in a string.
- *
- * @param {Object} a
- * @param {Object} b
- * @return {Object} a
- * @api private
- */
-
-exports.merge = function merge(a, b) {
-  var ac = a['class'];
-  var bc = b['class'];
-
-  if (ac || bc) {
-    ac = ac || [];
-    bc = bc || [];
-    if (!Array.isArray(ac)) ac = [ac];
-    if (!Array.isArray(bc)) bc = [bc];
-    ac = ac.filter(nulls);
-    bc = bc.filter(nulls);
-    a['class'] = ac.concat(bc).join(' ');
-  }
-
-  for (var key in b) {
-    if (key != 'class') {
-      a[key] = b[key];
-    }
-  }
-
-  return a;
-};
-
-/**
- * Filter null `val`s.
- *
- * @param {Mixed} val
- * @return {Mixed}
- * @api private
- */
-
-function nulls(val) {
-  return val != null;
-}
-
-/**
- * Render the given attributes object.
- *
- * @param {Object} obj
- * @param {Object} escaped
- * @return {String}
- * @api private
- */
-
-exports.attrs = function attrs(obj, escaped){
-  var buf = []
-    , terse = obj.terse;
-
-  delete obj.terse;
-  var keys = Object.keys(obj)
-    , len = keys.length;
-
-  if (len) {
-    buf.push('');
-    for (var i = 0; i < len; ++i) {
-      var key = keys[i]
-        , val = obj[key];
-
-      if ('boolean' == typeof val || null == val) {
-        if (val) {
-          terse
-            ? buf.push(key)
-            : buf.push(key + '="' + key + '"');
-        }
-      } else if (0 == key.indexOf('data') && 'string' != typeof val) {
-        buf.push(key + "='" + JSON.stringify(val) + "'");
-      } else if ('class' == key && Array.isArray(val)) {
-        buf.push(key + '="' + exports.escape(val.join(' ')) + '"');
-      } else if (escaped && escaped[key]) {
-        buf.push(key + '="' + exports.escape(val) + '"');
-      } else {
-        buf.push(key + '="' + val + '"');
-      }
-    }
-  }
-
-  return buf.join(' ');
-};
-
-/**
- * Escape the given string of `html`.
- *
- * @param {String} html
- * @return {String}
- * @api private
- */
-
-exports.escape = function escape(html){
-  return String(html)
-    .replace(/&(?!(\w+|\#\d+);)/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-};
-
-/**
- * Re-throw the given `err` in context to the
- * the jade in `filename` at the given `lineno`.
- *
- * @param {Error} err
- * @param {String} filename
- * @param {String} lineno
- * @api private
- */
-
-exports.rethrow = function rethrow(err, filename, lineno){
-  if (!filename) throw err;
-
-  var context = 3
-    , str = require('fs').readFileSync(filename, 'utf8')
-    , lines = str.split('\n')
-    , start = Math.max(lineno - context, 0)
-    , end = Math.min(lines.length, lineno + context);
-
-  // Error context
-  var context = lines.slice(start, end).map(function(line, i){
-    var curr = i + start + 1;
-    return (curr == lineno ? '  > ' : '    ')
-      + curr
-      + '| '
-      + line;
-  }).join('\n');
-
-  // Alter exception message
-  err.path = filename;
-  err.message = (filename || 'Jade') + ':' + lineno
-    + '\n' + context + '\n\n' + err.message;
-  throw err;
-};
-
-  return exports;
-
-})({});
-jade.templates = {};
-jade.templates['slider'] = function anonymous(locals, attrs, escape, rethrow, merge) {
-attrs = attrs || jade.attrs; escape = escape || jade.escape; rethrow = rethrow || jade.rethrow; merge = merge || jade.merge;
-var __jade = [{ lineno: 1, filename: undefined }];
-try {
-var buf = [];
-with (locals || {}) {
-var interp;
-__jade.unshift({ lineno: 1, filename: __jade[0].filename });
-__jade.unshift({ lineno: 1, filename: __jade[0].filename });
-buf.push('<div class="exterior">');
-__jade.unshift({ lineno: undefined, filename: __jade[0].filename });
-__jade.unshift({ lineno: 2, filename: __jade[0].filename });
-buf.push('<div class="bar">');
-__jade.unshift({ lineno: undefined, filename: __jade[0].filename });
-__jade.shift();
-buf.push('</div>');
-__jade.shift();
-__jade.shift();
-buf.push('</div>');
-__jade.shift();
-__jade.shift();
-}
-return buf.join("");
-} catch (err) {
-  rethrow(err, __jade[0].filename, __jade[0].lineno);
-}
-};
 function Vector2D (x, y) {
     this.x = x;
     this.y = y;
@@ -378,6 +171,9 @@ vect.normalize = function (v) {
     return v.clone ().normalize ();
 };
 (function () {
+    'use strict';
+    var BASE_DIR = '';
+
 
 /*
  * jQuery Hotkeys Plugin
@@ -629,7 +425,7 @@ function force_model (options, model) {
 
 function copy (src) {
     var dst = {};
-    for (key in src)
+    for (var key in src)
         dst[key] = src[key];
     return dst;
 };
@@ -643,7 +439,7 @@ function require (src, fields) {
 };
 
 function copy_to (dst, src) {
-    for (key in src)
+    for (var key in src)
         dst[key] = src[key];
 };
 
@@ -881,7 +677,7 @@ function setContext (canvas) {
             premultipliedAlpha: false
         });
     else {
-        function throwOnGLError(err, funcName, args) {
+        var throwOnGLError = function (err, funcName, args) {
             throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to " + funcName;
         };
         gl = WebGLDebugUtils.makeDebugContext(canvas.get (0).getContext ('experimental-webgl', {
@@ -2031,136 +1827,6 @@ var EventManager = new function () {
     };
 };
 */
-var basic_shader = null;
-
-function RangeBar (engine, colors, bottom, top, vert) {
-    if (!basic_shader)
-	basic_shader = makeProgram (BASE_DIR + 'shaders/basic');
-    
-    var c = [];
-    var pos = [];
-
-    if (!vert) {
-	var box_width = Math.abs ((top.x - bottom.x) / colors.length);
-	var box_height = Math.abs (top.y - bottom.y);
-
-	for (var i = 0; i < colors.length; i ++) {
-	    var min = new vect (bottom.x + box_width * i, bottom.y);
-	    var max = new vect (bottom.x + box_width * (i + 1), top.y);
-	    pos.push.apply (pos, rectv (engine.camera.percent (min), engine.camera.percent (max)));
-	    for (var k = 0; k < 6; k ++) {
-		c.push.apply (c, colors[i].vect ());
-	    }
-	}
-    }
-    else {
-	var box_width = Math.abs (top.x - bottom.x);
-	var box_height = Math.abs ((top.y - bottom.y) / colors.length);
-	for (var i = 0; i < colors.length; i ++) {
-	    var j = colors.length - 1 - i;
-	    var min = new vect (bottom.x,  bottom.y + box_height * (j + 1));
-	    var max = new vect (top.x, bottom.y - box_height * j);
-	    console.log ('box', min, max);
-	    pos.push.apply (pos, rectv (engine.camera.percent (min), engine.camera.percent (max)));
-	    for (var k = 0; k < 6; k ++) {
-		c.push.apply (c, colors[i].vect ());
-	    }
-	}
-    }
-
-    var pos_buffer = staticBuffer (pos, 2);
-    var color_buffer = staticBuffer (c, 4);
-
-    this.update = function (engine, p) {
-
-    };
-    
-    this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
-	gl.useProgram (basic_shader);
-
-	basic_shader.data ('pos', pos_buffer);
-	basic_shader.data ('color_in', color_buffer);
-
-	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
-    };
-};var SliderModel = Backbone.Model.extend ({
-    defaults: {
-        attr: [],
-        index: 0
-    },
-    setIndex: function (index) {
-        this.set ({
-            index: index 
-        });
-    }
-});
-
-var Slider = Backbone.View.extend ({
-    initialize: function (options) {
-        var slider = this;
-
-        this.model = new SliderModel (options);
-
-        $ (window).on ('mouseup', function () {
-            slider.stopDrag ();
-        }).on ('mousemove', function (event) {
-            slider.doDrag (vect (event.pageX, event.pageY));
-        });
-
-        this.render ();
-    },
-    className: 'slider',
-    events: {
-        'mousedown .bar': 'startDrag',
-        //'mouseup .bar': 'stopDrag'
-    },
-    render: function () {
-        this.$el.html ('<div class="exterior"><div class="bar"></div></div>');
-        return this;
-    },
-    change: function (callback) {
-        var slider = this;
-        this.model.on ('change:index', function () {
-            callback (slider.model.get ('index'));
-            slider.moveBar ();
-        });
-    },
-    dragging: false,
-    startDrag: function () {
-        this.dragging = true;
-    },
-    stopDrag: function () {
-        this.dragging = false;
-    },
-    doDrag: function (p) {
-        if (this.dragging) {
-	    var index = this.sliderIndex (p.x);
-            this.model.set ('index', index);
-        }
-    },
-    sliderIndex: function (px) {
-        var pos = vect (this.$el.offset ().left, this.$el.offset ().top + this.$el.height ());
-        var units = this.model.get ('attr').length;
-        var bar = this.$el.find ('.bar');
-        var barWidth = bar.width ();
-        var width = this.$el.find ('.exterior').width () - barWidth / 2;
-	if (px <= pos.x)
-	    return 0;
-	if (px >= pos.x + width)
-	    return units - 1;
-	return Math.round (((px - pos.x) / width) * (units - 1));        
-    },
-    moveBar: function () {
-        var bar = this.$el.find ('.bar');
-        var barWidth = bar.width ();
-        var width = this.$el.find ('.exterior').width () - barWidth;
-        var units = this.model.get ('attr').length;
-        var px = (width / (units - 1)) * this.model.get ('index');
-        bar.css ('left', px);
-    }
-});
 function FeatureView (geom, styleFunc) {
     this.style_map = {};
 
@@ -2432,7 +2098,7 @@ function draw_lines (stroke_buffers, geom) {
     var current_buffer = [];
     var next_buffer = [];
 
-    currentIndex = startIndex;
+    var currentIndex = startIndex;
 
     var add_vert = function (p, c, n) {
         /*prev_buffer.push (p.x);
@@ -3008,18 +2674,17 @@ function BaseEngine (selector, options) {
 
     if (selector) {
         $ (selector).append (this.canvas);
-        this.canvas.attr ('width', $ (selector).width ());
-        this.canvas.attr ('height', $ (selector).height ());
     }
     else {
         selector = window;
         $ ('body').append (this.canvas);
-        this.canvas.attr ('width', $ (selector).width ());
-        this.canvas.attr ('height', $ (selector).height ());
-        $ (window).resize (function (event) {
-            engine.resize ();
-        });
     }
+    this.canvas.attr ('width', $ (selector).width ());
+    this.canvas.attr ('height', $ (selector).height ());
+
+    $ (window).resize (function (event) {
+        engine.resize ();
+    });
 
     var framebuffers = [];
 
@@ -4953,8 +4618,6 @@ function Layer (options) {
                     props[key] = false;
             }
         };
-
-        dirty = true;
 
         return f;
     };
@@ -6955,48 +6618,45 @@ var load_shp = function (data, dbf_data, indices, options) {
 
     return layer;
 };
-    var ready_queue = [];
+var ready_queue = [];
 
-    window.wiggle = {
-	Map: Map,
-        TimeSeries: TimeSeries,
-	layer: {
-            Layer: Layer,
-	    Grid: Grid,
-	    Hillshade: Hillshade,
-	    Elevation: Elevation,
-            Raster: Raster
-	},
-	io: {
-	    Shapefile: Shapefile,
-	    GeoJSON: GeoJSON,
-	    KML: KML,
-	    SparseGrid: SparseGrid,
-	    AsciiGrid: AsciiGrid,
-	    WMS: WMS
-	},
-	util: {
-	    fcolor: fcolor,
-	    icolor: icolor,
-            Box: Box,
-            RangeTree: RangeTree
-	},
-	widget: {
-	    Slider: Slider
-	},
-	ready: function (func) {
-	    ready_queue.push (func);
-	}
-    };
+window.wiggle = {
+    Map: Map,
+    TimeSeries: TimeSeries,
+    layer: {
+        Layer: Layer,
+	Grid: Grid,
+	Hillshade: Hillshade,
+	Elevation: Elevation,
+        Raster: Raster
+    },
+    io: {
+	Shapefile: Shapefile,
+	GeoJSON: GeoJSON,
+	KML: KML,
+	SparseGrid: SparseGrid,
+	AsciiGrid: AsciiGrid,
+	WMS: WMS
+    },
+    util: {
+	fcolor: fcolor,
+	icolor: icolor,
+        Box: Box,
+        RangeTree: RangeTree
+    },
+    ready: function (func) {
+	ready_queue.push (func);
+    }
+};
 
-    $ (document).ready (function () {
-	$ ('script[src*="wigglemaps"]').each (function (i, script) {
-	    var regex = /wigglemaps(\.min)?\.js/;
-	    if ($ (script).attr('src').match (regex))
-		BASE_DIR = $ (script).attr('src').replace (regex, '');
-	});
-	$.each (ready_queue, function (i, func) {
-	    func ();
-	});
+$ (document).ready (function () {
+    $ ('script[src*="wigglemaps"]').each (function (i, script) {
+	var regex = /wigglemaps(\.min)?\.js/;
+	if ($ (script).attr('src').match (regex))
+	    BASE_DIR = $ (script).attr('src').replace (regex, '');
     });
+    $.each (ready_queue, function (i, func) {
+	func ();
+    });
+});
 } ());

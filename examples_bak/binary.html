@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Base Layer</title>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+    wiggle.ready (function () {
+	var map = new wiggle.Map ();
+	map.center (-55, -10);
+
+    /*$.ajax ({
+	    //url: 'data/br_precip/br_precip.shp',
+	    url: 'data/10m_parks_and_protected_areas/10m_us_parks_area.shp',
+	    //url: 'data/br_pop/br_pop.shp',
+	    //url: 'data/binary',
+	    mimeType: 'text/plain; charset=x-user-defined',
+	    success: function (data) {
+		layer = Shapefile (data);
+		layer.mouseover (function (f) {
+		    f.style ('fill', new Color (.32, .74, .99, 1));
+		});
+		layer.mouseout (function (f) {
+		    f.style ('fill', new Color (.02, .44, .69, 1));
+		});
+		map.append (layer);
+	    }
+	});*/
+	wiggle.io.Shapefile ({
+	    path: 'data/br_pop/br_pop',
+	    success: function (layer) {
+		layer.mouseover (function (f) {
+		    f.style ('fill', wiggle.util.fcolor (.32, .74, .99, 1));
+		});
+		layer.mouseout (function (f) {
+		    f.style ('fill', wiggle.util.fcolor (.02, .44, .69, 1));
+		});
+		map.append (layer);
+                
+                br_pop = layer;
+
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+  </body>
+</html>

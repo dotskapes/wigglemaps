@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Time Slider</title>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../lib/underscore.min.js"></script>
+    <script type="text/javascript" src="../lib/backbone.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+    wiggle.ready (function () {
+	var map = new wiggle.Map ();
+	map.center (-55, -10);
+
+	$.ajax ({
+	    url: 'data/br_precip.json',
+	    dataType: 'json',
+	    success: function (data) {
+		br_precip = wiggle.io.GeoJSON (data);
+
+		map.append (br_precip);
+
+		var attr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+		/*var colors = [
+		    new Color (158, 1, 66, 255),
+		    new Color (213, 62, 79, 255),
+		    new Color (244, 109, 67, 255),
+		    new Color (253, 174, 97, 255),
+		    new Color (254, 224, 139, 255),
+		    new Color (255, 255, 191, 255),
+		    new Color (230, 245, 152, 255),
+		    new Color (171, 221, 164, 255),
+		    new Color (102, 194, 165, 255),
+		    new Color (50, 136, 189, 255),
+		    new Color (94, 79, 162, 255)
+		];*/
+
+		var colors = [
+		    wiggle.util.icolor (178, 24, 43, 255),
+		    wiggle.util.icolor (239, 138, 98, 255),
+		    wiggle.util.icolor (253, 219, 199, 255),
+		    wiggle.util.icolor (209, 169, 207, 255),
+		    wiggle.util.icolor (103, 169, 207, 255),
+		    wiggle.util.icolor (33, 102, 172, 255),
+		];
+
+		var set_color = function (index) {
+		    var field = attr[index];
+		    for (var i = 1; i <= colors.length; i ++) {
+			br_precip.features ().quantile (field, i, colors.length).style ('fill', colors[i - 1]);
+		    }
+		}
+		set_color (0);
+
+		//var slider = new wiggle.widget.Slider (new vect (20, 20), new vect (500, 15), attr.length);
+                var slider = new wiggle.widget.Slider ({
+                    //pos: new vect (20, 20), 
+                    //size: new vect (500, 15),
+                    attr: attr
+                });
+		//$ ('#slider').append (slider.dom);
+                $ ('#slider').append (slider.$el);
+		slider.change (set_color);
+
+		/*var bottom = new vect ($ (document).width () - 70 - colors.length * 50, $ (document).height () - 70);
+		var top = new vect ($ (document).width () - 20, $ (document).height () - 20);
+		var bar = new RangeBar (engine, colors, bottom, top);
+		map.append (bar);*/
+
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+    <div id="slider" style="position: absolute; top: 20px; left: 20px"></div>
+  </body>
+</html>
