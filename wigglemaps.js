@@ -3188,7 +3188,6 @@ function SelectionBox (engine) {
 	if (!enabled)
 	    return;
 	dragging = true;
-	show = true;
 	start = engine.camera.percent (new vect (event.clientX, event.clientY));
 	end = start;
 	reset_rect ();
@@ -3224,7 +3223,6 @@ function SelectionBox (engine) {
     $(document).bind ('click', function (event) {
 	if (!enabled)
 	    return;
-	show = false;
     });
 
     $(document).bind ('mousemove', function (event) {

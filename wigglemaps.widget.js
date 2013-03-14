@@ -503,7 +503,6 @@ var Slider = Backbone.View.extend({
     toggleAnimation: function() {
         var slider = this;
         var playing = this.model.get('playing');
-        var bar = this.$el.find('.bar');
         if (playing) {
             this.$el.find('.play').text('Pause');
             this.interval = setInterval(function() {
