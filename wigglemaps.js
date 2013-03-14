@@ -5015,6 +5015,24 @@ function AsciiGrid (data, options) {
         return new LayerSelector (result);
     };
 
+    this.not = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (selector.id (elem[i].id) === null)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.both = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (selector.id (elem[i].id) !== null)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
     this.attr = function (field) {
         throw "Not Implemented";
 	/*if (!elem.length)
