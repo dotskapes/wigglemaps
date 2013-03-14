@@ -37,6 +37,8 @@ var Slider = Backbone.View.extend({
             slider.moveBar();
         }).on('change:index', function() {
             slider.changeLabel();
+        }).on('change:attr', function () {
+            slider.changeLabel();
         });
 
         this.render();
