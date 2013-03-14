@@ -134,13 +134,16 @@ module.exports = function(grunt) {
         var config = grunt.config.get ('jade');
         jade = require ('jade');
 
-        var runtime = fs.readFileSync ('node_modules/jade/runtime.js');
-        fs.writeFileSync ('templates.js', runtime);
+        //var runtime = fs.readFileSync ('node_modules/jade/runtime.js');
+        //fs.writeFileSync ('templates.js', runtime);
 
         var include = grunt.file.expand(config.src + "/*.jade");
 
         //fs.writeFileSync ('templates.js', 'var templates = {};\n');
         var task = this;
+
+        fs.writeFileSync(config.dst,'\nif (jade.templates === undefined) jade.templates = {};\n;');
+
         include.forEach (function (filename, i) {
             var buffer = fs.readFileSync (filename);
             var fn = jade.compile (buffer, {
@@ -149,7 +152,7 @@ module.exports = function(grunt) {
             var done = task.async ();
             
             exec ('basename ' + filename + ' .jade', function (error, stdout, stderr) {
-                fs.appendFileSync (config.dst, 'jade.templates = {};\njade.templates[\'' + stdout.trim () + '\'] = ' + fn.toString () + ';\n');
+                fs.appendFileSync (config.dst, 'jade.templates[\'' + stdout.trim () + '\'] = ' + fn.toString () + ';\n');
                 done (error === null);
             });
         });
