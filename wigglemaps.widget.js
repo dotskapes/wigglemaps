@@ -462,7 +462,7 @@ var Slider = Backbone.View.extend({
         this.$el.html(jade.templates['slider'] ({
             step: this.model.get('attr')[0]
         }));
-        var bar = this.$el.find('.bar');
+        this.$bar = this.$el.find('.bar');
         return this;
     },
     change: function(callback) {
@@ -479,8 +479,7 @@ var Slider = Backbone.View.extend({
     startDrag: function(event) {
         var p = vect(event.pageX, event.pageY)
         this.model.set('dragging', true);
-        var bar = this.$el.find('.bar');
-        var offset = p.x - bar.offset().left;
+        var offset = p.x - this.$bar.offset().left;
         this.model.set('offset', offset);
     },
     stopDrag: function() {
@@ -489,15 +488,13 @@ var Slider = Backbone.View.extend({
     },
     doDrag: function(p) {
         if(this.model.get('dragging')) {
-            var bar = this.$el.find('.bar');
-            var left = clamp(p.x - bar.parent().offset().left - this.model.get('offset'), 0, bar.parent().width() - bar.width());
-            this.model.set('pos', left / (bar.parent().width() - bar.width()));
+            var left = clamp(p.x - this.$bar.parent().offset().left - this.model.get('offset'), 0, this.$bar.parent().width() - this.$bar.width());
+            this.model.set('pos', left / (this.$bar.parent().width() - this.$bar.width()));
         }
     },
     moveBar: function() {
-        var bar = this.$el.find('.bar');
-        var left = this.model.get('pos') * (bar.parent().width() - bar.width())
-        bar.css('left', left);
+        var left = this.model.get('pos') * (this.$bar.parent().width() - this.$bar.width())
+        this.$bar.css('left', left);
     },
     togglePlay: function() {
         this.model.set('playing', !this.model.get('playing'));
