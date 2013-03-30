@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Random Points</title>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+        wiggle.ready (function () {
+	    var map = new wiggle.Map ();
+	    map.center (-55, -10);
+            map.extents (75);
+	    layer = new wiggle.layer.Layer ();
+	    for (var i = 0; i < 50000; i ++) {
+		var x = Math.random () * 360 - 180;
+		var y = Math.random () * 180 - 90;
+		var p = {
+		    geom: [[x, y]],
+		    attr: {
+			rand: Math.random ()
+		    },
+                    type: 'Point'
+		};
+		layer.append (p);
+	    }
+	    map.append (layer);
+	});
+    </script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Elevation</title>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+    wiggle.ready (function () {
+	var map = new wiggle.Map ();
+	map.center (-55, -10);
+
+	$.ajax ({
+	    url: 'data/w100n40.kml',
+	    success: function (data) {
+                elev = new wiggle.layer.Elevation (data);
+
+                map.append (elev);
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+  </body>
+</html>

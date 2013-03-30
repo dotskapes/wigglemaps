@@ -19,7 +19,9 @@ function Layer (options) {
 
     // Copy over the defined styles
     if (options.style) {
-        throw "Not Implemeneted";
+        for (var key in options.style) {
+            StyleManager.setStyle(this, null, key, options.style[key]);
+        }
     }
 
     this.style = function (arg0, arg1, arg2) {

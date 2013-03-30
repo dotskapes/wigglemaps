@@ -2,8 +2,6 @@ var OMEGA = Math.PI / 4;
 
 var hillshade_shader = null;
 function Hillshade (data) {
-    if (!hillshade_shader)
-	hillshade_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/hillshade');
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
@@ -13,24 +11,33 @@ function Hillshade (data) {
     //var max = data.max;
     //var url = data.url;
     var ready = false;
-    var image = getTexture (engine.gl, url, function () {
-	ready = true;
-    });
+    var image;
 
     this.ready = function () {
 	return ready;
     };
 
-    var tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
+    var tex_buffer, pos_buffer;
 
     var azimuth = 315.0;
 
+    var initialized = false;
     this.initialize = function (engine) {
+        if (!hillshade_shader)
+	    hillshade_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/hillshade');
+        tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
+        pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
+        image = getTexture (engine.gl, url, function () {
+	    ready = true;
+        });
 
+        initialized = true;
     };
 
     this.draw = function (engine, dt) {
+        var gl = engine.gl;
+        if (!initialized)
+            this.initialize(engine);
 	if (!ready)
 	    return;
 	gl.useProgram (hillshade_shader);

@@ -9,7 +9,7 @@ function SparseGrid (data, options) {
     var records_start = 20;
 
     var settings = {};
-    for (key in options)
+    for (var key in options)
 	settings[key] = options[key];
     settings.lower = new vect (xmin, ymin);
     settings.upper = new vect (xmin + cellsize * cols, ymin + cellsize * rows);

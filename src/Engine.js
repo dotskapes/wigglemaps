@@ -27,6 +27,85 @@ function BaseEngine (selector, options) {
 
     var framebuffers = [];
 
+    this.framebuffer = function () {
+        var framebuffer = gl.createFramebuffer ();
+        gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+        framebuffer.width = engine.canvas.width ();
+        framebuffer.height = engine.canvas.height ();
+    
+        var tex = gl.createTexture ();
+        gl.bindTexture (gl.TEXTURE_2D, tex);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);  
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        var renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, framebuffer.width, framebuffer.height);
+
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        var frame = {
+                framebuffer: framebuffer,
+                renderbuffer: renderbuffer,
+                tex: tex,
+                resize: function () {
+                    framebuffer.width = engine.canvas.width ();
+                    framebuffer.height = engine.canvas.height ();
+
+                    gl.bindTexture (gl.TEXTURE_2D, tex);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, framebuffer.width, framebuffer.height);
+
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                        },
+                activate: function (options) {
+                    if (!options)
+                            options = {};
+                    default_model (options, {
+                            blend: true,
+                            clear: true
+                        });
+
+                    framebuffer_stack.push (framebuffer);
+
+                    if (!options.blend)
+                            gl.disable (gl.BLEND);
+
+                    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+                    gl.viewport (0, 0, engine.canvas.width (), enigne.canvas.height ());
+
+                    if (options.clear) {
+
+                            gl.clearColor (0, 0, 0, 0);
+                            gl.clear(gl.COLOR_BUFFER_BIT);
+                            gl.clearDepth (0.0);
+                        }
+                        },
+                deactivate: function () {
+                    var current = framebuffer_stack.pop ();
+                    var last = framebuffer_stack[framebuffer_stack.length - 1];
+                    if (current != framebuffer)
+                            throw "Non-nested use of framebuffers";
+                    gl.bindFramebuffer (gl.FRAMEBUFFER, last);
+                    // THIS WILL CAUSE PROBLEMS - SAVE LAST VALUE OF BLEND
+                    gl.enable (gl.BLEND);
+                        },
+            };
+        framebuffers.push (frame);
+        return frame;
+    };
+
     this.resize = function () {
         this.canvas.attr ('width', $ (selector).width ());
         this.canvas.attr ('height', $ (selector).height ());

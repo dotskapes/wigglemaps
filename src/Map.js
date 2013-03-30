@@ -60,6 +60,9 @@ var Map = function (selector, options) {
     };
     var base = null;
     var setBase = function () {
+        if (base) {
+            
+        }
         if (options.base == 'default' || options.base == 'nasa') {
             var settings = copy (options);
             copy_to (settings, {
@@ -84,7 +87,7 @@ var Map = function (selector, options) {
             var settings = copy (options);
             copy_to (settings, {
                 source: 'file',
-                url: TILE_SERVER + '/tiles/NE1_HR_LC',
+                url: options['tile-server'] + '/tiles/NE1_HR_LC',
                 levels: 6,
                 size: 256
             });
@@ -100,6 +103,13 @@ var Map = function (selector, options) {
     };
 
     setBase ();
+
+    this.settings = function (key, value) {
+        options[key] = value;
+        if (key == 'base') {
+            setBase();
+        }
+    };
 
     this.append = function (layer) {
         // Legacy layer drawing code for old-school type layers

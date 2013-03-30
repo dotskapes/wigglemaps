@@ -117,7 +117,7 @@ var LayerSelector = function (elem) {
 	else {
 	    val = parseFloat (matches[3]);
 	}
-	new_elem = [];
+	var new_elem = [];
 	if (field2) {
 	    for (var i = 0; i < elem.length; i ++) {
 		if (operators[op] (elem[i].attr(field1), elem[i].attr(field2))) {

@@ -1,9 +1,6 @@
 var grid_shader = null;
 
 function Grid (options) {
-    if (!grid_shader) {
-	grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
-    }
     if (!options)
 	options = {};
     if (!options.style)
@@ -20,6 +17,14 @@ function Grid (options) {
 
     var tex_data = new Uint8Array (cols * rows * 4);
 
+    var buffers, tex;
+
+    var min = new vect (lower.x, lower.y);
+    var max = new vect (upper.x, upper.y);
+    
+    var tmin = new vect (0, 0);
+    var tmax = new vect (1, 1);
+
     var dirty = false;
     var write_color = function (i, c) {
 	//var c = options.ramp[j];
@@ -28,31 +33,6 @@ function Grid (options) {
 	tex_data[i * 4 + 2] = parseInt (c.b * 255);
 	tex_data[i * 4 + 3] = parseInt (c.a * 255);
     };
-
-    var buffers = new Buffers (engine, 6);
-    buffers.create ('vert', 2);
-    buffers.create ('screen', 2);
-    buffers.create ('tex', 2);
-
-    var min = new vect (lower.x, lower.y);
-    var max = new vect (upper.x, upper.y);
-
-    var tmin = new vect (0, 0);
-    var tmax = new vect (1, 1);
-
-    var start = buffers.alloc (6);
-
-    buffers.write ('vert', rectv (min, max), start, 6);
-    buffers.write ('screen', rectv (new vect (-1, -1), new vect (1, 1)), start, 6);
-    buffers.write ('tex', rectv (tmin, tmax), start, 6);
-
-    var tex = gl.createTexture ();
-    gl.bindTexture (gl.TEXTURE_2D, tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);  
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);  
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.bindTexture (gl.TEXTURE_2D, null);
 
     var index = function (i, j) {
 	return cols * i + j;
@@ -139,14 +119,42 @@ function Grid (options) {
 	    data[i] = val;
 	}
     };
+    
+    var initialized = false;
+    this.initialize = function (engine) {
+        var gl = engine.gl;
 
-    this.initialize = function () {
-
+        if (!grid_shader) {
+	    grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
+        }
+        buffers = new Buffers (engine, 6);
+        buffers.create ('vert', 2);
+        buffers.create ('screen', 2);
+        buffers.create ('tex', 2);
+        
+        var start = buffers.alloc (6);
+        
+        buffers.write ('vert', rectv (min, max), start, 6);
+        buffers.write ('screen', rectv (new vect (-1, -1), new vect (1, 1)), start, 6);
+        buffers.write ('tex', rectv (tmin, tmax), start, 6);
+        
+        tex = gl.createTexture ();
+        gl.bindTexture (gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);  
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);  
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindTexture (gl.TEXTURE_2D, null);
+        
+        initialized = true;
     };
 
     var framebuffer = null;
 
     this.draw = function (engine, dt) {
+        var gl = engine.gl;
+        if (!initialized)
+            this.initialize(engine);
 	if (!framebuffer)
 	    framebuffer = engine.framebuffer ();
 	buffers.update ();

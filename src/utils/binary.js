@@ -70,7 +70,7 @@ function lfloat32 (data, offset) {
 
 function str (data, offset, length) {
     var chars = [];
-    index = offset;
+    var index = offset;
     /*while (true) {
         var c = data[index];
         if (c.charCodeAt (0) != 0)

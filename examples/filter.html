@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Map</title>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <script type="text/javascript">
+      wiggle.ready (function () {
+      	var map = new wiggle.Map ();
+	map.center (-55, -10);
+	$.ajax ({
+	    url: 'data/br_precip.json',
+	    dataType: 'json',
+	    success: function (data) {
+		br_precip = wiggle.io.GeoJSON (data);
+                map.append (br_precip);
+      
+		$ ('#mar').click (function () {
+		    br_precip.features ().select ('mar > 150').style ('fill', wiggle.util.fcolor (1, 1, 0, 1));
+		});
+
+		$ ('#apr').click (function () {
+		    br_precip.features ().select ('apr < 75').style ('fill', wiggle.util.fcolor (.9, 0, 0, 1));
+		});
+
+		$ ('#may').click (function () {
+		    br_precip.features ().select ('may > 50').select ('may < 100').style ('fill', wiggle.util.icolor (204, 85, 0, 255));
+		});
+	    }
+	});
+    });
+</script>
+
+  </head>
+  <body>
+    <p style="color: white; position: absolute; z-index: 2; bottom: 10px; left: 10px;">FPS: <span id="fps">0</span></p>
+    <div style="padding: 10px; background-color: white;">
+      <input style="padding: 5px" id="mar" type="submit" value="Click to filter for all fields with March greater than 150" />
+      <input style="padding: 5px" id="apr" type="submit" value="Click to filter for all fields with April less than 75" />
+      <input style="padding: 5px" id="may" type="submit" value="Click to filter for all fields with May between 50 and 100" />
+    </div>
+  </body>
+</html>

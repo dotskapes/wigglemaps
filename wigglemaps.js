@@ -639,7 +639,7 @@ function lfloat32 (data, offset) {
 
 function str (data, offset, length) {
     var chars = [];
-    index = offset;
+    var index = offset;
     /*while (true) {
         var c = data[index];
         if (c.charCodeAt (0) != 0)
@@ -2688,6 +2688,85 @@ function BaseEngine (selector, options) {
 
     var framebuffers = [];
 
+    this.framebuffer = function () {
+        var framebuffer = gl.createFramebuffer ();
+        gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+        framebuffer.width = engine.canvas.width ();
+        framebuffer.height = engine.canvas.height ();
+    
+        var tex = gl.createTexture ();
+        gl.bindTexture (gl.TEXTURE_2D, tex);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);  
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        var renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, framebuffer.width, framebuffer.height);
+
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        var frame = {
+                framebuffer: framebuffer,
+                renderbuffer: renderbuffer,
+                tex: tex,
+                resize: function () {
+                    framebuffer.width = engine.canvas.width ();
+                    framebuffer.height = engine.canvas.height ();
+
+                    gl.bindTexture (gl.TEXTURE_2D, tex);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, framebuffer.width, framebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, framebuffer.width, framebuffer.height);
+
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                        },
+                activate: function (options) {
+                    if (!options)
+                            options = {};
+                    default_model (options, {
+                            blend: true,
+                            clear: true
+                        });
+
+                    framebuffer_stack.push (framebuffer);
+
+                    if (!options.blend)
+                            gl.disable (gl.BLEND);
+
+                    gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+                    gl.viewport (0, 0, engine.canvas.width (), enigne.canvas.height ());
+
+                    if (options.clear) {
+
+                            gl.clearColor (0, 0, 0, 0);
+                            gl.clear(gl.COLOR_BUFFER_BIT);
+                            gl.clearDepth (0.0);
+                        }
+                        },
+                deactivate: function () {
+                    var current = framebuffer_stack.pop ();
+                    var last = framebuffer_stack[framebuffer_stack.length - 1];
+                    if (current != framebuffer)
+                            throw "Non-nested use of framebuffers";
+                    gl.bindFramebuffer (gl.FRAMEBUFFER, last);
+                    // THIS WILL CAUSE PROBLEMS - SAVE LAST VALUE OF BLEND
+                    gl.enable (gl.BLEND);
+                        },
+            };
+        framebuffers.push (frame);
+        return frame;
+    };
+
     this.resize = function () {
         this.canvas.attr ('width', $ (selector).width ());
         this.canvas.attr ('height', $ (selector).height ());
@@ -2967,6 +3046,9 @@ var Map = function (selector, options) {
     };
     var base = null;
     var setBase = function () {
+        if (base) {
+            
+        }
         if (options.base == 'default' || options.base == 'nasa') {
             var settings = copy (options);
             copy_to (settings, {
@@ -2991,7 +3073,7 @@ var Map = function (selector, options) {
             var settings = copy (options);
             copy_to (settings, {
                 source: 'file',
-                url: TILE_SERVER + '/tiles/NE1_HR_LC',
+                url: options['tile-server'] + '/tiles/NE1_HR_LC',
                 levels: 6,
                 size: 256
             });
@@ -3007,6 +3089,13 @@ var Map = function (selector, options) {
     };
 
     setBase ();
+
+    this.settings = function (key, value) {
+        options[key] = value;
+        if (key == 'base') {
+            setBase();
+        }
+    };
 
     this.append = function (layer) {
         // Legacy layer drawing code for old-school type layers
@@ -4522,7 +4611,9 @@ function Layer (options) {
 
     // Copy over the defined styles
     if (options.style) {
-        throw "Not Implemeneted";
+        for (var key in options.style) {
+            StyleManager.setStyle(this, null, key, options.style[key]);
+        }
     }
 
     this.style = function (arg0, arg1, arg2) {
@@ -4663,9 +4754,6 @@ function Layer (options) {
 var grid_shader = null;
 
 function Grid (options) {
-    if (!grid_shader) {
-	grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
-    }
     if (!options)
 	options = {};
     if (!options.style)
@@ -4682,6 +4770,14 @@ function Grid (options) {
 
     var tex_data = new Uint8Array (cols * rows * 4);
 
+    var buffers, tex;
+
+    var min = new vect (lower.x, lower.y);
+    var max = new vect (upper.x, upper.y);
+    
+    var tmin = new vect (0, 0);
+    var tmax = new vect (1, 1);
+
     var dirty = false;
     var write_color = function (i, c) {
 	//var c = options.ramp[j];
@@ -4690,31 +4786,6 @@ function Grid (options) {
 	tex_data[i * 4 + 2] = parseInt (c.b * 255);
 	tex_data[i * 4 + 3] = parseInt (c.a * 255);
     };
-
-    var buffers = new Buffers (engine, 6);
-    buffers.create ('vert', 2);
-    buffers.create ('screen', 2);
-    buffers.create ('tex', 2);
-
-    var min = new vect (lower.x, lower.y);
-    var max = new vect (upper.x, upper.y);
-
-    var tmin = new vect (0, 0);
-    var tmax = new vect (1, 1);
-
-    var start = buffers.alloc (6);
-
-    buffers.write ('vert', rectv (min, max), start, 6);
-    buffers.write ('screen', rectv (new vect (-1, -1), new vect (1, 1)), start, 6);
-    buffers.write ('tex', rectv (tmin, tmax), start, 6);
-
-    var tex = gl.createTexture ();
-    gl.bindTexture (gl.TEXTURE_2D, tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);  
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);  
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.bindTexture (gl.TEXTURE_2D, null);
 
     var index = function (i, j) {
 	return cols * i + j;
@@ -4801,14 +4872,42 @@ function Grid (options) {
 	    data[i] = val;
 	}
     };
+    
+    var initialized = false;
+    this.initialize = function (engine) {
+        var gl = engine.gl;
 
-    this.initialize = function () {
-
+        if (!grid_shader) {
+	    grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
+        }
+        buffers = new Buffers (engine, 6);
+        buffers.create ('vert', 2);
+        buffers.create ('screen', 2);
+        buffers.create ('tex', 2);
+        
+        var start = buffers.alloc (6);
+        
+        buffers.write ('vert', rectv (min, max), start, 6);
+        buffers.write ('screen', rectv (new vect (-1, -1), new vect (1, 1)), start, 6);
+        buffers.write ('tex', rectv (tmin, tmax), start, 6);
+        
+        tex = gl.createTexture ();
+        gl.bindTexture (gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);  
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);  
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindTexture (gl.TEXTURE_2D, null);
+        
+        initialized = true;
     };
 
     var framebuffer = null;
 
     this.draw = function (engine, dt) {
+        var gl = engine.gl;
+        if (!initialized)
+            this.initialize(engine);
 	if (!framebuffer)
 	    framebuffer = engine.framebuffer ();
 	buffers.update ();
@@ -4954,7 +5053,7 @@ function AsciiGrid (data, options) {
     var records_start = 20;
 
     var settings = {};
-    for (key in options)
+    for (var key in options)
 	settings[key] = options[key];
     settings.lower = new vect (xmin, ymin);
     settings.upper = new vect (xmin + cellsize * cols, ymin + cellsize * rows);
@@ -4979,7 +5078,8 @@ function AsciiGrid (data, options) {
     }
     
     return grid;
-};var LayerSelector = function (elem) {
+};
+var LayerSelector = function (elem) {
 
     var lookup = null;
 
@@ -5098,7 +5198,7 @@ function AsciiGrid (data, options) {
 	else {
 	    val = parseFloat (matches[3]);
 	}
-	new_elem = [];
+	var new_elem = [];
 	if (field2) {
 	    for (var i = 0; i < elem.length; i ++) {
 		if (operators[op] (elem[i].attr(field1), elem[i].attr(field2))) {
@@ -5347,8 +5447,6 @@ var OMEGA = Math.PI / 4;
 
 var hillshade_shader = null;
 function Hillshade (data) {
-    if (!hillshade_shader)
-	hillshade_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/hillshade');
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
@@ -5358,24 +5456,33 @@ function Hillshade (data) {
     //var max = data.max;
     //var url = data.url;
     var ready = false;
-    var image = getTexture (engine.gl, url, function () {
-	ready = true;
-    });
+    var image;
 
     this.ready = function () {
 	return ready;
     };
 
-    var tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
+    var tex_buffer, pos_buffer;
 
     var azimuth = 315.0;
 
+    var initialized = false;
     this.initialize = function (engine) {
+        if (!hillshade_shader)
+	    hillshade_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/hillshade');
+        tex_buffer = staticBuffer (engine.gl, rectv (new vect (0, 1), new vect (1, 0)), 2);
+        pos_buffer = staticBuffer (engine.gl, rectv (min, max), 2);
+        image = getTexture (engine.gl, url, function () {
+	    ready = true;
+        });
 
+        initialized = true;
     };
 
     this.draw = function (engine, dt) {
+        var gl = engine.gl;
+        if (!initialized)
+            this.initialize(engine);
 	if (!ready)
 	    return;
 	gl.useProgram (hillshade_shader);
