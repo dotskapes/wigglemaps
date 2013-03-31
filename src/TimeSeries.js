@@ -81,7 +81,7 @@ function TimeSeries (selector, layer, options) {
         return feature_geom;
     };
 
-    BaseEngine.call (this, selector, options);
+    Engine.call (this, selector, options);
 
     this.styles = {
         'default': {

@@ -1,4 +1,4 @@
-function BaseEngine (selector, options) {
+function Engine (selector, options) {
     var engine = this;
 
     default_model (options, {

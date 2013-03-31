@@ -8,10 +8,18 @@ module.exports = function(grunt) {
             src: 'src/templates',
             dst: 'templates.js'
         },
+        shell: {
+            lint: {
+                command: 'node_modules/jshint/bin/jshint src',
+                options: {
+                    stdout: true,
+                    failOnError: true
+                }
+            }
+        },
         build: {
             dst: 'wigglemaps.js',
             include: [
-                //'templates.js',
                 'src/utils/vect.js',
 
                 'src/start.js',
@@ -20,18 +28,20 @@ module.exports = function(grunt) {
                 'lib/jquery.mousewheel.js',
                 'lib/requestAnimationFrame.js',
 
-                'src/util.js',
+                'src/utils/utils.js',
+                'src/utils/Color.js',
+                'src/utils/Mouse.js',
                 'src/utils/binary.js',
                 'src/utils/shader-utils.js',
                 'src/utils/Buffers.js',
-                'src/utils/texture.js',
+                'src/utils/Texture.js',
+                'src/utils/Box.js',
+                'src/utils/trapezoid.js',
 
-                'src/style.js',
-                'src/camera.js',
-                'src/panner.js',
-                'src/events.js',
-                //'src/range_bar.js',
-                //'src/widget/slider.js',
+                'src/StyleManager.js',
+                'src/Camera.js',
+                'src/Scroller.js',
+                'src/EventManager.js',
 
                 'src/renderers/FeatureView.js',
                 'src/renderers/FeatureRenderer.js',
@@ -45,6 +55,7 @@ module.exports = function(grunt) {
                 'src/query/PointQuerier.js',
                 'src/query/PolygonQuerier.js',
                 'src/query/TimeSeriesQuerier.js',
+                'src/query/LayerSelector.js',
 
                 'src/LayerController.js',
 
@@ -52,30 +63,33 @@ module.exports = function(grunt) {
                 'src/Map.js',
                 'src/TimeSeries.js',
 
-                'src/select.js',
-                'src/trapezoid.js',
-                'src/aabb.js',
-                'src/range.js',
+                'src/SelectionBox.js',
 
-                'src/model/Feature.js',
-                'src/model/Point.js',
-                'src/model/Polygon.js',
-                'src/model/Line.js',
+                'src/range/RangeNode.js',
+                'src/range/RangeTree.js',
 
-                'src/model/Layer.js',
+                'src/geom/Feature.js',
+                'src/geom/Point.js',
+                'src/geom/Polygon.js',
+                'src/geom/Line.js',
 
-                'src/grid.js',
-                'src/ascii.js',
-                'src/sgrid.js',
-                'src/selector.js',
-                'src/raster.js',
-                'src/hillshade.js',
-                'src/tile.js',
-                'src/ows.js',
+                'src/geom/Layer.js',
+
+                'src/grid/Grid.js',
+                'src/grid/AsciiGrid.js',
+
+                'src/raster/Raster.js',
+                'src/raster/Hillshade.js',
+                'src/raster/Elevation.js',
+                'src/raster/TileLayer.js',
+
+                'src/io/WMS.js',
                 'src/io/Geojson.js',
                 'src/io/Shapefile.js',
+                'src/io/SparseGrid.js',
+                'src/io/KML.js',
 
-                'src/Namespace.js',
+                'src/namespace.js',
 
                 'src/end.js'
             ]
@@ -84,10 +98,10 @@ module.exports = function(grunt) {
             dst: 'wigglemaps.widget.js',
             include: [
                 'templates.js',
-                'src/util.js',
+                'src/utils/utils.js',
                 'src/start.js',
-                'src/widget/slider.js',
-                'src/WidgetNamespace.js',
+                'src/widget/Slider.js',
+                'src/widget_namespace.js',
                 'src/end.js'
             ]
         },
@@ -115,6 +129,8 @@ module.exports = function(grunt) {
         var done = task.async ();
         var paths = config.include.join (' ');
         exec ('cat ' + paths, function (error, stdout, stderr) {
+            if (error)
+                grunt.log.write(stderr);
             fs.writeFileSync(config.dst, stdout);
             done (error === null);
         });
@@ -169,4 +185,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask('widget', ['jade', 'build-widget']);
     grunt.registerTask('default', ['build', 'uglify']);
+
+    grunt.loadNpmTasks('grunt-shell');
+    grunt.registerTask('lint', ['shell:lint']);
 };

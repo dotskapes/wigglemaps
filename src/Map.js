@@ -16,7 +16,7 @@ var Map = function (selector, options) {
         'preserveAspectRatio': true
     });
 
-    BaseEngine.call (this, selector, options); 
+    Engine.call (this, selector, options); 
 
     this.Renderers = {
         'Point': PointRenderer,

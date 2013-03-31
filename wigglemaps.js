@@ -391,17 +391,6 @@ function handler(event) {
 }());
 var PI = 3.14159265;
 
-var Mouse = {
-    x: 0,
-    y: 0
-};
-
-$ (document).mousemove (function (event) {
-    Mouse.x = event.clientX;
-    Mouse.y = event.clientY;
-    Mouse.lastMove = new Date ().getTime ();
-});
-
 function make_url (base, vars) {
     var items = [];
     for (var key in vars) {
@@ -463,54 +452,6 @@ var copy_value = function (dst, src, key, cast) {
     }
 };
 
-function as_rgb (array) {
-    return 'rgb(' + Math.round (array[0] * 255) + ',' + Math.round (array[1] * 255) + ',' + Math.round (array[2] * 255) + ')'
-};
-
-function clamp (val, min, max) {
-    return Math.min (Math.max (val, min), max);
-}
-
-function Color (r, g, b, a) {
-    if (r <= 1 && g <= 1 && b <= 1 && a <= 1) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
-    }
-    else {
-        this.r = r / 255;
-        this.g = g / 255;
-        this.b = b / 255;
-        this.a = a / 255;
-    }
-    
-    this.array = [this.r, this.g, this.b, this.a];
-
-    this.vect = function () {
-        return this.array;
-    };
-    
-    this.rgb = function () {
-        return 'rgb(' + parseInt (this.r * 255) + ',' + parseInt (this.g * 255) + ',' + parseInt (this.b * 255) + ')';
-    };
-};
-
-function icolor (r, g, b, a) {
-    return new Color (clamp (r / 255, 0, 1), clamp (g / 255, 0, 1), clamp (b / 255, 0, 1), clamp (a / 255, 0, 1));
-}
-
-function fcolor (r, g, b, a) {
-    return new Color (clamp (r, 0, 1), clamp (g, 0, 1), clamp (b, 0, 1), clamp (a, 0, 1));
-}
-
-function hex_to_color (hex) {
-    var r = parseInt (hex.slice (1, 3), 16);
-    var g = parseInt (hex.slice (3, 5), 16);
-    var b = parseInt (hex.slice (5, 7), 16);
-    return new Color (r, g, b, 255);
-};
-
 function is_list (elem) {
     if (elem == null)
         return false;
@@ -556,6 +497,57 @@ function isInt (value) {
     }
 };
 
+function str_contains (string, c) {
+    return string.indexOf (c) != -1;
+};
+var Color = function (r, g, b, a) {
+    if (r <= 1 && g <= 1 && b <= 1 && a <= 1) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+    }
+    else {
+        this.r = r / 255;
+        this.g = g / 255;
+        this.b = b / 255;
+        this.a = a / 255;
+    }
+    
+    this.array = [this.r, this.g, this.b, this.a];
+
+    this.vect = function () {
+        return this.array;
+    };
+    
+    this.rgb = function () {
+        return 'rgb(' + parseInt (this.r * 255) + ',' + parseInt (this.g * 255) + ',' + parseInt (this.b * 255) + ')';
+    };
+};
+
+function as_rgb (array) {
+    return 'rgb(' + Math.round (array[0] * 255) + ',' + Math.round (array[1] * 255) + ',' + Math.round (array[2] * 255) + ')'
+};
+
+function clamp (val, min, max) {
+    return Math.min (Math.max (val, min), max);
+}
+
+function icolor (r, g, b, a) {
+    return new Color (clamp (r / 255, 0, 1), clamp (g / 255, 0, 1), clamp (b / 255, 0, 1), clamp (a / 255, 0, 1));
+}
+
+function fcolor (r, g, b, a) {
+    return new Color (clamp (r, 0, 1), clamp (g, 0, 1), clamp (b, 0, 1), clamp (a, 0, 1));
+}
+
+function hex_to_color (hex) {
+    var r = parseInt (hex.slice (1, 3), 16);
+    var g = parseInt (hex.slice (3, 5), 16);
+    var b = parseInt (hex.slice (5, 7), 16);
+    return new Color (r, g, b, 255);
+};
+
 function parseRGB (value) {
     var color_match = value.match (/^rgb\((\d+),(\d+),(\d+)\)$/);
     if (!color_match)
@@ -563,10 +555,16 @@ function parseRGB (value) {
     else
         return new Color (color_match[1], color_match[2], color_match[3], 255);
 };
-
-function str_contains (string, c) {
-    return string.indexOf (c) != -1;
+var Mouse = {
+    x: 0,
+    y: 0
 };
+
+$ (document).mousemove (function (event) {
+    Mouse.x = event.clientX;
+    Mouse.y = event.clientY;
+    Mouse.lastMove = new Date ().getTime ();
+});
 function int8 (data, offset) {
     return data.charCodeAt (offset);
 };
@@ -1100,6 +1098,415 @@ function getImage (path, callback) {
 	callback (img);
     };
     img.src = path;
+};
+function Box (v1, v2) {
+    this.min = v1.clone ();
+    this.max = v2.clone ();
+    this.contains = function (p) {
+	return (v1.x <= p.x) && (v2.x >= p.x) && (v1.y <= p.y) && (v2.y >= p.y);
+    };
+
+    this.x_in = function (p) {
+	return (v1.x <= p.x) && (v2.x >= p.x);
+    };
+
+    this.x_left = function (p) {
+	return (v1.x >= p.x);
+    };
+
+    this.x_right = function (p) {
+	return (v2.x <= p.x);
+    };
+
+    this.y_in = function (p) {
+	return (v1.y <= p.y) && (v2.y >= p.y);
+    };
+
+    this.y_left = function (p) {
+	return (v1.y >= p.y);
+    };
+
+    this.y_right = function (p) {
+	return (v2.y <= p.y);
+    };
+
+    this.area = function () {
+	return (this.max.x - this.min.x) * (this.max.y - this.min.y);
+    }
+
+    this.height = function () {
+	return this.max.y - this.min.y;
+    };
+
+    this.width = function () {
+	return this.max.x - this.min.x;
+    };
+    
+    this.vertex = function (index) {
+	switch (index) {
+	case 0:
+	    return this.min.clone ();
+	    break;
+	case 1:
+	    return new vect (this.max.x, this.min.y);
+	    break;
+	case 2:
+	    return this.max.clone ();
+	    break;
+	case 3:
+	    return new vect (this.min.x, this.max.y);
+	    break;
+	default:
+	    throw "Index out of bounds: " + index ;
+	}
+    };
+
+    this.intersects = function (box) {
+	for (var i = 0; i < 4; i ++) {
+	    for (var j = 0; j < 4; j ++) {
+		if (vect.intersects (this.vertex (i), this.vertex ((i + 1) % 4),
+				     box.vertex (j), box.vertex ((j + 1) % 4)))
+		    return true;
+	    }
+	}
+	if (this.contains (box.min) &&
+	    this.contains (box.max) &&
+	    this.contains (new vect (box.min.x, box.max.y)) &&
+	    this.contains (new vect (box.max.x, box.min.y)))
+	    return true;
+	if (box.contains (this.min) &&
+	    box.contains (this.max) &&
+	    box.contains (new vect (this.min.x, this.max.y)) &&
+	    box.contains (new vect (this.max.x, this.min.y)))
+	    return true;
+	return false
+    };
+
+    this.union = function (b) {
+	this.min.x = Math.min (this.min.x, b.min.x);
+	this.min.y = Math.min (this.min.y, b.min.y);
+
+	this.max.x = Math.max (this.max.x, b.max.x);
+	this.max.y = Math.max (this.max.y, b.max.y);
+    };
+
+    this.centroid = function () {
+	return new vect ((this.max.x + this.min.x) / 2, (this.max.y + this.min.y) / 2);
+    };
+
+    this.clone = function () {
+	return new Box (v1, v2);
+    };
+};
+var triangulate_polygon = function (elem) {
+    var poly = [];
+    var tri = [];
+    for (var k = 0; k < elem.length; k++) {
+	var p = [];
+	//for (var i = elem[k].length - 1; i >= 1; i --) {
+        if (elem[k].length <= 3) {
+            tri.push (elem[k]);
+        }
+        else {
+	    for (var i = 1; i < elem[k].length; i ++) {
+	        p.push (rand_map (elem[k][i][0], elem[k][i][1]));
+	    }
+        }
+	p.push (poly[0]);
+	poly.push (p);
+    }
+    var triangles = trapezoid_polygon (poly);
+    for (var i = 0; i < tri.length; i ++) {
+        triangles.push (tri[i][0][0]);
+        triangles.push (tri[i][0][1]);
+
+        triangles.push (tri[i][1][0]);
+        triangles.push (tri[i][1][1]);
+
+        triangles.push (tri[i][2][0]);
+        triangles.push (tri[i][2][1]);
+    }
+    return triangles;
+};
+
+function circle (index, length) {
+    while (index >= length)
+	index -= length;
+    while (index < 0)
+	index += length;
+    return index
+};
+
+function Vertex (current, upper, lower, index) {
+    this.current = current;
+    this.upper = upper;
+    this.lower = lower;
+    this.index = index;
+};
+
+function xsearch (sweep, poly, index) {
+    var upper = sweep.length - 1;
+    var lower = 0;
+    var current = parseInt ((sweep.length - 1) / 2);
+    if (sweep.length == 0) {
+	return 0;
+    }
+    while (true) {
+	if (upper < 0 || lower >= sweep.length) {
+	    console.log (upper, lower, current, sweep.length);
+	    throw "Index Out of Bounds";
+	}
+	if (sweep[current] == index) {
+	    return current;
+	}
+	if (upper == lower) {
+	    if (poly[sweep[current]].x > poly[index].x) {
+		return current;
+	    }
+	    else {
+		return current + 1;
+	    }
+	}
+	if (poly[sweep[current]].x > poly[index].x) {
+	    upper = current;
+	}
+	else if (poly[sweep[current]].x < poly[index].x) {
+	    lower = current + 1;
+	}
+	else {
+	    if (poly[sweep[current]].y > poly[index].y) {
+		if (lower == current)
+		    return lower;
+		upper = current - 1;
+	    }
+	    else {
+		if (upper == current)
+		    return current;
+		lower = current + 1;
+	    }
+	}
+	current = parseInt ((upper + lower) / 2);
+    }
+};
+
+function set_contains (sweep, index) {
+    for (var i = 0; i < sweep.length; i ++) {
+	if (sweep[i] == index)
+	    return true;
+    }
+    return false;
+};
+
+function solvex (poly, index, slice) {
+    if (index == undefined)
+	throw "whoa";
+    if ((poly[index + 1].y - poly[index].y) == 0)
+	return Math.min (poly[index].x, poly[index + 1].x);
+    var t = (slice - poly[index].y) / (poly[index + 1].y - poly[index].y);
+    //console.log ('t', slice, poly[index + 1].y,  poly[index].y, t);
+    return poly[index].x + (poly[index + 1].x - poly[index].x) * t;
+};
+
+function find_index (sweep, index) {
+    for (var i = 0; i < sweep.length; i ++) {
+    	if (sweep[i] == index)
+	    return i;
+    }
+    return false;
+};
+
+function sorted_index (sweep, poly, xpos, slice) {
+    for (var i = 0; i < sweep.length; i ++) {
+	var sxpos = solvex (poly, sweep[i], slice);
+	//console.log (sweep[i], index, xpos, sxpos);
+	if (sxpos > xpos)
+	    return i;
+	if (sxpos - xpos == 0) {
+	    //console.log ('same', sweep[i], index, poly[sweep[i]].y, poly[index].y);
+	    if (poly[sweep[i]].y > poly[index].y)
+		return i;
+	}
+    }
+    //console.log ('biggest');
+    return sweep.length;
+};
+    
+function intersect (v, poly, index) {
+    return new vect (solvex (poly, index, poly[v].y), poly[v].y);
+};
+
+function add_point (trap, a) {
+    if (!a)
+	throw "eek";
+    trap.push (a.x);
+    trap.push (a.y);
+    //trap.push (1.0);
+}
+
+function add_trap (trap, bottom, top) {
+    if (!bottom || !top || ((top.length + bottom.length != 3) && (top.length + bottom.length != 4)))
+	throw "ahh";
+    if ((bottom.length + top.length) == 3) {
+	for (var i = 0; i < bottom.length; i ++) {
+	    add_point (trap, bottom[i]);
+	}
+	for (var i = 0; i < top.length; i ++) {
+	    add_point (trap, top[i]);
+	}
+    }
+    else {
+	if (bottom[1].x < bottom[0].x) {
+	    var tmp = bottom[0];
+	    bottom[0] = bottom[1];
+	    bottom[1] = tmp;
+	}
+	if (top[1].x < top[0].x) {
+	    var tmp = top[0];
+	    top[0] = top[1];
+	    top[1] = tmp;
+	}
+	
+	add_point (trap, bottom[0]);
+	add_point (trap, bottom[1]);
+	add_point (trap, top[1]);
+
+	add_point (trap, top[0]);
+	add_point (trap, top[1]);
+	add_point (trap, bottom[0]);
+    }
+};
+
+function trapezoid_polygon (poly_in) {
+    var vertices = [];
+    var count = 0;
+    var poly = [];
+    for (var k = 0; k < poly_in.length; k ++) {
+	for (var i = 0; i < poly_in[k].length - 1; i ++) {
+	    var j = circle (i + 1, poly_in[k].length - 1);
+	    var h = circle (i - 1, poly_in[k].length - 1);
+	    vertices.push (new Vertex (i + count, j + count, h + count, k));
+	    poly.push (poly_in[k][i]);
+	}
+	poly.push (poly_in[k][0]);
+	count += poly_in[k].length;
+    }
+    vertices.sort (function (a, b) {
+	return poly[a.current].y - poly[b.current].y;
+    });
+    var sweep = [];
+    var state = [];
+    var lower = new vect (-200, 0);
+    var upper = new vect (200, 0);
+    var count = 0
+    var pairs = [];
+    var change = 0;
+    var trap = [];
+    for (var i = 0; i < vertices.length; i ++) {
+	var v = vertices[i];
+	var l_in = set_contains (sweep, v.lower);
+	var u_in = set_contains (sweep, v.current);
+
+	var l_pos, u_pos;
+	if (l_in && !u_in) {
+	    l_pos = find_index (sweep, v.lower);
+	    u_pos = l_pos;
+	}
+	else if (u_in && !l_in) {
+	    u_pos = find_index (sweep, v.current);
+	    l_pos = u_pos;
+	}
+	else if (l_in && u_in) {
+	    l_pos = find_index (sweep, v.lower);
+	    u_pos = find_index (sweep, v.current);
+	}
+	else if (!l_in && !u_in) {
+	    u_pos = sorted_index (sweep, poly, poly[v.current].x, poly[v.current].y);
+	    l_pos = u_pos;
+	}
+
+	if (Math.abs (l_pos - u_pos) > 1) {
+	    for (var j = 0; j < sweep.length; j ++) {
+		//console.log (solvex (poly, sweep[j], poly[v.current].y));
+	    }
+	    //console.log ('prev', solvex (poly, v.lower, poly[v.current].y));
+	    //console.log ('current', solvex (poly, v.current, poly[v.current].y));
+	    throw "Bad";
+	}
+
+	//var above_in = poly[v.upper].x >= poly[v.current].x;
+	var above_in = vect.left (poly[v.lower], poly[v.current], poly[v.upper]);
+	//console.log (above_in, poly[v.upper].x - poly[v.current].x);
+
+	var s_index = Math.floor (Math.min (l_pos, u_pos) / 2);
+
+	if (!above_in && !l_in && !u_in) {
+	    //console.log ('pos1', v.current, u_pos, l_pos);
+	    add_trap (trap, state[s_index], [intersect (v.current, poly, sweep[u_pos - 1]), intersect (v.current, poly, sweep[u_pos])]);
+	    state.splice (s_index, 1, [intersect (v.current, poly, sweep[u_pos - 1]), poly[v.current]], 
+			  [poly[v.current], intersect (v.current, poly, sweep[l_pos])]);	    
+	}
+	else if (above_in && !l_in && !u_in) {
+	    state.splice (s_index, 0, [poly[v.current]]);
+	}
+	else if (l_in && !u_in) {
+	    add_trap (trap, state[s_index], [intersect (v.current, poly, sweep[Math.max (l_pos, u_pos) - 1]), poly[v.current]]);
+	    state[s_index] = [intersect (v.current, poly, sweep[Math.min (l_pos, u_pos) - 1]), poly[v.current]];
+	}
+	else if (!l_in && u_in) {
+	    add_trap (trap, state[s_index], [poly[v.current], intersect (v.current, poly, sweep[Math.min (u_pos, l_pos) + 1])]);
+	    state[s_index] = [poly[v.current], intersect (v.current, poly, sweep[Math.max (u_pos, l_pos) + 1])];
+	}
+	else if (!above_in && l_in && u_in) {
+	    
+	    add_trap (trap, state[s_index], [intersect (v.current, poly, sweep[Math.min (l_pos, u_pos) - 1]), poly[v.current]]);
+	    add_trap (trap, state[s_index + 1], [intersect (v.current, poly, sweep[Math.max (l_pos, u_pos) + 1]), poly[v.current]]);
+
+	    state.splice (s_index, 2, [intersect (v.current, poly, sweep[Math.min (l_pos, u_pos) - 1]), intersect (v.current, poly, sweep[Math.max (l_pos, u_pos) + 1])]);
+	}
+	else if (above_in && l_in && u_in) {
+	    //console.log ('pos6', u_pos, l_pos);
+	    add_trap (trap, state[s_index], [poly[v.current]]);
+	    state.splice (s_index, 1);	    
+	}
+
+	if (l_in && !u_in) {
+	    sweep[l_pos] = v.current;
+	}
+	else if (u_in && !l_in) {
+	    sweep[u_pos] = v.lower;
+	}
+	else if (l_in && u_in) {
+	    sweep.splice (find_index (sweep, v.lower), 1);
+	    sweep.splice (find_index (sweep, v.current), 1);
+	}
+	else if (!l_in && !u_in) {
+	    //if (poly[v.lower].x > poly[v.upper].x)
+	    if (!above_in)
+		sweep.splice (l_pos, 0, v.current, v.lower);
+	    else
+		sweep.splice (l_pos, 0, v.lower, v.current);
+	}
+
+	for (var j = 0; j < sweep.length - 1; j ++) {
+	    if (solvex (poly, sweep[j], poly[v.current].y) > solvex (poly, sweep[j + 1], poly[v.current].y)) {
+		//console.log (solvex (poly, sweep[j], poly[v.current].y), solvex (poly, sweep[j + 1], poly[v.current].y));
+		console.log ('Misplaced Sweep');
+		throw "Misplace!";
+	    }
+	}
+
+    }
+    if (sweep.length > 0) {
+	console.log (sweep);
+	throw "Bad " + sweep.length;
+    }
+    //console.log (change);
+    if (pairs.length > 0) {
+	console.log (pairs);
+	throw "Wrong";
+    }
+    return trap;
+    
 };
 var StyleManager = new function () {
     // The structure of style lookup is: Engine ids, then feature and layer ids
@@ -2604,6 +3011,225 @@ var TimeSeriesQuerier = function (engine, layer, options) {
         return null;
     };
 };
+var LayerSelector = function (elem) {
+
+    var lookup = null;
+
+    this.length = elem.length;
+
+    this.count = function () {
+	return elem.length;
+    }
+
+    this.items = function () {
+        return elem;
+    };
+
+    this.type = function (key) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (key == '*' || elem[i].type == key)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.join = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            result.push (elem[i]);        
+        }
+        for (var i = 0; i < selector.count (); i ++) {
+            var item = selector.get (i);
+            if (!this.id (item.id))
+                result.push (item);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.not = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (selector.id (elem[i].id) === null)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.both = function (selector) {
+        var result = [];
+        for (var i = 0; i < elem.length; i ++) {
+            if (selector.id (elem[i].id) !== null)
+                result.push (elem[i]);
+        }
+        return new LayerSelector (result);
+    };
+
+    this.attr = function (field) {
+        throw "Not Implemented";
+	/*if (!elem.length)
+	    return null;
+	else
+	    return elem[0].attr(field);*/
+    };
+
+    this.get = function (i) {
+	return elem[i];
+    };
+
+    this.subset = function (keys) {
+	var result = [];
+	for (var i = 0; i < keys.length; i ++) {
+	    result.push (elem[keys[i]]);
+	}
+	return new LayerSelector (result);
+    };
+
+    this.id = function (key) {
+	if (!lookup) {
+	    lookup = {};
+	    for (var i = 0; i < elem.length; i ++) {
+		lookup[elem[i].id] = elem[i];
+	    }
+	}
+	if (key in lookup) {
+	    return lookup[key];
+	}
+	else {
+	    return null;
+	}
+    };
+
+    this.each = function (func) {
+	for (var i = 0; i < elem.length; i ++) {
+	    func (i, elem[i]);
+	}
+	return this;
+    };
+
+    var operators = {
+	'>': function (a, b) { return a > b},
+	'<': function (a, b) { return a < b},
+	'==': function (a, b) { return a == b},
+	'>=': function (a, b) { return a >= b},
+	'<=': function (a, b) { return a <= b}
+    };
+    this.select = function (string) {
+	if (string.match (/^\s*\*\s*$/))
+	    return new LayerSelector (elem);
+	var matches = string.match (/^\s*([^\s]+)\s*([=<>]+)\s*(([^\s])+)\s*$/);
+	if (!matches)
+	    throw "Bad Selector";
+	var field1 = matches[1];
+	var op = matches[2];
+	var val = null;
+	var field2 = null;
+	if (isNaN (matches[3])) {
+	    field2 = matches[3];
+	}
+	else {
+	    val = parseFloat (matches[3]);
+	}
+	var new_elem = [];
+	if (field2) {
+	    for (var i = 0; i < elem.length; i ++) {
+		if (operators[op] (elem[i].attr(field1), elem[i].attr(field2))) {
+		    new_elem.push (elem[i]);
+		}
+	    }
+	}
+	else {
+	    for (var i = 0; i < elem.length; i ++) {
+		if (operators[op] (elem[i].attr(field1), val)) {
+		    new_elem.push (elem[i]);
+		}
+	    }
+	}
+	return new LayerSelector (new_elem);
+    };
+
+    this.filter = function (test) {
+	var results = [];
+	for (var i = 0; i < elem.length; i ++) {
+	    if (test (elem[i]))
+		results.push (elem[i]);
+	}
+	return new LayerSelector (results);
+    }
+
+    this.quantile = function (field, q, total) {
+        var clean = elem.filter (function (f) {
+            return (f.attr (field) !== undefined);
+        });
+	clean.sort (function (a, b) {
+	    return a.attr(field) - b.attr(field);
+	});
+	var top = Math.round (q * clean.length / total);
+	var bottom = Math.round ((q - 1) * clean.length / total);
+	return new LayerSelector (clean.slice (bottom, top));
+    };
+
+    this.range = function (field) {
+	var min = Infinity;
+	var max = -Infinity;
+        var okay = false;
+	for (var i = 0; i < elem.length; i ++) {
+            var val = elem[i].attr(field);
+            if (!isNaN (val)) {
+                okay = true;
+	        if (min > val)
+		    min = val;
+	        if (max < val)
+		    max = val;
+            }
+	}
+        if (!okay)
+            return null;
+	return {
+	    min: min,
+	    max: max
+	};
+    };
+
+    this.style = function (arg0, arg1, arg2) {
+        var map_value = function (value, i, f) {
+	    if ((typeof value) == 'function') {
+                return value (f);
+            }
+            else if (is_list (value)) {
+                return value[i];
+            }
+            else 
+                return value;
+        };
+
+        var engine, key, value;
+        if (arg0.type == 'Engine') {
+            engine = arg0;
+            key = arg1;
+            value = arg2;
+        }
+        else {
+            engine = null;
+            key = arg0;
+            value = arg1;
+        }
+            
+        // Getter style on a layer selector is shorthand for getting the style on
+        // only the first element
+        if (value === undefined) {
+            if (elem[0])
+                return elem[0].style (engine, key)
+        }
+        else {
+            // Otherwise, set the value, depending on the type of value
+	    $.each (elem, function (i, f) {
+                f.style (engine, key, map_value (value, i, f));
+	    });
+	    return this;
+        }
+    };
+};
 function LayerController (engine, layer, options) {
     var controller = this;
 
@@ -2659,7 +3285,7 @@ function LayerController (engine, layer, options) {
     };
 
 };
-function BaseEngine (selector, options) {
+function Engine (selector, options) {
     var engine = this;
 
     default_model (options, {
@@ -3002,7 +3628,7 @@ var Map = function (selector, options) {
         'preserveAspectRatio': true
     });
 
-    BaseEngine.call (this, selector, options); 
+    Engine.call (this, selector, options); 
 
     this.Renderers = {
         'Point': PointRenderer,
@@ -3191,7 +3817,7 @@ function TimeSeries (selector, layer, options) {
         return feature_geom;
     };
 
-    BaseEngine.call (this, selector, options);
+    Engine.call (this, selector, options);
 
     this.styles = {
         'default': {
@@ -3343,549 +3969,79 @@ function SelectionBox (engine) {
 	}
     };
 };
-var triangulate_polygon = function (elem) {
-    var poly = [];
-    var tri = [];
-    for (var k = 0; k < elem.length; k++) {
-	var p = [];
-	//for (var i = elem[k].length - 1; i >= 1; i --) {
-        if (elem[k].length <= 3) {
-            tri.push (elem[k]);
-        }
-        else {
-	    for (var i = 1; i < elem[k].length; i ++) {
-	        p.push (rand_map (elem[k][i][0], elem[k][i][1]));
-	    }
-        }
-	p.push (poly[0]);
-	poly.push (p);
-    }
-    var triangles = trapezoid_polygon (poly);
-    for (var i = 0; i < tri.length; i ++) {
-        triangles.push (tri[i][0][0]);
-        triangles.push (tri[i][0][1]);
-
-        triangles.push (tri[i][1][0]);
-        triangles.push (tri[i][1][1]);
-
-        triangles.push (tri[i][2][0]);
-        triangles.push (tri[i][2][1]);
-    }
-    return triangles;
-};
-
-function circle (index, length) {
-    while (index >= length)
-	index -= length;
-    while (index < 0)
-	index += length;
-    return index
-};
-
-/*function Trapezoid (p0, p1, p2, p3) {
-    this.points = [p0, p1, p2, p3];
-    this.adj = [null, null, null, null];
-    this.inside = false;
-    this.poly = [false, false, false, false];
-
-    var circle (index) {
-	while (index >= this.points.length)
-	    index -= this.points.length;
-	while (index < 0)
-	    index += this.points.length;
-	return index
+function RangeNode (elem, start, end, current) {
+    this.data = elem[current];
+    this.left = null;
+    this.right = null;
+    if (start != current)
+	this.left = new RangeNode (elem, start, current - 1, parseInt ((start + (current - 1)) / 2));
+    if (end != current)
+	this.right = new RangeNode (elem, current + 1, end, parseInt ((end + (current + 1)) / 2));
+    this.subtree = [];
+    for (var i = start; i <= end; i ++) {
+	this.subtree.push (elem[i]);
     };
-
-    this.contains = function (p) {
-	for (var i = 0; i < this.points.length; i ++) {
-	    var j = circle (i);
-	    if (!vect.left (this.points[i], this.points[j], p))
-		return false;
-	};
-	return true;
-    };
-};*/
-
-function Vertex (current, upper, lower, index) {
-    this.current = current;
-    this.upper = upper;
-    this.lower = lower;
-    this.index = index;
-};
-
-function xsearch (sweep, poly, index) {
-    var upper = sweep.length - 1;
-    var lower = 0;
-    var current = parseInt ((sweep.length - 1) / 2);
-    if (sweep.length == 0) {
-	return 0;
-    }
-    while (true) {
-	if (upper < 0 || lower >= sweep.length) {
-	    console.log (upper, lower, current, sweep.length);
-	    throw "Index Out of Bounds";
-	}
-	if (sweep[current] == index) {
-	    return current;
-	}
-	if (upper == lower) {
-	    if (poly[sweep[current]].x > poly[index].x) {
-		return current;
-	    }
-	    else {
-		return current + 1;
-	    }
-	}
-	if (poly[sweep[current]].x > poly[index].x) {
-	    upper = current;
-	}
-	else if (poly[sweep[current]].x < poly[index].x) {
-	    lower = current + 1;
-	}
-	else {
-	    if (poly[sweep[current]].y > poly[index].y) {
-		if (lower == current)
-		    return lower;
-		upper = current - 1;
-	    }
-	    else {
-		if (upper == current)
-		    return current;
-		lower = current + 1;
-	    }
-	}
-	current = parseInt ((upper + lower) / 2);
-    }
-};
-
-function set_contains (sweep, index) {
-    for (var i = 0; i < sweep.length; i ++) {
-	if (sweep[i] == index)
-	    return true;
-    }
-    return false;
-};
-
-function solvex (poly, index, slice) {
-    if (index == undefined)
-	throw "whoa";
-    if ((poly[index + 1].y - poly[index].y) == 0)
-	return Math.min (poly[index].x, poly[index + 1].x);
-    var t = (slice - poly[index].y) / (poly[index + 1].y - poly[index].y);
-    //console.log ('t', slice, poly[index + 1].y,  poly[index].y, t);
-    return poly[index].x + (poly[index + 1].x - poly[index].x) * t;
-};
-
-function find_index (sweep, index) {
-    for (var i = 0; i < sweep.length; i ++) {
-    	if (sweep[i] == index)
-	    return i;
-    }
-    return false;
-};
-
-function sorted_index (sweep, poly, xpos, slice) {
-    for (var i = 0; i < sweep.length; i ++) {
-	var sxpos = solvex (poly, sweep[i], slice);
-	//console.log (sweep[i], index, xpos, sxpos);
-	if (sxpos > xpos)
-	    return i;
-	if (sxpos - xpos == 0) {
-	    //console.log ('same', sweep[i], index, poly[sweep[i]].y, poly[index].y);
-	    if (poly[sweep[i]].y > poly[index].y)
-		return i;
-	}
-    }
-    //console.log ('biggest');
-    return sweep.length;
-};
-    
-/*function add (sweep, poly, index) {
-    var i = ysearch (sweep, poly, index);
-    sweep.splice (i, 0, index);
-};
-
-function remove (sweep, poly, index) {
-    var i = ysearch (sweep, poly, index);
-    if (sweep[i] == index)
-	return sweep.splice (i, 1)[0];
-    throw "Element Not Found: [" + sweep + '] ' + sweep[i] + ' ' + index;
-};*/
-
-function intersect (v, poly, index) {
-    return new vect (solvex (poly, index, poly[v].y), poly[v].y);
-};
-
-function add_point (trap, a) {
-    if (!a)
-	throw "eek";
-    trap.push (a.x);
-    trap.push (a.y);
-    //trap.push (1.0);
-}
-
-function add_trap (trap, bottom, top) {
-    if (!bottom || !top || ((top.length + bottom.length != 3) && (top.length + bottom.length != 4)))
-	throw "ahh";
-    /*for (var i = 0; i < bottom.length; i ++) {
-	console.log (bottom[i].x, bottom[i].y);
-    }
-    for (var i = 0; i < top.length; i ++) {
-	console.log (top[i].x, top[i].y);
-    }
-    console.log ('');*/
-    if ((bottom.length + top.length) == 3) {
-	for (var i = 0; i < bottom.length; i ++) {
-	    add_point (trap, bottom[i]);
-	}
-	for (var i = 0; i < top.length; i ++) {
-	    add_point (trap, top[i]);
-	}
-    }
-    else {
-	if (bottom[1].x < bottom[0].x) {
-	    var tmp = bottom[0];
-	    bottom[0] = bottom[1];
-	    bottom[1] = tmp;
-	}
-	if (top[1].x < top[0].x) {
-	    var tmp = top[0];
-	    top[0] = top[1];
-	    top[1] = tmp;
-	}
-	
-	/*if (bottom[0].y != bottom[1].y)
-	    throw 'y';
-	if (top[0].y != top[1].y)
-	    throw 'y';
-	if (bottom[0].x == bottom[1].x)
-	    throw 'x';
-	if (top[0].x == top[1].x)
-	    throw 'x';*/
-	add_point (trap, bottom[0]);
-	add_point (trap, bottom[1]);
-	add_point (trap, top[1]);
-
-	add_point (trap, top[0]);
-	add_point (trap, top[1]);
-	add_point (trap, bottom[0]);
-    }
-};
-
-function trapezoid_polygon (poly_in) {
-    var vertices = [];
-    var count = 0;
-    var poly = [];
-    for (var k = 0; k < poly_in.length; k ++) {
-	for (var i = 0; i < poly_in[k].length - 1; i ++) {
-	    var j = circle (i + 1, poly_in[k].length - 1);
-	    var h = circle (i - 1, poly_in[k].length - 1);
-	    vertices.push (new Vertex (i + count, j + count, h + count, k));
-	    poly.push (poly_in[k][i]);
-	}
-	poly.push (poly_in[k][0]);
-	count += poly_in[k].length;
-    }
-    vertices.sort (function (a, b) {
-	// Fix me! will fail with horizontal lines
-	return poly[a.current].y - poly[b.current].y;
+    this.subtree.sort (function (a, b) {
+	return a.y - b.y;
     });
-    var sweep = [];
-    var state = [];
-    var lower = new vect (-200, 0);
-    var upper = new vect (200, 0);
-    var count = 0
-    var pairs = [];
-    var change = 0;
-    var trap = [];
-    //console.log (vertices, poly);
-    for (var i = 0; i < vertices.length; i ++) {
-	var v = vertices[i];
-	var l_in = set_contains (sweep, v.lower);
-	var u_in = set_contains (sweep, v.current);
 
-	//console.log (v);
+    var xrange = function (b) {
+	return (b.x_in (elem[start]) && b.x_in (elem[end]));
+    };
 
-	/*var l_pos = sorted_index (sweep, poly, v.lower, poly[v.current].y);
-	var u_pos = sorted_index (sweep, poly, v.current, poly[v.current].y);*/
+    this.yrange = function (b, start, end) {
+	return (b.y_in (this.subtree[start]) && b.y_in (this.subtree[end]));
+    };
 
-	var l_pos, u_pos;
-	if (l_in && !u_in) {
-	    l_pos = find_index (sweep, v.lower);
-	    u_pos = l_pos;
-	}
-	else if (u_in && !l_in) {
-	    u_pos = find_index (sweep, v.current);
-	    l_pos = u_pos;
-	}
-	else if (l_in && u_in) {
-	    l_pos = find_index (sweep, v.lower);
-	    u_pos = find_index (sweep, v.current);
-	}
-	else if (!l_in && !u_in) {
-	    u_pos = sorted_index (sweep, poly, poly[v.current].x, poly[v.current].y);
-	    l_pos = u_pos;
-	}
-
-	if (Math.abs (l_pos - u_pos) > 1) {
-	    for (var j = 0; j < sweep.length; j ++) {
-		//console.log (solvex (poly, sweep[j], poly[v.current].y));
+    this.subquery = function (result, box, start, end, current) {
+	if (this.yrange (box, start, end)) {
+	    for (var i = start; i <= end; i ++) {
+		result.push (this.subtree[i]);
 	    }
-	    //console.log ('prev', solvex (poly, v.lower, poly[v.current].y));
-	    //console.log ('current', solvex (poly, v.current, poly[v.current].y));
-	    throw "Bad";
+	    return;
+	};
+	if (box.y_in (this.subtree[current]))
+	    result.push (this.subtree[current]);
+	if (box.y_left (this.subtree[current])){
+	    if (current != end)
+		this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2));
 	}
-
-	//var above_in = poly[v.upper].x >= poly[v.current].x;
-	var above_in = vect.left (poly[v.lower], poly[v.current], poly[v.upper]);
-	//console.log (above_in, poly[v.upper].x - poly[v.current].x);
-
-	var s_index = Math.floor (Math.min (l_pos, u_pos) / 2);
-
-	if (!above_in && !l_in && !u_in) {
-	    //console.log ('pos1', v.current, u_pos, l_pos);
-	    add_trap (trap, state[s_index], [intersect (v.current, poly, sweep[u_pos - 1]), intersect (v.current, poly, sweep[u_pos])]);
-	    state.splice (s_index, 1, [intersect (v.current, poly, sweep[u_pos - 1]), poly[v.current]], 
-			  [poly[v.current], intersect (v.current, poly, sweep[l_pos])]);	    
-	}
-	else if (above_in && !l_in && !u_in) {
-	    //console.log ('pos2', u_pos, l_pos);
-	    state.splice (s_index, 0, [poly[v.current]]);
-	}
-	else if (l_in && !u_in) {
-	    //console.log ('pos3', u_pos, l_pos, s_index);
-	    add_trap (trap, state[s_index], [intersect (v.current, poly, sweep[Math.max (l_pos, u_pos) - 1]), poly[v.current]]);
-	    state[s_index] = [intersect (v.current, poly, sweep[Math.min (l_pos, u_pos) - 1]), poly[v.current]];
-	}
-	else if (!l_in && u_in) {
-	    //console.log ('pos4', u_pos, l_pos, s_index);
-	    add_trap (trap, state[s_index], [poly[v.current], intersect (v.current, poly, sweep[Math.min (u_pos, l_pos) + 1])]);
-	    state[s_index] = [poly[v.current], intersect (v.current, poly, sweep[Math.max (u_pos, l_pos) + 1])];
-	    //if (state[s_index][0].x > state[s_index][1].x)
-	    //state[s_index] = [intersect (v.current, poly, sweep[Math.min (u_pos, l_pos) - 1]), poly[v.current]];
-	}
-	else if (!above_in && l_in && u_in) {
-	    //console.log ('pos5', u_pos, l_pos, s_index);
-	    
-	    add_trap (trap, state[s_index], [intersect (v.current, poly, sweep[Math.min (l_pos, u_pos) - 1]), poly[v.current]]);
-	    add_trap (trap, state[s_index + 1], [intersect (v.current, poly, sweep[Math.max (l_pos, u_pos) + 1]), poly[v.current]]);
-
-	    state.splice (s_index, 2, [intersect (v.current, poly, sweep[Math.min (l_pos, u_pos) - 1]), intersect (v.current, poly, sweep[Math.max (l_pos, u_pos) + 1])]);
-	}
-	else if (above_in && l_in && u_in) {
-	    //console.log ('pos6', u_pos, l_pos);
-	    add_trap (trap, state[s_index], [poly[v.current]]);
-	    state.splice (s_index, 1);	    
-	}
-
-	if (l_in && !u_in) {
-	    sweep[l_pos] = v.current;
-	}
-	else if (u_in && !l_in) {
-	    sweep[u_pos] = v.lower;
-	}
-	else if (l_in && u_in) {
-	    sweep.splice (find_index (sweep, v.lower), 1);
-	    sweep.splice (find_index (sweep, v.current), 1);
-	}
-	else if (!l_in && !u_in) {
-	    //if (poly[v.lower].x > poly[v.upper].x)
-	    if (!above_in)
-		sweep.splice (l_pos, 0, v.current, v.lower);
-	    else
-		sweep.splice (l_pos, 0, v.lower, v.current);
-	}
-
-	for (var j = 0; j < sweep.length - 1; j ++) {
-	    if (solvex (poly, sweep[j], poly[v.current].y) > solvex (poly, sweep[j + 1], poly[v.current].y)) {
-		//console.log (solvex (poly, sweep[j], poly[v.current].y), solvex (poly, sweep[j + 1], poly[v.current].y));
-		console.log ('Misplaced Sweep');
-		throw "Misplace!";
-	    }
-	}
-
-	/*for (var j = 0; j < state.length; j ++) {
-	    for (var k = 0; k < state[j].length - 1; k ++) {
-		if (vect.dist (state[j][k], state[j][k + 1]) == 0) 
-		    throw "Double!";
-		if (state[j][k].x > state[j][k + 1].x)
-		    throw "Order!";
-	    }
-	}*/
-
-	/*if (l_in) {
-	    //console.log (v.lower, 'out', l_pos);
-	    //console.log (v.lower, 'out', l_pos, sweep.toString ());
-	    if (l_pos > u_pos)
-		u_pos --;
-	    sweep.splice (find_index (sweep, v.lower), 1);
+	else if (box.x_right (this.subtree[current])) {
+	    if (current != start)
+		this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
 	}
 	else {
-	    //console.log (v.lower, 'in', l_pos);
-	    if (u_pos >= l_pos)
-		u_pos ++;
-	    sweep.splice (l_pos, 0, v.lower);
+	    if (current != end)
+		this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2));
+	    if (current != start)
+		this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
 	}
-
-	//u_pos = sorted_index (sweep, poly, v.current, poly[v.current].y);
-	if (u_in) {
-	    //console.log (v.current, 'out', u_pos);
-	    //console.log (v.current, 'out', u_pos, sweep.toString ());
-	    sweep.splice (find_index (sweep, v.current), 1);
+    };
+    
+    this.search = function (result, box) {
+	if (xrange (box)) {
+	    this.subquery (result, box, 0, this.subtree.length - 1, parseInt ((this.subtree.length - 1) / 2));
+	    return;
 	}
 	else {
-	    //console.log (v.current, 'in', u_pos);
-	    if (!l_in && poly[v.current].x > poly[v.upper].x)
-		sweep.splice (l_pos, 0, v.current);
-	    else
-		sweep.splice (l_pos + 1, 0, v.current);
-	}*/
-	
-	/*lower.y = poly[v.current].y;
-	upper.y = poly[v.current].y;
-	var l_index = xsearch (sweep, poly, v.lower);
-	var u_index = xsearch (sweep, poly, v.current);
-
-	var l_left = vect.left (lower, upper, poly[v.lower]);
-	var u_left = vect.left (lower, upper, poly[v.upper]);
-	var bottom, top;
-	if (l_left != u_left) {
-	    if (u_left) {
-		bottom = sweep[u_index - 1];
-		top = sweep[u_index];
+	    if (box.contains (this.data))
+		result.push (this.data);
+	    if (box.x_left (this.data)) {
+		if (this.right)
+		    this.right.search (result, box);
+	    }
+	    else if (box.x_right (this.data)) {
+		if (this.left)
+		    this.left.search (result, box);
 	    }
 	    else {
-		bottom = sweep[u_index];
-		top = sweep[u_index + 1];
+		if (this.left)
+		    this.left.search (result, box);
+		if (this.right)
+		    this.right.search (result, box);
 	    }
 	}
-	else {
-	    if (u_left) {
-		bottom = sweep[u_index - 1];
-		top = sweep[u_index];
-	    }
-	    else {
-		bottom = sweep[u_index - 1];
-		top = sweep[u_index + 1];
-	    }
-	}
-
-	if (sweep[l_index] == v.lower) {
-	    console.log ('found');
-	    sweep.splice (l_index, 1);
-	}
-	else {
-	    sweep.splice (l_index, 0, v.lower);
-	}
-
-	if (sweep[u_index] == v.current) {
-	    console.log ('found');
-	    sweep.splice (u_index, 1);
-	}
-	else {
-	    sweep.splice (u_index, 0, v.current);
-	}
-	var done = false;
-	for (var j = 0; j < pairs.length; j ++) {
-	    if (pairs[j][0] == bottom && pairs[j][1] == top){
-		pairs.splice (j, 1);
-		done = true;
-		change ++;
-	    }
-	}
-	if (!done) {
-	    pairs.push ([bottom, top]);
-	}*/
-	/*if (!vect.left (lower, upper, poly[v.lower])) {
-	    remove (sweep, poly, v.lower);
-	}
-	else {
-	    add (sweep, poly, v.lower);
-	}
-	if (!vect.left (lower, upper, poly[v.upper])) {
-	    remove (sweep, poly, v.current);
-	}
-	else {
-	    add (sweep, poly, v.current);
-	}*/
-    
-    }
-    if (sweep.length > 0) {
-	console.log (sweep);
-	throw "Bad " + sweep.length;
-    }
-    //console.log (change);
-    if (pairs.length > 0) {
-	console.log (pairs);
-	throw "Wrong";
-    }
-    //console.log (change, pairs.length);
-    return trap;
-    /*var indices = [];
-    for (var i = 0; i < poly.length; i ++) {
-	indices.push (i);
     };
-    for (var i = indices.length - 1; i >= 0; i --) {
-	var j = Math.floor (Math.random () * i);
-	var tmp = indices[i];
-	indices[i] = indices[j];
-	indices[j] = tmp;
-    };
-    var i = indices.pop ();
-    var j = circle (index, poly);
-    new Trapezoid (poly[index], poly[j], */
-    
-};
-function AABBNode (feature, bounds, first, second) {
-    this.bounds = bounds;
-    this.feature = feature;
-
-    this.first = null;
-    this.second = null;
-
-    this.dist = function (node) {
-        return vect.dist (this.bounds.centroid (), node.bounds.centroid ());
-    };
-    
-    this.join = function (node) {
-        return new AABBNode (null, this.bounds.union (node.bounds), this, node);
-    };
-};
-
-function AABBTree (features) {
-    var nodes = [];
-    
-    for (var key in features) {
-        var node = new AABBNode (features[key], features[key].bounds, null, null);
-        nodes.push (node);
-    }
-
-    var join_nearest = function () {
-        var min_dist = Infinity;
-        var min_i = -1;
-        var min_j = -1;
-        for (var i = 0; i < nodes.length; i ++) {
-            for (var j = 0; j < i; j ++) {
-                var dist = nodes[i].dist (nodes[j]);
-                if (dist < min_dist) {
-                    min_dist = dist;
-                    min_i = i;
-                    min_j = j;
-                }
-            }
-        }
-        var new_box = nodes[min_i].join (nodes[min_j]);
-        nodes.splice (min_i, 1);
-        nodes.splice (min_j, 1);
-        nodes.push (new_box);
-    };
-
-    while (nodes.length > 2) {
-        join_nearest ();
-    }
-
-    console.log (nodes[0]);
-    
 };
 function Box (v1, v2) {
     this.min = v1.clone ();
@@ -5042,272 +5198,7 @@ function AsciiGrid (data, options) {
 	}
     }
     return grid;
-};function SparseGrid (data, options) {
-    var xmin = lfloat32 (data, 0);
-    var ymin = lfloat32 (data, 4);
-
-    var cols = lint32 (data, 8);
-    var rows = lint32 (data, 12);
-    var cellsize = lfloat32 (data, 16);
-
-    var records_start = 20;
-
-    var settings = {};
-    for (var key in options)
-	settings[key] = options[key];
-    settings.lower = new vect (xmin, ymin);
-    settings.upper = new vect (xmin + cellsize * cols, ymin + cellsize * rows);
-    settings.rows = rows;
-    settings.cols = cols;
-
-    var grid = new Grid (settings);
-
-    var read_cells = function (start, index, count) {
-	for (var i = 0; i < count; i ++) {
-	    var val = lfloat32 (data, start + i * 4);
-	    grid.raw_set (index + i, val);
-	}
-    };
-    
-    var offset = records_start;
-    while (offset < data.length) {
-	var index = lint32 (data, offset);
-	var count = lint32 (data, offset + 4);
-	read_cells (offset + 4, index, count);
-	offset += 8 + count * 4;
-    }
-    
-    return grid;
-};
-var LayerSelector = function (elem) {
-
-    var lookup = null;
-
-    this.length = elem.length;
-
-    this.count = function () {
-	return elem.length;
-    }
-
-    this.items = function () {
-        return elem;
-    };
-
-    this.type = function (key) {
-        var result = [];
-        for (var i = 0; i < elem.length; i ++) {
-            if (key == '*' || elem[i].type == key)
-                result.push (elem[i]);
-        }
-        return new LayerSelector (result);
-    };
-
-    this.join = function (selector) {
-        var result = [];
-        for (var i = 0; i < elem.length; i ++) {
-            result.push (elem[i]);        
-        }
-        for (var i = 0; i < selector.count (); i ++) {
-            var item = selector.get (i);
-            if (!this.id (item.id))
-                result.push (item);
-        }
-        return new LayerSelector (result);
-    };
-
-    this.not = function (selector) {
-        var result = [];
-        for (var i = 0; i < elem.length; i ++) {
-            if (selector.id (elem[i].id) === null)
-                result.push (elem[i]);
-        }
-        return new LayerSelector (result);
-    };
-
-    this.both = function (selector) {
-        var result = [];
-        for (var i = 0; i < elem.length; i ++) {
-            if (selector.id (elem[i].id) !== null)
-                result.push (elem[i]);
-        }
-        return new LayerSelector (result);
-    };
-
-    this.attr = function (field) {
-        throw "Not Implemented";
-	/*if (!elem.length)
-	    return null;
-	else
-	    return elem[0].attr(field);*/
-    };
-
-    this.get = function (i) {
-	return elem[i];
-    };
-
-    this.subset = function (keys) {
-	var result = [];
-	for (var i = 0; i < keys.length; i ++) {
-	    result.push (elem[keys[i]]);
-	}
-	return new LayerSelector (result);
-    };
-
-    this.id = function (key) {
-	if (!lookup) {
-	    lookup = {};
-	    for (var i = 0; i < elem.length; i ++) {
-		lookup[elem[i].id] = elem[i];
-	    }
-	}
-	if (key in lookup) {
-	    return lookup[key];
-	}
-	else {
-	    return null;
-	}
-    };
-
-    this.each = function (func) {
-	for (var i = 0; i < elem.length; i ++) {
-	    func (i, elem[i]);
-	}
-	return this;
-    };
-
-    var operators = {
-	'>': function (a, b) { return a > b},
-	'<': function (a, b) { return a < b},
-	'==': function (a, b) { return a == b},
-	'>=': function (a, b) { return a >= b},
-	'<=': function (a, b) { return a <= b}
-    };
-    this.select = function (string) {
-	if (string.match (/^\s*\*\s*$/))
-	    return new LayerSelector (elem);
-	var matches = string.match (/^\s*([^\s]+)\s*([=<>]+)\s*(([^\s])+)\s*$/);
-	if (!matches)
-	    throw "Bad Selector";
-	var field1 = matches[1];
-	var op = matches[2];
-	var val = null;
-	var field2 = null;
-	if (isNaN (matches[3])) {
-	    field2 = matches[3];
-	}
-	else {
-	    val = parseFloat (matches[3]);
-	}
-	var new_elem = [];
-	if (field2) {
-	    for (var i = 0; i < elem.length; i ++) {
-		if (operators[op] (elem[i].attr(field1), elem[i].attr(field2))) {
-		    new_elem.push (elem[i]);
-		}
-	    }
-	}
-	else {
-	    for (var i = 0; i < elem.length; i ++) {
-		if (operators[op] (elem[i].attr(field1), val)) {
-		    new_elem.push (elem[i]);
-		}
-	    }
-	}
-	return new LayerSelector (new_elem);
-    };
-
-    this.filter = function (test) {
-	var results = [];
-	for (var i = 0; i < elem.length; i ++) {
-	    if (test (elem[i]))
-		results.push (elem[i]);
-	}
-	return new LayerSelector (results);
-    }
-
-    this.quantile = function (field, q, total) {
-        var clean = elem.filter (function (f) {
-            return (f.attr (field) !== undefined);
-        });
-	clean.sort (function (a, b) {
-	    return a.attr(field) - b.attr(field);
-	});
-	var top = Math.round (q * clean.length / total);
-	var bottom = Math.round ((q - 1) * clean.length / total);
-	return new LayerSelector (clean.slice (bottom, top));
-    };
-
-    this.range = function (field) {
-	var min = Infinity;
-	var max = -Infinity;
-        var okay = false;
-	for (var i = 0; i < elem.length; i ++) {
-            var val = elem[i].attr(field);
-            if (!isNaN (val)) {
-                okay = true;
-	        if (min > val)
-		    min = val;
-	        if (max < val)
-		    max = val;
-            }
-	}
-        if (!okay)
-            return null;
-	return {
-	    min: min,
-	    max: max
-	};
-    };
-
-    this.style = function (arg0, arg1, arg2) {
-        var map_value = function (value, i, f) {
-	    if ((typeof value) == 'function') {
-                return value (f);
-            }
-            else if (is_list (value)) {
-                return value[i];
-            }
-            else 
-                return value;
-        };
-
-        var engine, key, value;
-        if (arg0.type == 'Engine') {
-            engine = arg0;
-            key = arg1;
-            value = arg2;
-        }
-        else {
-            engine = null;
-            key = arg0;
-            value = arg1;
-        }
-            
-        // Getter style on a layer selector is shorthand for getting the style on
-        // only the first element
-        if (value === undefined) {
-            if (elem[0])
-                return elem[0].style (engine, key)
-        }
-        else {
-            // Otherwise, set the value, depending on the type of value
-	    $.each (elem, function (i, f) {
-                f.style (engine, key, map_value (value, i, f));
-	    });
-	    return this;
-        }
-    };
-};
-var raster_shader = null;
-
-function KML (data) {
-    var bounds = $ (data).find ('LatLonBox');
-    var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
-    var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
-    var url = $ (data).find ('GroundOverlay Icon href').text ();
-    return new Raster (BASE_DIR + url, min, max);
-};
-
+};var raster_shader = null;
 function Raster (url, min, max) {
     var raster_shader;
     var tex_buffer, pos_buffer;
@@ -5349,97 +5240,6 @@ function Raster (url, min, max) {
 
 	raster_shader.data ('sampler', this.image);
 
-	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
-    };
-};
-
-var OMEGA = Math.PI / 4;
-
-var hillshade_shader = null;
-function Hillshade (data) {
-    if (!hillshade_shader)
-	hillshade_shader = makeProgram (BASE_DIR + 'shaders/hillshade');
-
-    var bounds = $ (data).find ('LatLonBox');
-    var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
-    var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
-    var url = $ (data).find ('GroundOverlay Icon href').text ();
-    //var min = data.min;
-    //var max = data.max;
-    //var url = data.url;
-    var ready = false;
-    var image = getTexture (url, function () {
-	ready = true;
-    });
-
-    this.ready = function () {
-	return ready;
-    };
-
-    var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (rectv (min, max), 2);
-
-    var azimuth = 315.0;
-
-    this.draw = function (engine, dt) {
-	if (!ready)
-	    return;
-	gl.useProgram (altitude_shader);
-
-	//azimuth += (OMEGA / (2 * Math.PI)) * dt;
-	while (azimuth >= 1.0)
-	    azimuth -= 1.0;
-	altitude_shader.data ('azimuth', azimuth);
-	altitude_shader.data ('altitude', (Math.PI / 4) / (2 * Math.PI));
-
-
-	altitude_shader.data ('screen', engine.camera.mat3);
-	altitude_shader.data ('pos', pos_buffer);
-	altitude_shader.data ('tex_in', tex_buffer);
-
-	altitude_shader.data ('elevation', image);
-	//altitude_shader.data ('background', base_west.image);
-
-	var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
-	
-	//altitude_shader.data ('pix_w', 2.0 / engine.canvas.width ());
-	//altitude_shader.data ('pix_h', 2.0 / engine.canvas.height ());
-	altitude_shader.data ('pix_w', 1.0 / size.x);
-	altitude_shader.data ('pix_h', 1.0 / size.y);
-
-	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
-
-	return azimuth;
-    };
-};
-
-var elevation_shader = null;
-function Elevation (data) {
-    if (!elevation_shader)
-	elevation_shader = makeProgram (BASE_DIR + 'shaders/elevation');
-
-    var bounds = $ (data).find ('LatLonBox');
-    var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
-    var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
-    var url = $ (data).find ('GroundOverlay Icon href').text ();
-    var image = getTexture (url);
-
-    var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
-    var pos_buffer = staticBuffer (rectv (min, max), 2);
-
-    this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
-	gl.useProgram (elevation_shader);
-
-	elevation_shader.data ('screen', engine.camera.mat3);
-	elevation_shader.data ('pos', pos_buffer);
-	elevation_shader.data ('tex_in', tex_buffer);
-
-	elevation_shader.data ('elevation', image);
-
-	var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
-	
 	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
 };
@@ -5511,6 +5311,36 @@ function Hillshade (data) {
 	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
 
 	return azimuth;
+    };
+};
+var elevation_shader = null;
+function Elevation (data) {
+    if (!elevation_shader)
+	elevation_shader = makeProgram (BASE_DIR + 'shaders/elevation');
+
+    var bounds = $ (data).find ('LatLonBox');
+    var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
+    var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
+    var url = $ (data).find ('GroundOverlay Icon href').text ();
+    var image = getTexture (url);
+
+    var tex_buffer = staticBuffer (rectv (new vect (0, 1), new vect (1, 0)), 2);
+    var pos_buffer = staticBuffer (rectv (min, max), 2);
+
+    this.draw = function (engine, dt, select) {
+	if (select)
+	    return;
+	gl.useProgram (elevation_shader);
+
+	elevation_shader.data ('screen', engine.camera.mat3);
+	elevation_shader.data ('pos', pos_buffer);
+	elevation_shader.data ('tex_in', tex_buffer);
+
+	elevation_shader.data ('elevation', image);
+
+	var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
+	
+	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
 };
 var TIMEOUT = 1000;
@@ -6740,6 +6570,50 @@ var load_shp = function (data, dbf_data, indices, options) {
     }
 
     return layer;
+};
+function SparseGrid (data, options) {
+    var xmin = lfloat32 (data, 0);
+    var ymin = lfloat32 (data, 4);
+
+    var cols = lint32 (data, 8);
+    var rows = lint32 (data, 12);
+    var cellsize = lfloat32 (data, 16);
+
+    var records_start = 20;
+
+    var settings = {};
+    for (var key in options)
+	settings[key] = options[key];
+    settings.lower = new vect (xmin, ymin);
+    settings.upper = new vect (xmin + cellsize * cols, ymin + cellsize * rows);
+    settings.rows = rows;
+    settings.cols = cols;
+
+    var grid = new Grid (settings);
+
+    var read_cells = function (start, index, count) {
+	for (var i = 0; i < count; i ++) {
+	    var val = lfloat32 (data, start + i * 4);
+	    grid.raw_set (index + i, val);
+	}
+    };
+    
+    var offset = records_start;
+    while (offset < data.length) {
+	var index = lint32 (data, offset);
+	var count = lint32 (data, offset + 4);
+	read_cells (offset + 4, index, count);
+	offset += 8 + count * 4;
+    }
+    
+    return grid;
+};
+function KML (data) {
+    var bounds = $ (data).find ('LatLonBox');
+    var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
+    var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
+    var url = $ (data).find ('GroundOverlay Icon href').text ();
+    return new Raster (BASE_DIR + url, min, max);
 };
 var ready_queue = [];
 
