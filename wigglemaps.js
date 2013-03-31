@@ -4454,6 +4454,7 @@ var Layer = function (options) {
 var grid_shader = null;
 
 var Grid = function (options) {
+    var engine;
     if (!options)
         options = {};
     if (!options.style)
@@ -4552,12 +4553,8 @@ var Grid = function (options) {
         var k = index (i, j);
         data[k] = val;
         dirty = true;
-        /*if (val > max_val)
-          max_val = val;
-          if (val < min_val)
-          min_val = val;
-          dirty = true;*/
-        //write_color (k, options.map (val));
+        if (engine)
+            engine.dirty = true;
     };
 
     this.raw_set = function (k, val) {
@@ -4565,6 +4562,8 @@ var Grid = function (options) {
             throw "Index Out of Bounds: " + k;
         data[k] = val;
         dirty = true;
+        if (engine)
+            engine.dirty = true;
     };
 
     this.clear = function (val) {
@@ -4574,7 +4573,8 @@ var Grid = function (options) {
     };
     
     var initialized = false;
-    this.initialize = function (engine) {
+    this.initialize = function (_engine) {
+        engine = _engine;
         var gl = engine.gl;
 
         if (!grid_shader) {
