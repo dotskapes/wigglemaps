@@ -2,18 +2,18 @@ function linestring_bounds (geom) {
     var min = new vect (Infinity, Infinity);
     var max = new vect (-Infinity, -Infinity);
     $.each (geom, function (i, poly) {
-	$.each (poly, function (k, ring) {
-	    $.each (ring, function (j, pair) {
-		if (pair[0] < min.x)
-		    min.x = pair[0];
-		if (pair[0] > max.x)
-		    max.x = pair[0];
-		if (pair[1] < min.y)
-		    min.y = pair[1];
-		if (pair[1] > max.y)
-		    max.y = pair[1];
-	    });
-	});
+        $.each (poly, function (k, ring) {
+            $.each (ring, function (j, pair) {
+                if (pair[0] < min.x)
+                    min.x = pair[0];
+                if (pair[0] > max.x)
+                    max.x = pair[0];
+                if (pair[1] < min.y)
+                    min.y = pair[1];
+                if (pair[1] > max.y)
+                    max.y = pair[1];
+            });
+        });
     });
     return new Box (min, max);
 };
@@ -32,13 +32,13 @@ function draw_graph_lines (stroke_buffers, geom) {
 
     var index = 0;
     var next_vert = function () {
-	if (geom[index]) {
-	    var v = new vect (geom[index][0], geom[index][1]);
-	    index ++;
-	    return v;
-	}
-	else
-	    return null;
+        if (geom[index]) {
+            var v = new vect (geom[index][0], geom[index][1]);
+            index ++;
+            return v;
+        }
+        else
+            return null;
     };
 
     var prev = next_vert ();
@@ -115,9 +115,9 @@ function draw_graph_lines (stroke_buffers, geom) {
         p_norm1 = c_norm2;
         p_norm2 = c_norm1;
 
-	prev = current;
-	current = next;
-	next = next_vert ();
+        prev = current;
+        current = next;
+        next = next_vert ();
     };
 
     stroke_buffers.write ('vert', vert_buffer, start, count);
@@ -134,13 +134,13 @@ function draw_map_lines (stroke_buffers, geom) {
 
     var index = 0;
     var next_vert = function () {
-	if (geom[index]) {
-	    var v = new vect (geom[index][0], geom[index][1]);
-	    index ++;
-	    return v;
-	}
-	else
-	    return null;
+        if (geom[index]) {
+            var v = new vect (geom[index][0], geom[index][1]);
+            index ++;
+            return v;
+        }
+        else
+            return null;
     };
 
     var unit = [
@@ -157,23 +157,23 @@ function draw_map_lines (stroke_buffers, geom) {
     //var unit_buffer = [, 0, 0, 0, 0, 0, 0];
     //var unit_buffer = [-1, 1, -1, -1, 1, -1, -1, 1, 1, -1, 1, 1];
     var write_vert = function (buffer, v, index, invert) {
-	if (!invert) {
-	    buffer[index] = v.x;
-	    buffer[index + 1] = v.y;
-	}
-	else {
-	    buffer[index] = -v.x;
-	    buffer[index + 1] = -v.y;
-	}
+        if (!invert) {
+            buffer[index] = v.x;
+            buffer[index + 1] = v.y;
+        }
+        else {
+            buffer[index] = -v.x;
+            buffer[index + 1] = -v.y;
+        }
     };
     var cp_vert = function (buffer, v1, v2, invert) {
-	write_vert (buffer, v1, 0, false);
-	write_vert (buffer, v2, 2, false);
-	write_vert (buffer, v1, 4, invert);
-	
-	write_vert (buffer, v2, 6, invert);
-	write_vert (buffer, v1, 8, invert);
-	write_vert (buffer, v2, 10, false);
+        write_vert (buffer, v1, 0, false);
+        write_vert (buffer, v2, 2, false);
+        write_vert (buffer, v1, 4, invert);
+        
+        write_vert (buffer, v2, 6, invert);
+        write_vert (buffer, v1, 8, invert);
+        write_vert (buffer, v2, 10, false);
     };
     
     var prev = next_vert ();
@@ -184,28 +184,28 @@ function draw_map_lines (stroke_buffers, geom) {
     var write_index = start;
     
     while (current) {
-	if (next) {
+        if (next) {
             var p1 = vect.dir (next, current);
             var p2 = vect.dir (current, prev);
             c_norm = vect.sub (p1, p2).scale (.5).normalize ();
-	}
-	else {
-	    c_norm = vect.dir (prev, current).rotate (PI / 2);
-	}
+        }
+        else {
+            c_norm = vect.dir (prev, current).rotate (PI / 2);
+        }
         //c_norm = new vect (0.0, 1.0);
         //p_norm = new vect (0.0, 1.0);
-	cp_vert (vert_buffer, prev, current, false);
-	cp_vert (norm_buffer, p_norm, c_norm, true);
-	//cp_vert (unit_buffer, new vect (0, 1), new vect (0, 1), true);
-	stroke_buffers.write ('vert', vert_buffer, write_index, 6);
-	stroke_buffers.write ('norm', norm_buffer, write_index, 6);
-	stroke_buffers.write ('unit', unit_buffer, write_index, 6);
-	write_index += 6;
-	
-	prev = current;
-	current = next;
-	next = next_vert ();
-	p_norm = c_norm;
+        cp_vert (vert_buffer, prev, current, false);
+        cp_vert (norm_buffer, p_norm, c_norm, true);
+        //cp_vert (unit_buffer, new vect (0, 1), new vect (0, 1), true);
+        stroke_buffers.write ('vert', vert_buffer, write_index, 6);
+        stroke_buffers.write ('norm', norm_buffer, write_index, 6);
+        stroke_buffers.write ('unit', unit_buffer, write_index, 6);
+        write_index += 6;
+        
+        prev = current;
+        current = next;
+        next = next_vert ();
+        p_norm = c_norm;
     }
     return start;
 };

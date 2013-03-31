@@ -20,11 +20,11 @@ var PointQuerier = function (engine, layer, options) {
 
     this.boxSearch = function (box) {
         var elem = range_tree.search (box);
-	var results = [];
-	$.each (elem, function (index, point) {
-	    results.push (point.ref);
-	});
-	return new LayerSelector (results);
+        var results = [];
+        $.each (elem, function (index, point) {
+            results.push (point.ref);
+        });
+        return new LayerSelector (results);
     }
 
     // Converts geometry representation of a point to a vector
@@ -46,7 +46,7 @@ var PointQuerier = function (engine, layer, options) {
                     //return new LayerSelector ([point.ref]);
                     return point;
             }
-	}
+        }
         //return new LayerSelector ([]);
         return null;
     };

@@ -76,7 +76,6 @@ module.exports = function(grunt) {
                 'src/geom/Layer.js',
 
                 'src/grid/Grid.js',
-                'src/grid/AsciiGrid.js',
 
                 'src/raster/Raster.js',
                 'src/raster/Hillshade.js',
@@ -86,6 +85,7 @@ module.exports = function(grunt) {
                 'src/io/WMS.js',
                 'src/io/Geojson.js',
                 'src/io/Shapefile.js',
+                'src/io/AsciiGrid.js',
                 'src/io/SparseGrid.js',
                 'src/io/KML.js',
 

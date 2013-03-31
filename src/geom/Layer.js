@@ -96,10 +96,10 @@ function Layer (options) {
         features[f.id] = f;
 
         // Update the layer bounding box
-	if (this.bounds)
-	    this.bounds.union (f.bounds);
-	else
-	    this.bounds = f.bounds.clone ();
+        if (this.bounds)
+            this.bounds.union (f.bounds);
+        else
+            this.bounds = f.bounds.clone ();
 
         for (var key in feature.attr) {
             if (props[key] === undefined) { 
@@ -130,32 +130,32 @@ function Layer (options) {
     };
 
     /*// Receive low level mouse position handlers from the bound engine
-    var current_over = {};
-    this.update_move = function (engine, p) {
-	if (over_func || out_func) {
-	    var c = this.map_contains (engine, p);
-	    var new_over = {};
-	    if (c) {
-		c.each (function (i, f) {
-		    new_over[f.id] = f;
-		});
-	    }
-	    for (var key in current_over) {
-		if (!(key in new_over) && out_func) 
-		    out_func (current_over[key]);
-	    }
-	    for (var key in new_over) {
-		if (!(key in current_over) && over_func) 
-		    over_func (new_over[key]);
-	    }
-	    current_over = new_over;    
-        }
-    };
-    this.force_out = function () {
-	for (var key in current_over) {
-	    if (out_func)
-		out_func (current_over[key]);
-	}
-	current_over = {};
-    };*/
+      var current_over = {};
+      this.update_move = function (engine, p) {
+      if (over_func || out_func) {
+      var c = this.map_contains (engine, p);
+      var new_over = {};
+      if (c) {
+      c.each (function (i, f) {
+      new_over[f.id] = f;
+      });
+      }
+      for (var key in current_over) {
+      if (!(key in new_over) && out_func) 
+      out_func (current_over[key]);
+      }
+      for (var key in new_over) {
+      if (!(key in current_over) && over_func) 
+      over_func (new_over[key]);
+      }
+      current_over = new_over;    
+      }
+      };
+      this.force_out = function () {
+      for (var key in current_over) {
+      if (out_func)
+      out_func (current_over[key]);
+      }
+      current_over = {};
+      };*/
 };

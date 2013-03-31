@@ -11,12 +11,12 @@ function AsciiGrid (data, options) {
     var min_val = Infinity;
 
     var index = function (i, j) {
-	return cols * i + j;
+        return cols * i + j;
     };
 
     var settings = {};
     for (key in options)
-	settings[key] = options[key];
+        settings[key] = options[key];
     settings.lower = new vect (xllcorner, yllcorner);
     settings.upper = new vect (xllcorner + cellsize * cols, yllcorner + cellsize * rows);
     settings.rows = rows;
@@ -25,15 +25,15 @@ function AsciiGrid (data, options) {
     var grid = new Grid (settings);
 
     for (var i = 0; i < rows; i ++) {
-	var r = vals[i].split (' ');
-	for (var j = 0; j < cols; j ++) {
-	    if (r[j] == nodata_value) {
-		grid.set (rows - 1 - i, j, NaN);
-	    }
-	    else {
-		grid.set (rows - 1 - i, j, parseFloat (r[j]));
-	    }
-	}
+        var r = vals[i].split (' ');
+        for (var j = 0; j < cols; j ++) {
+            if (r[j] == nodata_value) {
+                grid.set (rows - 1 - i, j, NaN);
+            }
+            else {
+                grid.set (rows - 1 - i, j, parseFloat (r[j]));
+            }
+        }
     }
     return grid;
 };

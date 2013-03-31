@@ -4,7 +4,7 @@ var Querier = function (engine, layer, options) {
         queriers[geomType] = new GeomQuerier (engine, layer, options);
     });
 
-     this.boxSearch = function (box) {
+    this.boxSearch = function (box) {
         var results = new LayerSelector ([]);
         for (var key in queriers) {
             var search_results = queriers[key].boxSearch (box);

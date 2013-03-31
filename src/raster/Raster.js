@@ -11,7 +11,7 @@ function Raster (url, min, max) {
 
     this.initialize = function (engine) {
         if (!raster_shader)
-	    raster_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/raster');
+            raster_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/raster');
 
         this.image = getTexture (engine.gl, url, function () {
             tex_ready = true;
@@ -32,14 +32,14 @@ function Raster (url, min, max) {
         if (!tex_ready)
             return;
 
-	gl.useProgram (raster_shader);
+        gl.useProgram (raster_shader);
 
-	raster_shader.data ('screen', engine.camera.mat3);
-	raster_shader.data ('pos', pos_buffer);
-	raster_shader.data ('tex_in', tex_buffer);
+        raster_shader.data ('screen', engine.camera.mat3);
+        raster_shader.data ('pos', pos_buffer);
+        raster_shader.data ('tex_in', tex_buffer);
 
-	raster_shader.data ('sampler', this.image);
+        raster_shader.data ('sampler', this.image);
 
-	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
+        gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
 };

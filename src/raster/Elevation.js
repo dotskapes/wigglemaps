@@ -1,7 +1,7 @@
 var elevation_shader = null;
 function Elevation (data) {
     if (!elevation_shader)
-	elevation_shader = makeProgram (BASE_DIR + 'shaders/elevation');
+        elevation_shader = makeProgram (BASE_DIR + 'shaders/elevation');
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
@@ -13,18 +13,18 @@ function Elevation (data) {
     var pos_buffer = staticBuffer (rectv (min, max), 2);
 
     this.draw = function (engine, dt, select) {
-	if (select)
-	    return;
-	gl.useProgram (elevation_shader);
+        if (select)
+            return;
+        gl.useProgram (elevation_shader);
 
-	elevation_shader.data ('screen', engine.camera.mat3);
-	elevation_shader.data ('pos', pos_buffer);
-	elevation_shader.data ('tex_in', tex_buffer);
+        elevation_shader.data ('screen', engine.camera.mat3);
+        elevation_shader.data ('pos', pos_buffer);
+        elevation_shader.data ('tex_in', tex_buffer);
 
-	elevation_shader.data ('elevation', image);
+        elevation_shader.data ('elevation', image);
 
-	var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
-	
-	gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
+        var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
+        
+        gl.drawArrays (gl.TRIANGLES, 0, pos_buffer.numItems); 
     };
 };

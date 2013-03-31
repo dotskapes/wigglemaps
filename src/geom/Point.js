@@ -14,10 +14,10 @@ var Point = function (prop, layer) {
     for (var i = 0; i < this.geom.length; i ++) {
         var pos = geom2vect (this.geom[i]);
         var bbox = new Box (pos.clone (), pos.clone ());
-	if (this.bounds)
-	    this.bounds.union (bbox);
-	else
-	    this.bounds = bbox;
+        if (this.bounds)
+            this.bounds.union (bbox);
+        else
+            this.bounds = bbox;
     }
 
     // Check if a point (usually a mouse position) is contained in the buffer
@@ -57,11 +57,11 @@ var PointCollection = function (points) {
     // Search a rectangle for point contained within
     this.search = function (box) {
         var elem = range_tree.search (box);
-	var results = [];
-	$.each (elem, function (index, point) {
-	    results.push (point.ref);
-	});
-	return new LayerSelector (results);
+        var results = [];
+        $.each (elem, function (index, point) {
+            results.push (point.ref);
+        });
+        return new LayerSelector (results);
     };
 
     // Determine if a point is contained in the buffer of any of the points
@@ -74,9 +74,9 @@ var PointCollection = function (points) {
         var elem = range_tree.search (box);
         for (var i = 0; i < elem.length; i ++) {
             var point = elem[i];
-	    if (point.ref.map_contains (engine, p))
+            if (point.ref.map_contains (engine, p))
                 return new LayerSelector ([point.ref]);
-	}
+        }
         return new LayerSelector ([]);
     };
 };
