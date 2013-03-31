@@ -29,7 +29,7 @@ var triangulate_polygon = function (elem) {
     return triangles;
 };
 
-function circle (index, length) {
+var circle = function (index, length) {
     while (index >= length)
         index -= length;
     while (index < 0)
@@ -37,18 +37,18 @@ function circle (index, length) {
     return index
 };
 
-function Vertex (current, upper, lower, index) {
+var Vertex = function (current, upper, lower, index) {
     this.current = current;
     this.upper = upper;
     this.lower = lower;
     this.index = index;
 };
 
-function xsearch (sweep, poly, index) {
+var xsearch = function (sweep, poly, index) {
     var upper = sweep.length - 1;
     var lower = 0;
     var current = parseInt ((sweep.length - 1) / 2);
-    if (sweep.length == 0) {
+    if (sweep.length === 0) {
         return 0;
     }
     while (true) {
@@ -89,7 +89,7 @@ function xsearch (sweep, poly, index) {
     }
 };
 
-function set_contains (sweep, index) {
+var set_contains = function (sweep, index) {
     for (var i = 0; i < sweep.length; i ++) {
         if (sweep[i] == index)
             return true;
@@ -97,17 +97,17 @@ function set_contains (sweep, index) {
     return false;
 };
 
-function solvex (poly, index, slice) {
-    if (index == undefined)
+var solvex = function (poly, index, slice) {
+    if (index === undefined)
         throw "whoa";
-    if ((poly[index + 1].y - poly[index].y) == 0)
+    if ((poly[index + 1].y - poly[index].y) === 0)
         return Math.min (poly[index].x, poly[index + 1].x);
     var t = (slice - poly[index].y) / (poly[index + 1].y - poly[index].y);
     //console.log ('t', slice, poly[index + 1].y,  poly[index].y, t);
     return poly[index].x + (poly[index + 1].x - poly[index].x) * t;
 };
 
-function find_index (sweep, index) {
+var find_index = function (sweep, index) {
     for (var i = 0; i < sweep.length; i ++) {
         if (sweep[i] == index)
             return i;
@@ -115,13 +115,13 @@ function find_index (sweep, index) {
     return false;
 };
 
-function sorted_index (sweep, poly, xpos, slice) {
+var sorted_index = function (sweep, poly, xpos, slice) {
     for (var i = 0; i < sweep.length; i ++) {
         var sxpos = solvex (poly, sweep[i], slice);
         //console.log (sweep[i], index, xpos, sxpos);
         if (sxpos > xpos)
             return i;
-        if (sxpos - xpos == 0) {
+        if (sxpos - xpos === 0) {
             //console.log ('same', sweep[i], index, poly[sweep[i]].y, poly[index].y);
             if (poly[sweep[i]].y > poly[index].y)
                 return i;
@@ -131,11 +131,11 @@ function sorted_index (sweep, poly, xpos, slice) {
     return sweep.length;
 };
     
-function intersect (v, poly, index) {
+var intersect = function (v, poly, index) {
     return new vect (solvex (poly, index, poly[v].y), poly[v].y);
 };
 
-function add_point (trap, a) {
+var add_point = function (trap, a) {
     if (!a)
         throw "eek";
     trap.push (a.x);
@@ -143,7 +143,7 @@ function add_point (trap, a) {
     //trap.push (1.0);
 }
 
-function add_trap (trap, bottom, top) {
+var add_trap = function (trap, bottom, top) {
     if (!bottom || !top || ((top.length + bottom.length != 3) && (top.length + bottom.length != 4)))
         throw "ahh";
     if ((bottom.length + top.length) == 3) {
@@ -176,7 +176,7 @@ function add_trap (trap, bottom, top) {
     }
 };
 
-function trapezoid_polygon (poly_in) {
+var trapezoid_polygon = function (poly_in) {
     var vertices = [];
     var count = 0;
     var poly = [];

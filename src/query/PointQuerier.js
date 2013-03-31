@@ -25,7 +25,7 @@ var PointQuerier = function (engine, layer, options) {
             results.push (point.ref);
         });
         return new LayerSelector (results);
-    }
+    };
 
     // Converts geometry representation of a point to a vector
     var geom2vect = function (geom) {

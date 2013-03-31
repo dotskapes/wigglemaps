@@ -4,7 +4,7 @@ var geom_types = {
     'Line': Line
 };
 
-function Layer (options) {
+var Layer = function (options) {
     if (!options)
         options = {};
 
@@ -114,7 +114,7 @@ function Layer (options) {
                 else
                     props[key] = false;
             }
-        };
+        }
 
         return f;
     };
@@ -128,34 +128,4 @@ function Layer (options) {
     this.mouseout = function (func) {
         EventManager.addEventHandler (this, 'mouseout', func);
     };
-
-    /*// Receive low level mouse position handlers from the bound engine
-      var current_over = {};
-      this.update_move = function (engine, p) {
-      if (over_func || out_func) {
-      var c = this.map_contains (engine, p);
-      var new_over = {};
-      if (c) {
-      c.each (function (i, f) {
-      new_over[f.id] = f;
-      });
-      }
-      for (var key in current_over) {
-      if (!(key in new_over) && out_func) 
-      out_func (current_over[key]);
-      }
-      for (var key in new_over) {
-      if (!(key in current_over) && over_func) 
-      over_func (new_over[key]);
-      }
-      current_over = new_over;    
-      }
-      };
-      this.force_out = function () {
-      for (var key in current_over) {
-      if (out_func)
-      out_func (current_over[key]);
-      }
-      current_over = {};
-      };*/
 };

@@ -1,4 +1,4 @@
-function LayerController (engine, layer, options) {
+var LayerController = function (engine, layer, options) {
     var controller = this;
 
     // Set this as the parent of the layer in the event hierarchy
@@ -31,7 +31,7 @@ function LayerController (engine, layer, options) {
         var view = controller.renderers[renderKey].create (options.geomFunc (f), (function (feature) {
             return function (key) {
                 return StyleManager.derivedStyle (feature, layer, engine, key);
-            }
+            };
         }) (f));
 
         controller.views[f.id] = view;

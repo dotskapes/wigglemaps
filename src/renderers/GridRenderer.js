@@ -1,3 +1,3 @@
-function GridRenderer (engine, options) {
+var GridRenderer = function (engine, options) {
     
 };

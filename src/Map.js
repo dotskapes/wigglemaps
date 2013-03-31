@@ -1,9 +1,12 @@
+// The main map class
+// This is the top level controller for all layers and renderers
 var Map = function (selector, options) {
     var engine = this;
 
     if (options === undefined)
         options = {};
 
+    // The geom function defined how to extract the geometry from a feature
     options.geomFunc = function (f) {
         return f.geom;
     };
@@ -18,16 +21,19 @@ var Map = function (selector, options) {
 
     Engine.call (this, selector, options); 
 
+    // The renderers map between types and classes
     this.Renderers = {
         'Point': PointRenderer,
         'Polygon': multiRendererFactory ([PolygonRenderer, LineRenderer]),
-        'Line': LineRenderer,
+        'Line': LineRenderer
     };
 
+    // Queriers tell us how to search the geometry, which may not be the literal
+    // geometry, depending on the choice of renderer
     this.Queriers = {
         'Point': PointQuerier,
-        'Polygon': PolygonQuerier,
-        //'Line': lineQuerier
+        'Polygon': PolygonQuerier
+        //'Line': LineQuerier
     };
 
     this.styles = {
@@ -60,11 +66,13 @@ var Map = function (selector, options) {
     };
     var base = null;
     var setBase = function () {
+        // If the base layer already exists, remove to old one
         if (base) {
-            
+            // TODO
         }
+        var settings;
         if (options.base == 'default' || options.base == 'nasa') {
-            var settings = copy (options);
+            settings = copy (options);
             copy_to (settings, {
                 source: 'file',
                 url: options['tile-server'] + '/tiles/nasa_topo_bathy',
@@ -74,7 +82,7 @@ var Map = function (selector, options) {
             base = new MultiTileLayer (settings);
         }
         else if (options.base == 'ne') {
-            var settings = copy (options);
+            settings = copy (options);
             copy_to (settings, {
                 source: 'file',
                 url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
@@ -84,7 +92,7 @@ var Map = function (selector, options) {
             base = new MultiTileLayer (settings);
         }
         else if (options.base == 'ne1') {
-            var settings = copy (options);
+            settings = copy (options);
             copy_to (settings, {
                 source: 'file',
                 url: options['tile-server'] + '/tiles/NE1_HR_LC',
@@ -104,6 +112,7 @@ var Map = function (selector, options) {
 
     setBase ();
 
+    // Allow for settings to be changed dynamically at runtime
     this.settings = function (key, value) {
         options[key] = value;
         if (key == 'base') {
@@ -111,6 +120,9 @@ var Map = function (selector, options) {
         }
     };
 
+    // Add a layer to the scene. Instantiate a controller (that handles
+    // event and style registrations) and a set of queriers (that
+    // handle searching rendered geometry)
     this.append = function (layer) {
         // Legacy layer drawing code for old-school type layers
         if ('draw' in layer) {

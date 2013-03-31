@@ -2,7 +2,7 @@ var text_shader = null;
 
 var fonts = {};
 
-function Text (string, options) {
+var Text = function (string, options) {
     if (!options)
         options = {};
     if (!options.style)
@@ -21,10 +21,10 @@ function Text (string, options) {
             async: false,
             dataType: 'xml',
             success: function (data) {
-                fonts['OpenSans'] = {};
+                fonts.OpenSans = {};
                 var glyphs = data.getElementsByTagName ('glyph');
                 for (var i = 0 ; i < glyphs.length; i ++) {
-                    var letter = glyphs[i].getAttribute ('unicode')
+                    var letter = glyphs[i].getAttribute ('unicode');
                     fonts['OpenSans'][letter] = {
                         path: glyphs[i].getAttribute ('d'),
                         hor: parseFloat (glyphs[i].getAttribute ('horiz-adv-x'))
@@ -33,13 +33,6 @@ function Text (string, options) {
             }
         });
     }
-    /*var letters = {
-      H: "M551 332H176V0H83V729H176V414H551V729H644V0H551V332Z",
-      e: "M513 234H127Q128 162 155 122Q198 54 281 54Q383 54 418 159H502Q486 73 427 25T278 -23Q168 -23 104 51T40 255T105 461T280 539Q354 539 410 502T492 401Q513 346 513 234ZM129 302H423Q424 304 424 308Q424 373 382 417T279 462Q216 462 175 419T129 302Z",
-      l: "M152 729V0H68V729H152Z",
-      o: "M272 539Q385 539 447 465T510 254Q510 125 447 51T273 -23Q161 -23 99 51T36 258T99 464T272 539ZM273 462Q203 462 163 408T123 258T163 109T273 54Q342 54 382 108T423 255Q423 352 384 407T273 462Z"
-      };*/
-
     var buffers = new Buffers ();
     buffers.create ('pos', 2);
     buffers.create ('tex', 2);
@@ -62,20 +55,20 @@ function Text (string, options) {
         var ring = [];
         while (match = re.exec (letter)) {
             var args = match[2].split (' ');
+            var next;
             if (match[1].match ('[Zz]')) {
-                var next = [current[0], current[1]];
+                next = [current[0], current[1]];
                 ring.push (ring[0]);
                 if (ring)
                     rings.push (ring);
                 ring = [];
             }
             else if (match[1].match (/[M]/)) {
-                var next = [parseFloat (args[0]) + offset, parseFloat (args[1])];
+                next = [parseFloat (args[0]) + offset, parseFloat (args[1])];
                 ring.push(next);
                 current = next;
             }
             else if (match[1].match (/[Ll]/)) {
-                var next
                 if (match[1] == 'L')
                     next = [parseFloat (args[0]) + offset, parseFloat (args[1])];
                 else if (match[1] == 'l')
@@ -84,7 +77,6 @@ function Text (string, options) {
                 current = next;
             }
             else if (match[1].match (/[Hh]/)) {
-                var next
                 if (match[1] == 'H')
                     next = [parseFloat (args[0]) + offset, current[1]];
                 else if (match[1] == 'h')
@@ -93,7 +85,6 @@ function Text (string, options) {
                 current = next;
             }
             else if (match[1].match (/[Vv]/)) {
-                var next;
                 if (match[1] == 'V')            
                     next = [current[0], parseFloat (args[0])];
                 else if (match[1] == 'v')
@@ -102,7 +93,6 @@ function Text (string, options) {
                 current = next;
             }
             else if (match[1].match (/[QqTt]/)) {
-                var next;
                 if (match[1] == 'Q') {
                     control = [parseFloat (args[0]) + offset, parseFloat (args[1])];
                     next = [parseFloat (args[2]) + offset, parseFloat (args[3])];
@@ -132,10 +122,10 @@ function Text (string, options) {
                     mode = 0.0;
                     ring.push (next);
                 }
-                var start = buffers.alloc (3);
-                buffers.write ('pos', [current[0], current[1], next[0], next[1], control[0], control[1]], start, 3);
-                buffers.write ('tex', [0, 0, 1, 1, .5, 0], start, 3);
-                buffers.repeat ('mode', [mode], start, 3);
+                var start_tri = buffers.alloc (3);
+                buffers.write ('pos', [current[0], current[1], next[0], next[1], control[0], control[1]], start_tri, 3);
+                buffers.write ('tex', [0, 0, 1, 1, .5, 0], start_tri, 3);
+                buffers.repeat ('mode', [mode], start_tri, 3);
                 current = next;
             }
             else
@@ -158,7 +148,7 @@ function Text (string, options) {
             }
         }
         if (count == 100)
-            console.log ('rendering polygon failed')
+            console.log ('rendering polygon failed');
 
         var tri_len = poly.length / 2;
         var start = buffers.alloc (tri_len);
@@ -180,7 +170,7 @@ function Text (string, options) {
     };
 
     var offset = 0;
-    var letters = fonts['OpenSans'];
+    var letters = fonts.OpenSans;
     
     for (var i = 0; i < string.length; i ++) {
         path (letters[string[i]].path, offset);

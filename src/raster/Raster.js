@@ -1,5 +1,5 @@
 var raster_shader = null;
-function Raster (url, min, max) {
+var Raster = function (url, min, max) {
     var raster_shader;
     var tex_buffer, pos_buffer;
 

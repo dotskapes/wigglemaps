@@ -1,5 +1,5 @@
 var elevation_shader = null;
-function Elevation (data) {
+var Elevation = function (data) {
     if (!elevation_shader)
         elevation_shader = makeProgram (BASE_DIR + 'shaders/elevation');
 

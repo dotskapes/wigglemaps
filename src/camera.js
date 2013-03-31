@@ -1,4 +1,4 @@
-function Camera (engine, options) {
+var Camera = function (engine, options) {
     var canvas = engine.canvas;
     var camera = this;
     if (!options)

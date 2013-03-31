@@ -45,16 +45,12 @@ function Box (v1, v2) {
         switch (index) {
         case 0:
             return this.min.clone ();
-            break;
         case 1:
             return new vect (this.max.x, this.min.y);
-            break;
         case 2:
             return this.max.clone ();
-            break;
         case 3:
             return new vect (this.min.x, this.max.y);
-            break;
         default:
             throw "Index out of bounds: " + index ;
         }

@@ -74,7 +74,7 @@ var Feature = function (prop, layer) {
     };
 };
 
-var EARTH = 6378.1
+var EARTH = 6378.1;
 
 var new_feature_id = (function () {
     var current_id = 1;
@@ -86,18 +86,18 @@ var new_feature_id = (function () {
 }) ();
 
 var rand_map = (function () {
-    var factor = 1e-6
-    var xmap = {} 
-    var ymap = {} 
+    var factor = 1e-6;
+    var xmap = {};
+    var ymap = {};
     return function (x, y) {
         // Temporary Fix
         return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
         // End Temp
-        var key = x.toString () + ',' + y.toString ();
+        /*var key = x.toString () + ',' + y.toString ();
         if (!(key in xmap)) {
             xmap[key] = x + Math.random () * factor - (factor / 2);
             ymap[key] = y + Math.random () * factor - (factor / 2);
         }
-        return new vect (xmap[key], ymap[key]);
+        return new vect (xmap[key], ymap[key]);*/
     };
 }) ();

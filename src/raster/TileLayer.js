@@ -7,7 +7,7 @@ var NUM_TILES = 8;
 var total_drawn = 0;
 var total_calls = 0;
 
-function MultiTileLayer (options) {
+var MultiTileLayer = function (options) {
     var tile_shader = null;
 
     var layers = [];
@@ -74,7 +74,7 @@ function MultiTileLayer (options) {
 
         total_drawn = 0;
         total_calls = 0;
-        var min = Infinity
+        var min = Infinity;
         var current = layers[0];
 
         var max_layer, min_layer;
@@ -110,7 +110,7 @@ function MultiTileLayer (options) {
             //current.draw (engine, dt, z_top);
             var count = 0;
             for (var i = max_layer; i >= 0; i --) {
-                count = layers[i].draw (engine, dt, buffers, count, i == 0);
+                count = layers[i].draw (engine, dt, buffers, count, i === 0);
                 //if (layers[i].ready ())
                 //    break;
             }
@@ -225,8 +225,8 @@ function MultiTileLayer (options) {
                 min_col: min_col,
                 max_col: max_col,
                 min_row: min_row,
-                max_row: max_row,
-            }
+                max_row: max_row
+            };
         };
 
         var current = {};
@@ -282,7 +282,7 @@ function MultiTileLayer (options) {
                             tile.tex.image (img);
                             tile.ready = true;
                         }
-                    }
+                    };
                 }) (tiles[i][j]));
                 
             }
@@ -362,7 +362,7 @@ function MultiTileLayer (options) {
                         current[tiles[i][j].id] = time; 
 
                         tile_shader.data ('sampler' + count, tiles[i][j].tex);
-                        if (tiles[i][j].tex == null)
+                        if (tiles[i][j].tex === null)
                             throw "badness";
                         count ++;
                         total_drawn ++;

@@ -1,7 +1,7 @@
 var OMEGA = Math.PI / 4;
 
 var hillshade_shader = null;
-function Hillshade (data) {
+var Hillshade = function (data) {
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));

@@ -1,4 +1,4 @@
-function AABBNode (feature, bounds, first, second) {
+var AABBNode = function (feature, bounds, first, second) {
     this.bounds = bounds;
     this.feature = feature;
 
@@ -14,7 +14,7 @@ function AABBNode (feature, bounds, first, second) {
     };
 };
 
-function AABBTree (features) {
+var AABBTree = function (features) {
     var nodes = [];
     
     for (var key in features) {

@@ -9,8 +9,8 @@ module.exports = function(grunt) {
             dst: 'templates.js'
         },
         shell: {
-            lint: {
-                command: 'node_modules/jshint/bin/jshint src',
+            hint: {
+                command: 'node_modules/jshint/bin/jshint --verbose --reporter=build/jshint.js src',
                 options: {
                     stdout: true,
                     failOnError: true
@@ -187,5 +187,5 @@ module.exports = function(grunt) {
     grunt.registerTask('default', ['build', 'uglify']);
 
     grunt.loadNpmTasks('grunt-shell');
-    grunt.registerTask('lint', ['shell:lint']);
+    grunt.registerTask('hint', ['shell:hint']);
 };

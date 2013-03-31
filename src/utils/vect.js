@@ -1,3 +1,4 @@
+// A basic vector type. Supports standard 2D vector operations
 var Vector2D = function (x, y) {
     this.x = x;
     this.y = y;
@@ -65,9 +66,12 @@ var Vector2D = function (x, y) {
     };
 };
 
+// A shortcut for the vector constructor
 function vect (x, y) {
     return new Vector2D (x, y);
 }
+
+// Shorthand operations for vectors for operations that make new vectors
 
 vect.scale = function (v, s) {
     return v.clone ().scale (s);

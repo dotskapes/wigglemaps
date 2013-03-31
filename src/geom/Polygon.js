@@ -1,4 +1,4 @@
-function Polygon (prop, layer) {
+var Polygon = function (prop, layer) {
     Feature.call (this, prop, layer);
     
     this.bounds = linestring_bounds (this.geom);
@@ -38,7 +38,7 @@ function Polygon (prop, layer) {
 
 };
 
-function PolygonCollection (polygons) {
+var PolygonCollection = function (polygons) {
     var r_points = [];
     for (var n = 0; n < polygons.length; n ++) {
         $.each (polygons[n].geom, function (i, poly) {

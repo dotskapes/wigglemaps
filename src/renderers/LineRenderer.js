@@ -1,6 +1,6 @@
 var INITIAL_LINES = 1024;
 
-function draw_lines (stroke_buffers, geom) {
+var draw_lines = function (stroke_buffers, geom) {
 
     var vertCount = 6 * geom.length;
     var startIndex = stroke_buffers.alloc (vertCount);
@@ -79,13 +79,13 @@ function draw_lines (stroke_buffers, geom) {
     return vertCount;
 };
 
-function LineRenderer (engine) {
+var LineRenderer = function (engine) {
     FeatureRenderer.call (this, engine);
 
-    if (!(engine.shaders['line'])) {
-        engine.shaders['line'] = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
+    if (!(engine.shaders.line)) {
+        engine.shaders.line = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
     }
-    var line_shader = engine.shaders['line'];
+    var line_shader = engine.shaders.line;
 
     var stroke_buffers = new Buffers (engine, 1024);
     //stroke_buffers.create ('vert', 2);
@@ -125,13 +125,7 @@ function LineRenderer (engine) {
 
         $.each (feature_geom, function (i, poly) {
             for (var i = 0; i < poly.length; i ++) {
-                //stroke_count += poly[i].length * 6;
-                //draw_graph_lines (stroke_buffers, poly[i]);
                 stroke_count += draw_lines (stroke_buffers, poly[i]);
-                /*if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
-                  draw_map_lines (stroke_buffers, poly[i]);
-                  else
-                  draw_graph_lines (stroke_buffers, poly[i]);*/
             }
         });
     };

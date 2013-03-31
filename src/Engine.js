@@ -1,8 +1,8 @@
-function Engine (selector, options) {
+var Engine = function (selector, options) {
     var engine = this;
 
     default_model (options, {
-        background: new Color (0, 0, 0, 1),
+        background: new Color (0, 0, 0, 1)
     });
 
     this.type = 'Engine';
@@ -100,7 +100,7 @@ function Engine (selector, options) {
                     gl.bindFramebuffer (gl.FRAMEBUFFER, last);
                     // THIS WILL CAUSE PROBLEMS - SAVE LAST VALUE OF BLEND
                     gl.enable (gl.BLEND);
-                        },
+                }
             };
         framebuffers.push (frame);
         return frame;
@@ -314,7 +314,7 @@ function Engine (selector, options) {
 
     this.disableZ = function () {
         gl.disable (gl.DEPTH_TEST);
-    }
+    };
 
     this.canvas.mouseout (function () {
         EventManager.mouseOver (null);

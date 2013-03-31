@@ -6,7 +6,7 @@ var LayerSelector = function (elem) {
 
     this.count = function () {
         return elem.length;
-    }
+    };
 
     this.items = function () {
         return elem;
@@ -95,11 +95,11 @@ var LayerSelector = function (elem) {
     };
 
     var operators = {
-        '>': function (a, b) { return a > b},
-        '<': function (a, b) { return a < b},
-        '==': function (a, b) { return a == b},
-        '>=': function (a, b) { return a >= b},
-        '<=': function (a, b) { return a <= b}
+        '>': function (a, b) { return a > b; },
+        '<': function (a, b) { return a < b; },
+        '==': function (a, b) { return a == b; },
+        '>=': function (a, b) { return a >= b; },
+        '<=': function (a, b) { return a <= b; }
     };
     this.select = function (string) {
         if (string.match (/^\s*\*\s*$/))
@@ -142,7 +142,7 @@ var LayerSelector = function (elem) {
                 results.push (elem[i]);
         }
         return new LayerSelector (results);
-    }
+    };
 
     this.quantile = function (field, q, total) {
         var clean = elem.filter (function (f) {
@@ -206,7 +206,7 @@ var LayerSelector = function (elem) {
         // only the first element
         if (value === undefined) {
             if (elem[0])
-                return elem[0].style (engine, key)
+                return elem[0].style (engine, key);
         }
         else {
             // Otherwise, set the value, depending on the type of value

@@ -1,6 +1,6 @@
 var grid_shader = null;
 
-function Grid (options) {
+var Grid = function (options) {
     if (!options)
         options = {};
     if (!options.style)
@@ -28,10 +28,10 @@ function Grid (options) {
     var dirty = false;
     var write_color = function (i, c) {
         //var c = options.ramp[j];
-        tex_data[i * 4] = parseInt (c.r * 255);
-        tex_data[i * 4 + 1] = parseInt (c.g * 255);
-        tex_data[i * 4 + 2] = parseInt (c.b * 255);
-        tex_data[i * 4 + 3] = parseInt (c.a * 255);
+        tex_data[i * 4] = parseInt (c.r * 255, 10);
+        tex_data[i * 4 + 1] = parseInt (c.g * 255, 10);
+        tex_data[i * 4 + 2] = parseInt (c.b * 255, 10);
+        tex_data[i * 4 + 3] = parseInt (c.a * 255, 10);
     };
 
     var index = function (i, j) {
@@ -79,14 +79,14 @@ function Grid (options) {
                 return a - b;
             };
         }
-        var points = []
+        var points = [];
         for (var i = 0; i < data.length; i ++) {
             points.push (data[i]);
-        };
+        }
         points.sort (sort);
         var quantiles = [-Infinity];
         for (var i = 1; i < size; i ++) {
-            var b = parseInt (inc * i)
+            var b = parseInt (inc * i, 10)
             quantiles.push (points[b]);
         }
         quantiles.push (Infinity);
@@ -207,47 +207,5 @@ function Grid (options) {
             framebuffer.deactivate ();
             engine.draw_blur (framebuffer.tex);
         }
-
-        //engine.post_draw (options.style);
-
-        /*var do_draw = function (use_mat, image, hor) {
-          gl.useProgram (grid_shader);
-          
-          grid_shader.data ('screen', engine.camera.mat3);
-          if (use_mat) 
-          grid_shader.data ('pos', buffers.get ('vert'));
-          else
-          grid_shader.data ('pos', buffers.get ('screen'));
-          grid_shader.data ('use_mat', use_mat);
-          grid_shader.data ('tex_in', buffers.get ('tex'));
-          
-          grid_shader.data ('sampler', image);
-          
-          var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
-          grid_shader.data ('width', size.x);
-          grid_shader.data ('height', -size.y);
-          
-          grid_shader.data ('rows', rows);
-          grid_shader.data ('cols', cols);
-          
-          grid_shader.data ('blur', options.blur);
-          grid_shader.data ('hor', hor);
-          
-          gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
-          };
-
-          if (options.blur) {
-          //gl.bindFramebuffer (gl.FRAMEBUFFER, engine.framebuffer);
-          //gl.clearColor (0, 0, 0, 0);
-          //gl.clear(gl.COLOR_BUFFER_BIT);
-          //gl.clearDepth (0.0);
-          //do_draw (true, tex, true);
-          //gl.bindFramebuffer (gl.FRAMEBUFFER, null);
-          //do_draw (false, engine.tex_canvas, false);
-          //do_draw (true, tex, true)
-          }
-          else {
-          //do_draw (tex);
-          }*/
     };
 };

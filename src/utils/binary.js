@@ -1,8 +1,8 @@
-function int8 (data, offset) {
+var int8 = function (data, offset) {
     return data.charCodeAt (offset);
 };
 
-function bint32 (data, offset) {
+var bint32 = function (data, offset) {
     return (
         ((data.charCodeAt (offset) & 0xff) << 24) +
             ((data.charCodeAt (offset + 1) & 0xff) << 16) +
@@ -11,7 +11,7 @@ function bint32 (data, offset) {
     );
 };
 
-function lint32 (data, offset) {
+var lint32 = function (data, offset) {
     return (
         ((data.charCodeAt (offset + 3) & 0xff) << 24) +
             ((data.charCodeAt (offset + 2) & 0xff) << 16) +
@@ -20,21 +20,21 @@ function lint32 (data, offset) {
     );
 };
 
-function bint16 (data, offset) {
+var bint16 = function (data, offset) {
     return (
         ((data.charCodeAt (offset) & 0xff) << 8) +
             (data.charCodeAt (offset + 1) & 0xff)
     );
 };
 
-function lint16 (data, offset) {
+var lint16 = function (data, offset) {
     return (
         ((data.charCodeAt (offset + 1) & 0xff) << 8) +
             (data.charCodeAt (offset) & 0xff)
     );
 };
 
-function ldbl64 (data, offset) {
+var ldbl64 = function (data, offset) {
     var b0 = data.charCodeAt (offset) & 0xff;
     var b1 = data.charCodeAt (offset + 1) & 0xff;
     var b2 = data.charCodeAt (offset + 2) & 0xff;
@@ -54,7 +54,7 @@ function ldbl64 (data, offset) {
     return sign * (1 + frac * Math.pow (2, -52)) * Math.pow (2, exp);
 };
 
-function lfloat32 (data, offset) {
+var lfloat32 = function (data, offset) {
     var b0 = data.charCodeAt (offset) & 0xff;
     var b1 = data.charCodeAt (offset + 1) & 0xff;
     var b2 = data.charCodeAt (offset + 2) & 0xff;
@@ -68,7 +68,7 @@ function lfloat32 (data, offset) {
     return sign * (1 + frac * Math.pow (2, -23)) * Math.pow (2, exp);
 };
 
-function str (data, offset, length) {
+var str = function (data, offset, length) {
     var chars = [];
     var index = offset;
     /*while (true) {

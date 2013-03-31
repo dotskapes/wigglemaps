@@ -1,4 +1,4 @@
-function Buffers (engine, initial_size) {
+var Buffers = function (engine, initial_size) {
     var gl = engine.gl;
     var data = {};
     
@@ -27,7 +27,7 @@ function Buffers (engine, initial_size) {
         while (new_size < min_expand)
             new_size *= 2;
         size = new_size;
-        for (name in data) {
+        for (var name in data) {
             var new_array = new Float32Array (new_size * data[name].len);
             var old_array = data[name].array;
             var new_buffer = dynamicBuffer (gl, size, data[name].len);
@@ -86,7 +86,7 @@ function Buffers (engine, initial_size) {
     };
 
     this.update = function () {
-        for (name in data) {
+        for (var name in data) {
             if (data[name].dirty) {
                 if (data[name].buffer)
                     data[name].buffer.update (data[name].array, 0);

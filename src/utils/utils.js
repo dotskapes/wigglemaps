@@ -109,3 +109,8 @@ var isInt = function (value) {
 var str_contains = function (string, c) {
     return string.indexOf (c) != -1;
 };
+
+// Clamp values between two extrema
+var clamp = function (val, min, max) {
+    return Math.min (Math.max (val, min), max);
+};

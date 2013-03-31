@@ -43,7 +43,7 @@ function TimeSeries (selector, layer, options) {
         },
         'domain': {
             'min': 0,
-            'max': options.order.length - 1,
+            'max': options.order.length - 1
         },
         'min': new vect (0, bounds.min),
         'width': options.order.length - 1,
@@ -51,7 +51,7 @@ function TimeSeries (selector, layer, options) {
         'worldMin': new vect (0, bounds.min),
         'worldMax': new vect (options.order.length - 1, bounds.max),
         'xlock': false,
-        'ylock': false,
+        'ylock': false
     });
 
     var order = options.order;
@@ -89,7 +89,7 @@ function TimeSeries (selector, layer, options) {
             'fill-opacity': .5,
             'stroke': new Color (.02, .44, .69, 1.0),
             'stroke-opacity': 1.0,
-            'stroke-width': 2.0,
+            'stroke-width': 2.0
         }
     };
 

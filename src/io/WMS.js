@@ -1,6 +1,6 @@
-function WMS (options) {
+var WMS = function (options) {
     var settings = copy (options);
-    require (settings, ['url', 'layer'])
+    require (settings, ['url', 'layer']);
     default_model (settings, {
 	levels: 16,
 	size: 256

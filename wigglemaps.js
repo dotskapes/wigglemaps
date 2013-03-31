@@ -1,3 +1,4 @@
+// A basic vector type. Supports standard 2D vector operations
 var Vector2D = function (x, y) {
     this.x = x;
     this.y = y;
@@ -65,9 +66,12 @@ var Vector2D = function (x, y) {
     };
 };
 
+// A shortcut for the vector constructor
 function vect (x, y) {
     return new Vector2D (x, y);
 }
+
+// Shorthand operations for vectors for operations that make new vectors
 
 vect.scale = function (v, s) {
     return v.clone ().scale (s);
@@ -500,7 +504,15 @@ var isInt = function (value) {
 var str_contains = function (string, c) {
     return string.indexOf (c) != -1;
 };
+
+// Clamp values between two extrema
+var clamp = function (val, min, max) {
+    return Math.min (Math.max (val, min), max);
+}
+// Color objects are used throughout the API as a fundemental type
 var Color = function (r, g, b, a) {
+    // Allow for colors to be specified as both floats and ints
+    // The true representation is floats however
     if (r <= 1 && g <= 1 && b <= 1 && a <= 1) {
         this.r = r;
         this.g = g;
@@ -508,52 +520,59 @@ var Color = function (r, g, b, a) {
         this.a = a;
     }
     else {
+        // Eventually, colors should only be specified as floats
+        console.warn ('Specifying colors as ints is deprecated');
         this.r = r / 255;
         this.g = g / 255;
         this.b = b / 255;
         this.a = a / 255;
     }
     
+    // A flat representation of the vector
     this.array = [this.r, this.g, this.b, this.a];
 
+    // Covert the color to a WebGL format that can be sent to shaders
     this.vect = function () {
         return this.array;
     };
     
+    // Convert the color to an SVG readable format
     this.rgb = function () {
-        return 'rgb(' + parseInt (this.r * 255) + ',' + parseInt (this.g * 255) + ',' + parseInt (this.b * 255) + ')';
+        return 'rgb(' + parseInt (this.r * 255, 10) + ',' + parseInt (this.g * 255, 10) + ',' + parseInt (this.b * 255, 10) + ')';
     };
 };
 
-function as_rgb (array) {
-    return 'rgb(' + Math.round (array[0] * 255) + ',' + Math.round (array[1] * 255) + ',' + Math.round (array[2] * 255) + ')'
-};
-
-function clamp (val, min, max) {
-    return Math.min (Math.max (val, min), max);
-}
-
-function icolor (r, g, b, a) {
+// Helper function to for specifying colors as integers
+var icolor = function (r, g, b, a) {
     return new Color (clamp (r / 255, 0, 1), clamp (g / 255, 0, 1), clamp (b / 255, 0, 1), clamp (a / 255, 0, 1));
 }
 
-function fcolor (r, g, b, a) {
+// Corresponding helper function for specifying colors as floats
+var fcolor = function (r, g, b, a) {
     return new Color (clamp (r, 0, 1), clamp (g, 0, 1), clamp (b, 0, 1), clamp (a, 0, 1));
 }
 
-function hex_to_color (hex) {
+// Covert a flat floating point representation of color to an rgb string
+var as_rgb = function (array) {
+    conosole.warn('Deprecated: use parseRGB instead');
+    return 'rgb(' + Math.round (array[0] * 255, 10) + ',' + Math.round (array[1] * 255, 10) + ',' + Math.round (array[2] * 255, 10) + ')'
+};
+
+// Convert a hex string to a color object
+var hex_to_color = function (hex) {
     var r = parseInt (hex.slice (1, 3), 16);
     var g = parseInt (hex.slice (3, 5), 16);
     var b = parseInt (hex.slice (5, 7), 16);
-    return new Color (r, g, b, 255);
+    return icolor (r, g, b, 255);
 };
 
-function parseRGB (value) {
+// Convert an rgb string to a color object
+var parseRGB = function (value) {
     var color_match = value.match (/^rgb\((\d+),(\d+),(\d+)\)$/);
     if (!color_match)
         return null;
     else
-        return new Color (color_match[1], color_match[2], color_match[3], 255);
+        return icolor (color_match[1], color_match[2], color_match[3], 255);
 };
 var Mouse = {
     x: 0,
@@ -565,11 +584,11 @@ $ (document).mousemove (function (event) {
     Mouse.y = event.clientY;
     Mouse.lastMove = new Date ().getTime ();
 });
-function int8 (data, offset) {
+var int8 = function (data, offset) {
     return data.charCodeAt (offset);
 };
 
-function bint32 (data, offset) {
+var bint32 = function (data, offset) {
     return (
         ((data.charCodeAt (offset) & 0xff) << 24) +
             ((data.charCodeAt (offset + 1) & 0xff) << 16) +
@@ -578,7 +597,7 @@ function bint32 (data, offset) {
     );
 };
 
-function lint32 (data, offset) {
+var lint32 = function (data, offset) {
     return (
         ((data.charCodeAt (offset + 3) & 0xff) << 24) +
             ((data.charCodeAt (offset + 2) & 0xff) << 16) +
@@ -587,21 +606,21 @@ function lint32 (data, offset) {
     );
 };
 
-function bint16 (data, offset) {
+var bint16 = function (data, offset) {
     return (
         ((data.charCodeAt (offset) & 0xff) << 8) +
             (data.charCodeAt (offset + 1) & 0xff)
     );
 };
 
-function lint16 (data, offset) {
+var lint16 = function (data, offset) {
     return (
         ((data.charCodeAt (offset + 1) & 0xff) << 8) +
             (data.charCodeAt (offset) & 0xff)
     );
 };
 
-function ldbl64 (data, offset) {
+var ldbl64 = function (data, offset) {
     var b0 = data.charCodeAt (offset) & 0xff;
     var b1 = data.charCodeAt (offset + 1) & 0xff;
     var b2 = data.charCodeAt (offset + 2) & 0xff;
@@ -621,7 +640,7 @@ function ldbl64 (data, offset) {
     return sign * (1 + frac * Math.pow (2, -52)) * Math.pow (2, exp);
 };
 
-function lfloat32 (data, offset) {
+var lfloat32 = function (data, offset) {
     var b0 = data.charCodeAt (offset) & 0xff;
     var b1 = data.charCodeAt (offset + 1) & 0xff;
     var b2 = data.charCodeAt (offset + 2) & 0xff;
@@ -635,7 +654,7 @@ function lfloat32 (data, offset) {
     return sign * (1 + frac * Math.pow (2, -23)) * Math.pow (2, exp);
 };
 
-function str (data, offset, length) {
+var str = function (data, offset, length) {
     var chars = [];
     var index = offset;
     /*while (true) {
@@ -666,7 +685,7 @@ var DEBUG = false;
 //gl = null;
 
 
-function setContext (canvas) {
+var setContext = function (canvas) {
     var gl;
     if (!DEBUG) 
         gl = canvas.get (0).getContext ('experimental-webgl', {
@@ -687,7 +706,7 @@ function setContext (canvas) {
     return gl;
 };
 
-function rect (x, y, w, h) {
+var rect = function (x, y, w, h) {
     var verts = [
         x - w, y + h,
         x - w, y - h,
@@ -700,7 +719,7 @@ function rect (x, y, w, h) {
     return verts;
 };
 
-function rectv (p1, p2, z) {
+var rectv = function (p1, p2, z) {
     var verts;
     if (arguments.length == 2) {
         verts = [
@@ -727,7 +746,7 @@ function rectv (p1, p2, z) {
     return verts;
 };
 
-function makeProgram (gl, path) {
+var makeProgram = function (gl, path) {
     if (!gl)
         return null;
     var shader = gl.createProgram();
@@ -745,7 +764,7 @@ function makeProgram (gl, path) {
     return shader;
 };
 
-function getShader (gl, type, path) {
+var getShader = function (gl, type, path) {
     var shader = gl.createShader (type);
 
     $.ajax ({
@@ -767,7 +786,7 @@ function getShader (gl, type, path) {
     return shader;
 };
 
-function addVars (gl, shader, vert, frag) {
+var addVars = function (gl, shader, vert, frag) {
     var uniforms = {};
     var attr = {};
 
@@ -845,7 +864,7 @@ function addVars (gl, shader, vert, frag) {
     }
 };
 
-function repeats (gl, data, itemSize, count) {
+var repeats = function (gl, data, itemSize, count) {
     var buffer = gl.createBuffer ();
     buffer.itemSize = itemSize;
     buffer.numItems = count;
@@ -861,7 +880,7 @@ function repeats (gl, data, itemSize, count) {
     return buffer;
 };
 
-function staticBuffer (gl, data, itemSize) {
+var staticBuffer = function (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var float_data = new Float32Array (data);
     gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
@@ -873,7 +892,7 @@ function staticBuffer (gl, data, itemSize) {
     return buffer;
 };
 
-function staticBufferJoin (gl, data, itemSize) {
+var staticBufferJoin = function (gl, data, itemSize) {
     var buffer = gl.createBuffer ();
     var count = 0;
     for (var i = 0; i < data.length; i ++) {
@@ -896,7 +915,7 @@ function staticBufferJoin (gl, data, itemSize) {
     return buffer;
 };
 
-function dynamicBuffer (gl, items, itemSize) {
+var dynamicBuffer = function (gl, items, itemSize) {
     if (!gl)
         return null;
     var buffer = gl.createBuffer ();
@@ -917,7 +936,7 @@ function dynamicBuffer (gl, items, itemSize) {
     return buffer;
 };
 
-function indexBuffer (gl, items, itemSize) {
+var indexBuffer = function (gl, items, itemSize) {
     var buffer = gl.createBuffer ();
     gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
     var float_data = new Uint16Array (items);
@@ -937,7 +956,7 @@ function indexBuffer (gl, items, itemSize) {
 };
 
 var tex_count = 0;
-function getTexture (gl, path, callback) {
+var getTexture = function (gl, path, callback) {
     var tex = gl.createTexture ();
     tex.id = tex_count;
     tex_count ++;
@@ -957,7 +976,7 @@ function getTexture (gl, path, callback) {
     img.src = path;
     return tex;
 };
-function Buffers (engine, initial_size) {
+var Buffers = function (engine, initial_size) {
     var gl = engine.gl;
     var data = {};
     
@@ -986,7 +1005,7 @@ function Buffers (engine, initial_size) {
         while (new_size < min_expand)
             new_size *= 2;
         size = new_size;
-        for (name in data) {
+        for (var name in data) {
             var new_array = new Float32Array (new_size * data[name].len);
             var old_array = data[name].array;
             var new_buffer = dynamicBuffer (gl, size, data[name].len);
@@ -1045,7 +1064,7 @@ function Buffers (engine, initial_size) {
     };
 
     this.update = function () {
-        for (name in data) {
+        for (var name in data) {
             if (data[name].dirty) {
                 if (data[name].buffer)
                     data[name].buffer.update (data[name].array, 0);
@@ -1146,16 +1165,12 @@ function Box (v1, v2) {
         switch (index) {
         case 0:
             return this.min.clone ();
-            break;
         case 1:
             return new vect (this.max.x, this.min.y);
-            break;
         case 2:
             return this.max.clone ();
-            break;
         case 3:
             return new vect (this.min.x, this.max.y);
-            break;
         default:
             throw "Index out of bounds: " + index ;
         }
@@ -1229,7 +1244,7 @@ var triangulate_polygon = function (elem) {
     return triangles;
 };
 
-function circle (index, length) {
+var circle = function (index, length) {
     while (index >= length)
         index -= length;
     while (index < 0)
@@ -1237,18 +1252,18 @@ function circle (index, length) {
     return index
 };
 
-function Vertex (current, upper, lower, index) {
+var Vertex = function (current, upper, lower, index) {
     this.current = current;
     this.upper = upper;
     this.lower = lower;
     this.index = index;
 };
 
-function xsearch (sweep, poly, index) {
+var xsearch = function (sweep, poly, index) {
     var upper = sweep.length - 1;
     var lower = 0;
     var current = parseInt ((sweep.length - 1) / 2);
-    if (sweep.length == 0) {
+    if (sweep.length === 0) {
         return 0;
     }
     while (true) {
@@ -1289,7 +1304,7 @@ function xsearch (sweep, poly, index) {
     }
 };
 
-function set_contains (sweep, index) {
+var set_contains = function (sweep, index) {
     for (var i = 0; i < sweep.length; i ++) {
         if (sweep[i] == index)
             return true;
@@ -1297,17 +1312,17 @@ function set_contains (sweep, index) {
     return false;
 };
 
-function solvex (poly, index, slice) {
-    if (index == undefined)
+var solvex = function (poly, index, slice) {
+    if (index === undefined)
         throw "whoa";
-    if ((poly[index + 1].y - poly[index].y) == 0)
+    if ((poly[index + 1].y - poly[index].y) === 0)
         return Math.min (poly[index].x, poly[index + 1].x);
     var t = (slice - poly[index].y) / (poly[index + 1].y - poly[index].y);
     //console.log ('t', slice, poly[index + 1].y,  poly[index].y, t);
     return poly[index].x + (poly[index + 1].x - poly[index].x) * t;
 };
 
-function find_index (sweep, index) {
+var find_index = function (sweep, index) {
     for (var i = 0; i < sweep.length; i ++) {
         if (sweep[i] == index)
             return i;
@@ -1315,13 +1330,13 @@ function find_index (sweep, index) {
     return false;
 };
 
-function sorted_index (sweep, poly, xpos, slice) {
+var sorted_index = function (sweep, poly, xpos, slice) {
     for (var i = 0; i < sweep.length; i ++) {
         var sxpos = solvex (poly, sweep[i], slice);
         //console.log (sweep[i], index, xpos, sxpos);
         if (sxpos > xpos)
             return i;
-        if (sxpos - xpos == 0) {
+        if (sxpos - xpos === 0) {
             //console.log ('same', sweep[i], index, poly[sweep[i]].y, poly[index].y);
             if (poly[sweep[i]].y > poly[index].y)
                 return i;
@@ -1331,11 +1346,11 @@ function sorted_index (sweep, poly, xpos, slice) {
     return sweep.length;
 };
     
-function intersect (v, poly, index) {
+var intersect = function (v, poly, index) {
     return new vect (solvex (poly, index, poly[v].y), poly[v].y);
 };
 
-function add_point (trap, a) {
+var add_point = function (trap, a) {
     if (!a)
         throw "eek";
     trap.push (a.x);
@@ -1343,7 +1358,7 @@ function add_point (trap, a) {
     //trap.push (1.0);
 }
 
-function add_trap (trap, bottom, top) {
+var add_trap = function (trap, bottom, top) {
     if (!bottom || !top || ((top.length + bottom.length != 3) && (top.length + bottom.length != 4)))
         throw "ahh";
     if ((bottom.length + top.length) == 3) {
@@ -1376,7 +1391,7 @@ function add_trap (trap, bottom, top) {
     }
 };
 
-function trapezoid_polygon (poly_in) {
+var trapezoid_polygon = function (poly_in) {
     var vertices = [];
     var count = 0;
     var poly = [];
@@ -1732,7 +1747,7 @@ return value;
 
 //     };
 // };
-function Camera (engine, options) {
+var Camera = function (engine, options) {
     var canvas = engine.canvas;
     var camera = this;
     if (!options)
@@ -2117,124 +2132,7 @@ var EventManager = new function () {
     };
 
 } ();
-/*function EventManager (engine) {
-  var events = {
-  'mouseover': {},
-  'mouseout': {},
-  'click': {}
-  };
-  var callers = {};
-  var features = {};
-
-  var r = 0;
-  var g = 0;
-  var b = 0;
-  var set_id_color = function () {
-  b ++;
-  if (b > 255) {
-  b = 0;
-  g ++;
-  }
-  if (g > 255) {
-  g = 0;
-  r ++;
-  }
-  if (r > 255)
-  throw "Too many elements to assign unique id";
-  return {
-  r: r, 
-  g: g,
-  b: b
-  };
-  };
-
-  this.register = function (layer, f) {
-  var c = set_id_color ();
-  var key = c.r + ',' + c.g + ',' + c.b;
-  
-  callers[key] = layer;
-  features[key] = f;
-
-  if (!(layer.id in events['click'])) {
-  for (key in events) {
-  events[key][layer.id] = [];
-  }
-  }
-  return c;
-  };
-  
-  this.bind = function (type, caller, func) {
-  if (!(type in events))
-  throw "Event type " + type + " does not exist";
-  events[type][caller.id].push (func);
-  };
-
-  var cx = -1;
-  var cy = -1;
-  var current = new Uint8Array (4);
-
-  var is_zero = function (pixel) {
-  return (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0);
-  }
-
-  var trigger_event = function (type, pixel) {
-  var key = pixel[0] + ',' + pixel[1] + ',' + pixel[2];
-  var layer = callers[key];
-  var feature = features[key];
-  for (var i = 0; i < events[type][layer.id].length; i ++) {
-  events[type][layer.id][i] (new LayerSelector ([feature]));
-  }
-  }
-
-  var click = false;
-  var click_queue = [];
-  this.click = function (x, y) {
-  click = true;
-  click_queue.push ({
-  x: x,
-  y: y
-  });
-  };
-
-  this.update = function (dt) {
-  if (cx != Mouse.x || cy != Mouse.y) {
-  var pixel = engine.read_pixel (Mouse.x, Mouse.y);
-  cx = Mouse.x;
-  cy = Mouse.y;
-  var same = true;
-  for (var i = 0; i < 4; i ++) {
-  if (current[i] != pixel[i])
-  same = false;
-  }
-  if (same) {
-  return null;
-  }
-  if (!is_zero (current)) {
-  trigger_event ('mouseout', current);
-  //console.log ('out');
-  }
-  //console.log (pixel);
-  for (var i = 0; i < 4; i ++) {
-  current[i] = pixel[i];
-  }
-  if (is_zero (pixel))
-  return null;
-  trigger_event ('mouseover', pixel);
-  }
-  if (click) {
-  click = false;
-  while (click_queue.length > 0) {
-  var pos = click_queue.splice (0, 1)[0];
-  var px = engine.read_pixel (pos.x, pos.y);
-  if (!is_zero (px)) {                  
-  trigger_event ('click', px);                                      
-  }
-  }
-  }
-  };
-  };
-*/
-function FeatureView (geom, styleFunc) {
+var FeatureView = function (geom, styleFunc) {
     this.style_map = {};
 
     this.geom = geom;
@@ -2283,7 +2181,7 @@ function FeatureView (geom, styleFunc) {
 
     this.keys = function () {
         var items = {};
-        for (key in this.style_map) {
+        for (var key in this.style_map) {
             items[key] = true;
         }        
         return items;
@@ -2296,7 +2194,7 @@ function FeatureView (geom, styleFunc) {
         }
     };
 };
-function FeatureRenderer (engine) {
+var FeatureRenderer = function (engine) {
     var renderer = this;
 
     this.engine = engine;
@@ -2348,10 +2246,10 @@ var unit = rect (0, 0, 1, 1);
 function PointRenderer (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
-    if (!(engine.shaders['point'])) {
-        engine.shaders['point'] = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
+    if (!(engine.shaders.point)) {
+        engine.shaders.point = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
-    var point_shader = engine.shaders['point'];
+    var point_shader = engine.shaders.point;
     
     // A value greater than or equal to the maximum radius of each point
     var max_rad = 10.0;
@@ -2458,7 +2356,7 @@ function PointRenderer (engine, layer) {
 };
 var INITIAL_LINES = 1024;
 
-function draw_lines (stroke_buffers, geom) {
+var draw_lines = function (stroke_buffers, geom) {
 
     var vertCount = 6 * geom.length;
     var startIndex = stroke_buffers.alloc (vertCount);
@@ -2537,13 +2435,13 @@ function draw_lines (stroke_buffers, geom) {
     return vertCount;
 };
 
-function LineRenderer (engine) {
+var LineRenderer = function (engine) {
     FeatureRenderer.call (this, engine);
 
-    if (!(engine.shaders['line'])) {
-        engine.shaders['line'] = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
+    if (!(engine.shaders.line)) {
+        engine.shaders.line = makeProgram (engine.gl, BASE_DIR + 'shaders/line');
     }
-    var line_shader = engine.shaders['line'];
+    var line_shader = engine.shaders.line;
 
     var stroke_buffers = new Buffers (engine, 1024);
     //stroke_buffers.create ('vert', 2);
@@ -2583,13 +2481,7 @@ function LineRenderer (engine) {
 
         $.each (feature_geom, function (i, poly) {
             for (var i = 0; i < poly.length; i ++) {
-                //stroke_count += poly[i].length * 6;
-                //draw_graph_lines (stroke_buffers, poly[i]);
                 stroke_count += draw_lines (stroke_buffers, poly[i]);
-                /*if (point_cmp (poly[i][0], poly[i][poly[i].length - 1]))
-                  draw_map_lines (stroke_buffers, poly[i]);
-                  else
-                  draw_graph_lines (stroke_buffers, poly[i]);*/
             }
         });
     };
@@ -2629,10 +2521,10 @@ var INITIAL_POLYGONS = 1024;
 function PolygonRenderer (engine) {
     FeatureRenderer.call (this, engine);
 
-    if (!(engine.shaders['polygon'])) {
-        engine.shaders['polygon'] = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+    if (!(engine.shaders.polygon)) {
+        engine.shaders.polygon = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
-    var poly_shader = engine.shaders['polygon'];
+    var poly_shader = engine.shaders.polygon;
 
     var fill_buffers = new Buffers (engine, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);
@@ -2850,7 +2742,7 @@ var PointQuerier = function (engine, layer, options) {
             results.push (point.ref);
         });
         return new LayerSelector (results);
-    }
+    };
 
     // Converts geometry representation of a point to a vector
     var geom2vect = function (geom) {
@@ -2934,27 +2826,8 @@ var TimeSeriesQuerier = function (engine, layer, options) {
     var lines = layer.features ();
     var r_points = [];
     layer.features ().each (function (n, polygon) {
-        /*var pushPoint = function (v) {
-          r_points.push ({
-          ref: polygon,
-          x: v.x,
-          y: v.y
-          });
-          };*/
         $.each (options.geomFunc (polygon), function (i, poly) {
             $.each (poly, function (j, ring) {
-                /*var currentPoint = new vect (ring[0][0], ring[0][1]);
-                  pushPoint (currentPoint);
-                  for (var k = 1; k < ring.length; k ++) {
-                  var nextPoint = new vect (ring[k][0], ring[k][1]);
-                  var t = 0;
-                  while (t < 1) {
-                  t += .5;
-                  var dir = vect.sub (nextPoint, currentPoint).scale (t);
-                  pushPoint (vect.add (currentPoint, dir));
-                  }
-                  currentPoint = nextPoint;
-                  }*/
                 $.each (ring, function (k, pair) {
                     r_points.push ({
                         ref: polygon,
@@ -3019,7 +2892,7 @@ var LayerSelector = function (elem) {
 
     this.count = function () {
         return elem.length;
-    }
+    };
 
     this.items = function () {
         return elem;
@@ -3108,11 +2981,11 @@ var LayerSelector = function (elem) {
     };
 
     var operators = {
-        '>': function (a, b) { return a > b},
-        '<': function (a, b) { return a < b},
-        '==': function (a, b) { return a == b},
-        '>=': function (a, b) { return a >= b},
-        '<=': function (a, b) { return a <= b}
+        '>': function (a, b) { return a > b; },
+        '<': function (a, b) { return a < b; },
+        '==': function (a, b) { return a == b; },
+        '>=': function (a, b) { return a >= b; },
+        '<=': function (a, b) { return a <= b; }
     };
     this.select = function (string) {
         if (string.match (/^\s*\*\s*$/))
@@ -3155,7 +3028,7 @@ var LayerSelector = function (elem) {
                 results.push (elem[i]);
         }
         return new LayerSelector (results);
-    }
+    };
 
     this.quantile = function (field, q, total) {
         var clean = elem.filter (function (f) {
@@ -3219,7 +3092,7 @@ var LayerSelector = function (elem) {
         // only the first element
         if (value === undefined) {
             if (elem[0])
-                return elem[0].style (engine, key)
+                return elem[0].style (engine, key);
         }
         else {
             // Otherwise, set the value, depending on the type of value
@@ -3230,7 +3103,7 @@ var LayerSelector = function (elem) {
         }
     };
 };
-function LayerController (engine, layer, options) {
+var LayerController = function (engine, layer, options) {
     var controller = this;
 
     // Set this as the parent of the layer in the event hierarchy
@@ -3263,7 +3136,7 @@ function LayerController (engine, layer, options) {
         var view = controller.renderers[renderKey].create (options.geomFunc (f), (function (feature) {
             return function (key) {
                 return StyleManager.derivedStyle (feature, layer, engine, key);
-            }
+            };
         }) (f));
 
         controller.views[f.id] = view;
@@ -3285,11 +3158,11 @@ function LayerController (engine, layer, options) {
     };
 
 };
-function Engine (selector, options) {
+var Engine = function (selector, options) {
     var engine = this;
 
     default_model (options, {
-        background: new Color (0, 0, 0, 1),
+        background: new Color (0, 0, 0, 1)
     });
 
     this.type = 'Engine';
@@ -3387,7 +3260,7 @@ function Engine (selector, options) {
                     gl.bindFramebuffer (gl.FRAMEBUFFER, last);
                     // THIS WILL CAUSE PROBLEMS - SAVE LAST VALUE OF BLEND
                     gl.enable (gl.BLEND);
-                        },
+                }
             };
         framebuffers.push (frame);
         return frame;
@@ -3601,7 +3474,7 @@ function Engine (selector, options) {
 
     this.disableZ = function () {
         gl.disable (gl.DEPTH_TEST);
-    }
+    };
 
     this.canvas.mouseout (function () {
         EventManager.mouseOver (null);
@@ -3610,12 +3483,15 @@ function Engine (selector, options) {
     // Start the animation loop
     requestAnimationFrame (draw);
 };
+// The main map class
+// This is the top level controller for all layers and renderers
 var Map = function (selector, options) {
     var engine = this;
 
     if (options === undefined)
         options = {};
 
+    // The geom function defined how to extract the geometry from a feature
     options.geomFunc = function (f) {
         return f.geom;
     };
@@ -3630,16 +3506,19 @@ var Map = function (selector, options) {
 
     Engine.call (this, selector, options); 
 
+    // The renderers map between types and classes
     this.Renderers = {
         'Point': PointRenderer,
         'Polygon': multiRendererFactory ([PolygonRenderer, LineRenderer]),
-        'Line': LineRenderer,
+        'Line': LineRenderer
     };
 
+    // Queriers tell us how to search the geometry, which may not be the literal
+    // geometry, depending on the choice of renderer
     this.Queriers = {
         'Point': PointQuerier,
-        'Polygon': PolygonQuerier,
-        //'Line': lineQuerier
+        'Polygon': PolygonQuerier
+        //'Line': LineQuerier
     };
 
     this.styles = {
@@ -3672,11 +3551,13 @@ var Map = function (selector, options) {
     };
     var base = null;
     var setBase = function () {
+        // If the base layer already exists, remove to old one
         if (base) {
-            
+            // TODO
         }
+        var settings;
         if (options.base == 'default' || options.base == 'nasa') {
-            var settings = copy (options);
+            settings = copy (options);
             copy_to (settings, {
                 source: 'file',
                 url: options['tile-server'] + '/tiles/nasa_topo_bathy',
@@ -3686,7 +3567,7 @@ var Map = function (selector, options) {
             base = new MultiTileLayer (settings);
         }
         else if (options.base == 'ne') {
-            var settings = copy (options);
+            settings = copy (options);
             copy_to (settings, {
                 source: 'file',
                 url: options['tile-server'] + '/tiles/NE1_HR_LC_SR_W_DR',
@@ -3696,7 +3577,7 @@ var Map = function (selector, options) {
             base = new MultiTileLayer (settings);
         }
         else if (options.base == 'ne1') {
-            var settings = copy (options);
+            settings = copy (options);
             copy_to (settings, {
                 source: 'file',
                 url: options['tile-server'] + '/tiles/NE1_HR_LC',
@@ -3716,6 +3597,7 @@ var Map = function (selector, options) {
 
     setBase ();
 
+    // Allow for settings to be changed dynamically at runtime
     this.settings = function (key, value) {
         options[key] = value;
         if (key == 'base') {
@@ -3723,6 +3605,9 @@ var Map = function (selector, options) {
         }
     };
 
+    // Add a layer to the scene. Instantiate a controller (that handles
+    // event and style registrations) and a set of queriers (that
+    // handle searching rendered geometry)
     this.append = function (layer) {
         // Legacy layer drawing code for old-school type layers
         if ('draw' in layer) {
@@ -3779,7 +3664,7 @@ function TimeSeries (selector, layer, options) {
         },
         'domain': {
             'min': 0,
-            'max': options.order.length - 1,
+            'max': options.order.length - 1
         },
         'min': new vect (0, bounds.min),
         'width': options.order.length - 1,
@@ -3787,7 +3672,7 @@ function TimeSeries (selector, layer, options) {
         'worldMin': new vect (0, bounds.min),
         'worldMax': new vect (options.order.length - 1, bounds.max),
         'xlock': false,
-        'ylock': false,
+        'ylock': false
     });
 
     var order = options.order;
@@ -3825,7 +3710,7 @@ function TimeSeries (selector, layer, options) {
             'fill-opacity': .5,
             'stroke': new Color (.02, .44, .69, 1.0),
             'stroke-opacity': 1.0,
-            'stroke-width': 2.0,
+            'stroke-width': 2.0
         }
     };
 
@@ -3969,192 +3854,18 @@ function SelectionBox (engine) {
         }
     };
 };
-function RangeNode (elem, start, end, current) {
+var RangeNode = function (elem, start, end, current) {
     this.data = elem[current];
     this.left = null;
     this.right = null;
     if (start != current)
-        this.left = new RangeNode (elem, start, current - 1, parseInt ((start + (current - 1)) / 2));
+        this.left = new RangeNode (elem, start, current - 1, parseInt ((start + (current - 1)) / 2, 10));
     if (end != current)
-        this.right = new RangeNode (elem, current + 1, end, parseInt ((end + (current + 1)) / 2));
+        this.right = new RangeNode (elem, current + 1, end, parseInt ((end + (current + 1)) / 2, 10));
     this.subtree = [];
     for (var i = start; i <= end; i ++) {
         this.subtree.push (elem[i]);
-    };
-    this.subtree.sort (function (a, b) {
-        return a.y - b.y;
-    });
-
-    var xrange = function (b) {
-        return (b.x_in (elem[start]) && b.x_in (elem[end]));
-    };
-
-    this.yrange = function (b, start, end) {
-        return (b.y_in (this.subtree[start]) && b.y_in (this.subtree[end]));
-    };
-
-    this.subquery = function (result, box, start, end, current) {
-        if (this.yrange (box, start, end)) {
-            for (var i = start; i <= end; i ++) {
-                result.push (this.subtree[i]);
-            }
-            return;
-        };
-        if (box.y_in (this.subtree[current]))
-            result.push (this.subtree[current]);
-        if (box.y_left (this.subtree[current])){
-            if (current != end)
-                this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2));
-        }
-        else if (box.x_right (this.subtree[current])) {
-            if (current != start)
-                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
-        }
-        else {
-            if (current != end)
-                this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2));
-            if (current != start)
-                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
-        }
-    };
-    
-    this.search = function (result, box) {
-        if (xrange (box)) {
-            this.subquery (result, box, 0, this.subtree.length - 1, parseInt ((this.subtree.length - 1) / 2));
-            return;
-        }
-        else {
-            if (box.contains (this.data))
-                result.push (this.data);
-            if (box.x_left (this.data)) {
-                if (this.right)
-                    this.right.search (result, box);
-            }
-            else if (box.x_right (this.data)) {
-                if (this.left)
-                    this.left.search (result, box);
-            }
-            else {
-                if (this.left)
-                    this.left.search (result, box);
-                if (this.right)
-                    this.right.search (result, box);
-            }
-        }
-    };
-};
-function Box (v1, v2) {
-    this.min = v1.clone ();
-    this.max = v2.clone ();
-    this.contains = function (p) {
-        return (v1.x <= p.x) && (v2.x >= p.x) && (v1.y <= p.y) && (v2.y >= p.y);
-    };
-
-    this.x_in = function (p) {
-        return (v1.x <= p.x) && (v2.x >= p.x);
-    };
-
-    this.x_left = function (p) {
-        return (v1.x >= p.x);
-    };
-
-    this.x_right = function (p) {
-        return (v2.x <= p.x);
-    };
-
-    this.y_in = function (p) {
-        return (v1.y <= p.y) && (v2.y >= p.y);
-    };
-
-    this.y_left = function (p) {
-        return (v1.y >= p.y);
-    };
-
-    this.y_right = function (p) {
-        return (v2.y <= p.y);
-    };
-
-    this.area = function () {
-        return (this.max.x - this.min.x) * (this.max.y - this.min.y);
     }
-
-    this.height = function () {
-        return this.max.y - this.min.y;
-    };
-
-    this.width = function () {
-        return this.max.x - this.min.x;
-    };
-    
-    this.vertex = function (index) {
-        switch (index) {
-        case 0:
-            return this.min.clone ();
-            break;
-        case 1:
-            return new vect (this.max.x, this.min.y);
-            break;
-        case 2:
-            return this.max.clone ();
-            break;
-        case 3:
-            return new vect (this.min.x, this.max.y);
-            break;
-        default:
-            throw "Index out of bounds: " + index ;
-        }
-    };
-
-    this.intersects = function (box) {
-        for (var i = 0; i < 4; i ++) {
-            for (var j = 0; j < 4; j ++) {
-                if (vect.intersects (this.vertex (i), this.vertex ((i + 1) % 4),
-                                     box.vertex (j), box.vertex ((j + 1) % 4)))
-                    return true;
-            }
-        }
-        if (this.contains (box.min) &&
-            this.contains (box.max) &&
-            this.contains (new vect (box.min.x, box.max.y)) &&
-            this.contains (new vect (box.max.x, box.min.y)))
-            return true;
-        if (box.contains (this.min) &&
-            box.contains (this.max) &&
-            box.contains (new vect (this.min.x, this.max.y)) &&
-            box.contains (new vect (this.max.x, this.min.y)))
-            return true;
-        return false
-    };
-
-    this.union = function (b) {
-        this.min.x = Math.min (this.min.x, b.min.x);
-        this.min.y = Math.min (this.min.y, b.min.y);
-
-        this.max.x = Math.max (this.max.x, b.max.x);
-        this.max.y = Math.max (this.max.y, b.max.y);
-    };
-
-    this.centroid = function () {
-        return new vect ((this.max.x + this.min.x) / 2, (this.max.y + this.min.y) / 2);
-    };
-
-    this.clone = function () {
-        return new Box (v1, v2);
-    };
-};
-
-function RangeNode (elem, start, end, current) {
-    this.data = elem[current];
-    this.left = null;
-    this.right = null;
-    if (start != current)
-        this.left = new RangeNode (elem, start, current - 1, parseInt ((start + (current - 1)) / 2));
-    if (end != current)
-        this.right = new RangeNode (elem, current + 1, end, parseInt ((end + (current + 1)) / 2));
-    this.subtree = [];
-    for (var i = start; i <= end; i ++) {
-        this.subtree.push (elem[i]);
-    };
     this.subtree.sort (function (a, b) {
         return a.y - b.y;
     });
@@ -4173,20 +3884,20 @@ function RangeNode (elem, start, end, current) {
                 result.push (this.subtree[i]);
             }
             return;
-        };
+        }
         if (box.y_in (this.subtree[current]))
             result.push (this.subtree[current]);
         if (box.y_left (this.subtree[current])){
             if (current != end)
-                this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2));
+                this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2, 10));
         }
         else if (box.x_right (this.subtree[current])) {
             if (current != start)
-                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
+                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2, 10));
         }
         else {
             if (current != end)
-                this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2));
+                this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2, 10));
             if (current != start)
                 this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
         }
@@ -4194,7 +3905,7 @@ function RangeNode (elem, start, end, current) {
     
     this.search = function (result, box) {
         if (xrange (box)) {
-            this.subquery (result, box, 0, this.subtree.length - 1, parseInt ((this.subtree.length - 1) / 2));
+            this.subquery (result, box, 0, this.subtree.length - 1, parseInt ((this.subtree.length - 1) / 2, 10));
             return;
         }
         else {
@@ -4217,15 +3928,14 @@ function RangeNode (elem, start, end, current) {
         }
     };
 };
-
-function RangeTree (elem) {
+var RangeTree = function (elem) {
     elem.sort (function (a, b) {
         return a.x - b.x;
     });
     if (elem.length > 0)
-        this.root = new RangeNode (elem, 0, elem.length - 1, parseInt ((elem.length - 1) / 2));
+        this.root = new RangeNode (elem, 0, elem.length - 1, parseInt ((elem.length - 1) / 2, 10));
     else
-        this.root == null;
+        this.root = null;
 
     this.search = function (_box) {
         if (!this.root)
@@ -4275,21 +3985,21 @@ var Feature = function (prop, layer) {
 
     /*var change_callbacks = [];
 
-    var trigger_change = function (mode, key, value) {
-        $.each (change_callbacks, function (i, callback) {
-            callback (feature, mode, key, value);
-        });
-    };
+      var trigger_change = function (mode, key, value) {
+      $.each (change_callbacks, function (i, callback) {
+      callback (feature, mode, key, value);
+      });
+      };
 
-    // A function to broadcast when the geometry or feature specific styles change
-    // This is used when changes occur that views may not be aware of
-    this.change = function (change_func) {
-        change_callbacks.push (change_func);
-    };
+      // A function to broadcast when the geometry or feature specific styles change
+      // This is used when changes occur that views may not be aware of
+      this.change = function (change_func) {
+      change_callbacks.push (change_func);
+      };
 
-    this.compute = function (engine, key) {
-        return derived_style (engine, this, layer, key);
-    };*/
+      this.compute = function (engine, key) {
+      return derived_style (engine, this, layer, key);
+      };*/
 
     this.style = function (arg0, arg1, arg2) {
         var engine, key, value;
@@ -4313,31 +4023,31 @@ var Feature = function (prop, layer) {
     };
 };
 
-var EARTH = 6378.1
+var EARTH = 6378.1;
 
 var new_feature_id = (function () {
     var current_id = 1;
     return function () {
-	var id = current_id;
-	current_id ++;
-	return id;
+        var id = current_id;
+        current_id ++;
+        return id;
     };
 }) ();
 
 var rand_map = (function () {
-    var factor = 1e-6
-    var xmap = {} 
-    var ymap = {} 
+    var factor = 1e-6;
+    var xmap = {};
+    var ymap = {};
     return function (x, y) {
-	// Temporary Fix
-	return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
-	// End Temp
-	var key = x.toString () + ',' + y.toString ();
-	if (!(key in xmap)) {
-	    xmap[key] = x + Math.random () * factor - (factor / 2);
-	    ymap[key] = y + Math.random () * factor - (factor / 2);
-	}
-	return new vect (xmap[key], ymap[key]);
+        // Temporary Fix
+        return new vect (x + Math.random () * factor - (factor / 2), y + Math.random () * factor - (factor / 2));
+        // End Temp
+        /*var key = x.toString () + ',' + y.toString ();
+        if (!(key in xmap)) {
+            xmap[key] = x + Math.random () * factor - (factor / 2);
+            ymap[key] = y + Math.random () * factor - (factor / 2);
+        }
+        return new vect (xmap[key], ymap[key]);*/
     };
 }) ();
 // A point for the layer. A point is actually a multi-point, so it can be
@@ -4356,10 +4066,10 @@ var Point = function (prop, layer) {
     for (var i = 0; i < this.geom.length; i ++) {
         var pos = geom2vect (this.geom[i]);
         var bbox = new Box (pos.clone (), pos.clone ());
-	if (this.bounds)
-	    this.bounds.union (bbox);
-	else
-	    this.bounds = bbox;
+        if (this.bounds)
+            this.bounds.union (bbox);
+        else
+            this.bounds = bbox;
     }
 
     // Check if a point (usually a mouse position) is contained in the buffer
@@ -4399,11 +4109,11 @@ var PointCollection = function (points) {
     // Search a rectangle for point contained within
     this.search = function (box) {
         var elem = range_tree.search (box);
-	var results = [];
-	$.each (elem, function (index, point) {
-	    results.push (point.ref);
-	});
-	return new LayerSelector (results);
+        var results = [];
+        $.each (elem, function (index, point) {
+            results.push (point.ref);
+        });
+        return new LayerSelector (results);
     };
 
     // Determine if a point is contained in the buffer of any of the points
@@ -4416,13 +4126,13 @@ var PointCollection = function (points) {
         var elem = range_tree.search (box);
         for (var i = 0; i < elem.length; i ++) {
             var point = elem[i];
-	    if (point.ref.map_contains (engine, p))
+            if (point.ref.map_contains (engine, p))
                 return new LayerSelector ([point.ref]);
-	}
+        }
         return new LayerSelector ([]);
     };
 };
-function Polygon (prop, layer) {
+var Polygon = function (prop, layer) {
     Feature.call (this, prop, layer);
     
     this.bounds = linestring_bounds (this.geom);
@@ -4432,70 +4142,70 @@ function Polygon (prop, layer) {
     };
 
     this.contains = function (p) {
-	var s = 0;
-	var results = [];
+        var s = 0;
+        var results = [];
         var feature = this;
-	if (feature.bounds.contains (p)) {
-	    s ++;
-	    for (var j = 0; j < feature.geom.length; j ++) {
-		var poly = feature.geom[j];
-		var count = 0;
-		$.each (poly, function (k, ring) {
-		    for (var l = 0; l < ring.length; l ++) {
-			var m = (l + 1) % ring.length;
-			if ((p.y - ring[l][1]) / (p.y - ring[m][1]) < 0) {
-			    var inf = new vect (720, p.y);
-			    var v1 = new vect (ring[l][0], ring[l][1]);
-			    var v2 = new vect (ring[m][0], ring[m][1]);
-			    if (vect.intersects (p, inf, v1, v2))
-				count ++
-			}
-		    }
-		});
-		if ((count % 2) == 1) {
+        if (feature.bounds.contains (p)) {
+            s ++;
+            for (var j = 0; j < feature.geom.length; j ++) {
+                var poly = feature.geom[j];
+                var count = 0;
+                $.each (poly, function (k, ring) {
+                    for (var l = 0; l < ring.length; l ++) {
+                        var m = (l + 1) % ring.length;
+                        if ((p.y - ring[l][1]) / (p.y - ring[m][1]) < 0) {
+                            var inf = new vect (720, p.y);
+                            var v1 = new vect (ring[l][0], ring[l][1]);
+                            var v2 = new vect (ring[m][0], ring[m][1]);
+                            if (vect.intersects (p, inf, v1, v2))
+                                count ++
+                        }
+                    }
+                });
+                if ((count % 2) == 1) {
                     return true;
-		}
-	    }
-	}
+                }
+            }
+        }
         return false;
     };
 
 };
 
-function PolygonCollection (polygons) {
+var PolygonCollection = function (polygons) {
     var r_points = [];
     for (var n = 0; n < polygons.length; n ++) {
-	$.each (polygons[n].geom, function (i, poly) {
-	    $.each (poly, function (j, ring) {
-		$.each (ring, function (k, pair) {
-		    r_points.push ({
+        $.each (polygons[n].geom, function (i, poly) {
+            $.each (poly, function (j, ring) {
+                $.each (ring, function (k, pair) {
+                    r_points.push ({
                         ref: polygons[n],
-			x: pair[0],
-			y: pair[1]
-		    });			
-		});
-	    });
-	});
+                        x: pair[0],
+                        y: pair[1]
+                    });                 
+                });
+            });
+        });
     }
     tree = new RangeTree (r_points);
 
     this.search = function (box) {
-	var elem = tree.search (box);
-	var keys = {};
-	$.each (elem, function (i, p) {
-	    keys[p.ref.id] = p.ref;
-	});
+        var elem = tree.search (box);
+        var keys = {};
+        $.each (elem, function (i, p) {
+            keys[p.ref.id] = p.ref;
+        });
         for (var i = 0; i < polygons.length; i ++) {
             for (var j = 0; j < 4; j ++) {
                 if (polygons[i].contains (box.vertex (j)))
                     keys[polygons[i].id] = polygons[i];
             }
         }
-	var results = [];
-	for (var k in keys) {
-	    results.push (keys[k]);
-	}
-	return new LayerSelector (results);
+        var results = [];
+        for (var k in keys) {
+            results.push (keys[k]);
+        }
+        return new LayerSelector (results);
     };
 
     this.map_contains = function (engine, p) {
@@ -4511,219 +4221,27 @@ function PolygonCollection (polygons) {
         return new LayerSelector (results);
     };
 };
-function linestring_bounds (geom) {
+var linestring_bounds = function (geom) {
     var min = new vect (Infinity, Infinity);
     var max = new vect (-Infinity, -Infinity);
     $.each (geom, function (i, poly) {
-	$.each (poly, function (k, ring) {
-	    $.each (ring, function (j, pair) {
-		if (pair[0] < min.x)
-		    min.x = pair[0];
-		if (pair[0] > max.x)
-		    max.x = pair[0];
-		if (pair[1] < min.y)
-		    min.y = pair[1];
-		if (pair[1] > max.y)
-		    max.y = pair[1];
-	    });
-	});
+        $.each (poly, function (k, ring) {
+            $.each (ring, function (j, pair) {
+                if (pair[0] < min.x)
+                    min.x = pair[0];
+                if (pair[0] > max.x)
+                    max.x = pair[0];
+                if (pair[1] < min.y)
+                    min.y = pair[1];
+                if (pair[1] > max.y)
+                    max.y = pair[1];
+            });
+        });
     });
     return new Box (min, max);
 };
 
-
-function draw_graph_lines (stroke_buffers, geom) {
-    var count = 6 * geom.length;
-    var start = stroke_buffers.alloc (count);
-    
-    var unit = [
-        new vect (1, 1),
-        new vect (1, -1),
-        new vect (-1, -1),
-        new vect (-1, 1)
-    ];
-
-    var index = 0;
-    var next_vert = function () {
-	if (geom[index]) {
-	    var v = new vect (geom[index][0], geom[index][1]);
-	    index ++;
-	    return v;
-	}
-	else
-	    return null;
-    };
-
-    var prev = next_vert ();
-    var current = next_vert ();
-    var next = next_vert ();
-
-    var get_norm_dir = function (u1, u2) {
-        var dir = vect.dir (u1, u2);
-        return dir.rotate (PI / 2);
-    };
-
-    var intersect_parallel_lines = function (p1, p2, p3) {
-        //var norm1 = vect.sub (get_norm_dir (p1, p2), current);
-        //var norm2 = vect.sub (get_norm_dir (p2, p3), current);
-        var norm1 = get_norm_dir (p1, p2);
-        var norm2 = get_norm_dir (p2, p3);
-
-        var x1 = vect.add (p1, norm1);
-        var x2 = vect.add (p2, norm1);
-        var x3 = vect.add (p2, norm2);
-        var x4 = vect.add (p3, norm2);
-        
-        var intersect = vect.intersect2dpos (x1, x2, x3, x4);
-        if (intersect == Infinity)
-            return vect.add (p2, norm1);
-        else
-            return intersect;
-    };
-
-    var p_norm1 = vect.dir (prev, current).rotate (-PI / 2);
-    var p_norm2 = vect.dir (prev, current).rotate (PI / 2);
-
-    var c_norm1, c_norm2;
-
-    var write_quad = function (buffer, v1, v2, v3, v4) {
-        buffer.push (v1.x);
-        buffer.push (v1.y);
-
-        buffer.push (v2.x);
-        buffer.push (v2.y);
-
-        buffer.push (v3.x);
-        buffer.push (v3.y);
-
-        buffer.push (v1.x);
-        buffer.push (v1.y);
-
-        buffer.push (v3.x);
-        buffer.push (v3.y);
-
-        buffer.push (v4.x);
-        buffer.push (v4.y);
-    };
-
-    var vert_buffer = [];
-    var norm_buffer = [];
-    var unit_buffer = [];
-
-    while (current) {
-        if (next) {
-            c_norm1 = vect.sub (intersect_parallel_lines (prev, current, next), current);
-            c_norm2 = vect.sub (intersect_parallel_lines (next, current, prev), current);
-        }
-        else {
-            c_norm1 = vect.dir (prev, current).rotate (PI / 2);
-            c_norm2 = vect.dir (prev, current).rotate (-PI / 2);
-            // TODO: if first == last, connect them together
-        }
-        
-        write_quad (vert_buffer, prev, prev, current, current);
-        write_quad (norm_buffer, p_norm1, p_norm2, c_norm1, c_norm2);
-        write_quad (unit_buffer, unit[0], unit[1], unit[2], unit[3]);
-
-        p_norm1 = c_norm2;
-        p_norm2 = c_norm1;
-
-	prev = current;
-	current = next;
-	next = next_vert ();
-    };
-
-    stroke_buffers.write ('vert', vert_buffer, start, count);
-    stroke_buffers.write ('norm', norm_buffer, start, count);
-    stroke_buffers.write ('unit', unit_buffer, start, count);
-
-    return start;
-
-};
-
-function draw_map_lines (stroke_buffers, geom) {
-    var count = 6 * geom.length;
-    var start = stroke_buffers.alloc (count);
-
-    var index = 0;
-    var next_vert = function () {
-	if (geom[index]) {
-	    var v = new vect (geom[index][0], geom[index][1]);
-	    index ++;
-	    return v;
-	}
-	else
-	    return null;
-    };
-
-    var unit = [
-        new vect (1, 1),
-        new vect (1, -1),
-        new vect (-1, -1),
-        new vect (-1, 1)
-    ];
-    
-    var vert_buffer = [];
-    var norm_buffer = [];
-    var unit_buffer = []
-    var unit_buffer = [-1, 0, 1, 0, -1, -1, 1, -1, -1, -1, 1, 0];
-    //var unit_buffer = [, 0, 0, 0, 0, 0, 0];
-    //var unit_buffer = [-1, 1, -1, -1, 1, -1, -1, 1, 1, -1, 1, 1];
-    var write_vert = function (buffer, v, index, invert) {
-	if (!invert) {
-	    buffer[index] = v.x;
-	    buffer[index + 1] = v.y;
-	}
-	else {
-	    buffer[index] = -v.x;
-	    buffer[index + 1] = -v.y;
-	}
-    };
-    var cp_vert = function (buffer, v1, v2, invert) {
-	write_vert (buffer, v1, 0, false);
-	write_vert (buffer, v2, 2, false);
-	write_vert (buffer, v1, 4, invert);
-	
-	write_vert (buffer, v2, 6, invert);
-	write_vert (buffer, v1, 8, invert);
-	write_vert (buffer, v2, 10, false);
-    };
-    
-    var prev = next_vert ();
-    var current = next_vert ();
-    var next = next_vert ();
-    var p_norm = vect.dir (prev, current).rotate (PI / 2);
-    var c_norm;
-    var write_index = start;
-    
-    while (current) {
-	if (next) {
-            var p1 = vect.dir (next, current);
-            var p2 = vect.dir (current, prev);
-            c_norm = vect.sub (p1, p2).scale (.5).normalize ();
-	}
-	else {
-	    c_norm = vect.dir (prev, current).rotate (PI / 2);
-	}
-        //c_norm = new vect (0.0, 1.0);
-        //p_norm = new vect (0.0, 1.0);
-	cp_vert (vert_buffer, prev, current, false);
-	cp_vert (norm_buffer, p_norm, c_norm, true);
-	//cp_vert (unit_buffer, new vect (0, 1), new vect (0, 1), true);
-	stroke_buffers.write ('vert', vert_buffer, write_index, 6);
-	stroke_buffers.write ('norm', norm_buffer, write_index, 6);
-	stroke_buffers.write ('unit', unit_buffer, write_index, 6);
-	write_index += 6;
-	
-	prev = current;
-	current = next;
-	next = next_vert ();
-	p_norm = c_norm;
-    }
-    return start;
-};
-
-function Line (prop, layer) {
+var Line = function (prop, layer) {
     Feature.call (this, prop, layer);
 
     this.bounds = linestring_bounds (this.geom);
@@ -4733,7 +4251,7 @@ function Line (prop, layer) {
     }
 };
 
-function LineCollection (lines) {
+var LineCollection = function (lines) {
     this.search = function (box) {
         return new LayerSelector ([]);
     };
@@ -4752,7 +4270,7 @@ var geom_types = {
     'Line': Line
 };
 
-function Layer (options) {
+var Layer = function (options) {
     if (!options)
         options = {};
 
@@ -4844,10 +4362,10 @@ function Layer (options) {
         features[f.id] = f;
 
         // Update the layer bounding box
-	if (this.bounds)
-	    this.bounds.union (f.bounds);
-	else
-	    this.bounds = f.bounds.clone ();
+        if (this.bounds)
+            this.bounds.union (f.bounds);
+        else
+            this.bounds = f.bounds.clone ();
 
         for (var key in feature.attr) {
             if (props[key] === undefined) { 
@@ -4862,7 +4380,7 @@ function Layer (options) {
                 else
                     props[key] = false;
             }
-        };
+        }
 
         return f;
     };
@@ -4876,40 +4394,10 @@ function Layer (options) {
     this.mouseout = function (func) {
         EventManager.addEventHandler (this, 'mouseout', func);
     };
-
-    /*// Receive low level mouse position handlers from the bound engine
-    var current_over = {};
-    this.update_move = function (engine, p) {
-	if (over_func || out_func) {
-	    var c = this.map_contains (engine, p);
-	    var new_over = {};
-	    if (c) {
-		c.each (function (i, f) {
-		    new_over[f.id] = f;
-		});
-	    }
-	    for (var key in current_over) {
-		if (!(key in new_over) && out_func) 
-		    out_func (current_over[key]);
-	    }
-	    for (var key in new_over) {
-		if (!(key in current_over) && over_func) 
-		    over_func (new_over[key]);
-	    }
-	    current_over = new_over;    
-        }
-    };
-    this.force_out = function () {
-	for (var key in current_over) {
-	    if (out_func)
-		out_func (current_over[key]);
-	}
-	current_over = {};
-    };*/
 };
 var grid_shader = null;
 
-function Grid (options) {
+var Grid = function (options) {
     if (!options)
         options = {};
     if (!options.style)
@@ -4937,10 +4425,10 @@ function Grid (options) {
     var dirty = false;
     var write_color = function (i, c) {
         //var c = options.ramp[j];
-        tex_data[i * 4] = parseInt (c.r * 255);
-        tex_data[i * 4 + 1] = parseInt (c.g * 255);
-        tex_data[i * 4 + 2] = parseInt (c.b * 255);
-        tex_data[i * 4 + 3] = parseInt (c.a * 255);
+        tex_data[i * 4] = parseInt (c.r * 255, 10);
+        tex_data[i * 4 + 1] = parseInt (c.g * 255, 10);
+        tex_data[i * 4 + 2] = parseInt (c.b * 255, 10);
+        tex_data[i * 4 + 3] = parseInt (c.a * 255, 10);
     };
 
     var index = function (i, j) {
@@ -4988,14 +4476,14 @@ function Grid (options) {
                 return a - b;
             };
         }
-        var points = []
+        var points = [];
         for (var i = 0; i < data.length; i ++) {
             points.push (data[i]);
-        };
+        }
         points.sort (sort);
         var quantiles = [-Infinity];
         for (var i = 1; i < size; i ++) {
-            var b = parseInt (inc * i)
+            var b = parseInt (inc * i, 10)
             quantiles.push (points[b]);
         }
         quantiles.push (Infinity);
@@ -5116,52 +4604,10 @@ function Grid (options) {
             framebuffer.deactivate ();
             engine.draw_blur (framebuffer.tex);
         }
-
-        //engine.post_draw (options.style);
-
-        /*var do_draw = function (use_mat, image, hor) {
-          gl.useProgram (grid_shader);
-          
-          grid_shader.data ('screen', engine.camera.mat3);
-          if (use_mat) 
-          grid_shader.data ('pos', buffers.get ('vert'));
-          else
-          grid_shader.data ('pos', buffers.get ('screen'));
-          grid_shader.data ('use_mat', use_mat);
-          grid_shader.data ('tex_in', buffers.get ('tex'));
-          
-          grid_shader.data ('sampler', image);
-          
-          var size = vect.sub (engine.camera.screen (max), engine.camera.screen (min));
-          grid_shader.data ('width', size.x);
-          grid_shader.data ('height', -size.y);
-          
-          grid_shader.data ('rows', rows);
-          grid_shader.data ('cols', cols);
-          
-          grid_shader.data ('blur', options.blur);
-          grid_shader.data ('hor', hor);
-          
-          gl.drawArrays (gl.TRIANGLES, 0, buffers.count ());
-          };
-
-          if (options.blur) {
-          //gl.bindFramebuffer (gl.FRAMEBUFFER, engine.framebuffer);
-          //gl.clearColor (0, 0, 0, 0);
-          //gl.clear(gl.COLOR_BUFFER_BIT);
-          //gl.clearDepth (0.0);
-          //do_draw (true, tex, true);
-          //gl.bindFramebuffer (gl.FRAMEBUFFER, null);
-          //do_draw (false, engine.tex_canvas, false);
-          //do_draw (true, tex, true)
-          }
-          else {
-          //do_draw (tex);
-          }*/
     };
 };
 var raster_shader = null;
-function Raster (url, min, max) {
+var Raster = function (url, min, max) {
     var raster_shader;
     var tex_buffer, pos_buffer;
 
@@ -5208,7 +4654,7 @@ function Raster (url, min, max) {
 var OMEGA = Math.PI / 4;
 
 var hillshade_shader = null;
-function Hillshade (data) {
+var Hillshade = function (data) {
 
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
@@ -5276,7 +4722,7 @@ function Hillshade (data) {
     };
 };
 var elevation_shader = null;
-function Elevation (data) {
+var Elevation = function (data) {
     if (!elevation_shader)
         elevation_shader = makeProgram (BASE_DIR + 'shaders/elevation');
 
@@ -5314,7 +4760,7 @@ var NUM_TILES = 8;
 var total_drawn = 0;
 var total_calls = 0;
 
-function MultiTileLayer (options) {
+var MultiTileLayer = function (options) {
     var tile_shader = null;
 
     var layers = [];
@@ -5381,7 +4827,7 @@ function MultiTileLayer (options) {
 
         total_drawn = 0;
         total_calls = 0;
-        var min = Infinity
+        var min = Infinity;
         var current = layers[0];
 
         var max_layer, min_layer;
@@ -5417,7 +4863,7 @@ function MultiTileLayer (options) {
             //current.draw (engine, dt, z_top);
             var count = 0;
             for (var i = max_layer; i >= 0; i --) {
-                count = layers[i].draw (engine, dt, buffers, count, i == 0);
+                count = layers[i].draw (engine, dt, buffers, count, i === 0);
                 //if (layers[i].ready ())
                 //    break;
             }
@@ -5532,8 +4978,8 @@ function MultiTileLayer (options) {
                 min_col: min_col,
                 max_col: max_col,
                 min_row: min_row,
-                max_row: max_row,
-            }
+                max_row: max_row
+            };
         };
 
         var current = {};
@@ -5589,7 +5035,7 @@ function MultiTileLayer (options) {
                             tile.tex.image (img);
                             tile.ready = true;
                         }
-                    }
+                    };
                 }) (tiles[i][j]));
                 
             }
@@ -5669,7 +5115,7 @@ function MultiTileLayer (options) {
                         current[tiles[i][j].id] = time; 
 
                         tile_shader.data ('sampler' + count, tiles[i][j].tex);
-                        if (tiles[i][j].tex == null)
+                        if (tiles[i][j].tex === null)
                             throw "badness";
                         count ++;
                         total_drawn ++;
@@ -5687,9 +5133,9 @@ function MultiTileLayer (options) {
         };
     };
 };
-function WMS (options) {
+var WMS = function (options) {
     var settings = copy (options);
-    require (settings, ['url', 'layer'])
+    require (settings, ['url', 'layer']);
     default_model (settings, {
 	levels: 16,
 	size: 256
@@ -5700,7 +5146,8 @@ function WMS (options) {
 
     var layer = new MultiTileLayer (settings);
     return layer;
-};var GeoJSON = function (data, options) {
+};
+var GeoJSON = function (data, options) {
     if (options === undefined)
         options = {};
     var layer = new Layer (options);
@@ -6332,14 +5779,14 @@ var read_header = function (data) {
         length: length,
         version: version,
         shapetype: shapetype,
-        bounds: new Box (new vect (xmin, ymin), new (xmax, ymax))
-    }
+        bounds: new Box (vect (xmin, ymin), vect (xmax, ymax))
+    };
 };
 
 var load_shx = function (data) {
     var indices = [];
     var append_index = function (offset) {
-        indices.push (2 * bint32 (data, offset))
+        indices.push (2 * bint32 (data, offset));
         return offset + 8;
     };
     var offset = 100;
@@ -6416,7 +5863,7 @@ var load_dbf = function (data) {
     var records = [];
     var record_offset = header_size;
     while (record_offset < header_size + num_entries * record_size) {
-        var declare = str (data, record_offset, 1)
+        var declare = str (data, record_offset, 1);
         if (declare == '*') {
             // Record size in the header include the size of the delete indicator
             record_offset += record_size;
@@ -6427,7 +5874,7 @@ var load_dbf = function (data) {
             var record = {};
             for (var i = 0; i < headers.length; i ++) {
                 var header = headers[i];
-                var value = undefined;
+                var value;
                 if (header.type == 'C') {
                     value = str (data, record_offset, header.length).trim ();
                 }
@@ -6487,7 +5934,7 @@ var load_shp = function (data, dbf_data, indices, options) {
             var parts_start = offset + 52;
             var points_start = offset + 52 + 4 * num_parts;
 
-            var rings = []
+            var rings = [];
             for (var i = 0; i < num_parts; i ++) {
                 var start = lint32 (data, parts_start + i * 4);
                 var end;
@@ -6533,11 +5980,11 @@ var load_shp = function (data, dbf_data, indices, options) {
 
     return layer;
 };
-function AsciiGrid (data, options) {
+var AsciiGrid = function (data, options) {
     var vals = data.split ('\n');
     var meta = vals.splice (0, 6);
-    var cols = parseInt (meta[0].slice (14));
-    var rows = parseInt (meta[1].slice (14));
+    var cols = parseInt (meta[0].slice (14), 10);
+    var rows = parseInt (meta[1].slice (14), 10);
     var xllcorner = parseFloat (meta[2].slice (14));
     var yllcorner = parseFloat (meta[3].slice (14));
     var cellsize =  parseFloat (meta[4].slice (14));
@@ -6550,7 +5997,7 @@ function AsciiGrid (data, options) {
     };
 
     var settings = {};
-    for (key in options)
+    for (var key in options)
         settings[key] = options[key];
     settings.lower = new vect (xllcorner, yllcorner);
     settings.upper = new vect (xllcorner + cellsize * cols, yllcorner + cellsize * rows);
@@ -6609,7 +6056,7 @@ function SparseGrid (data, options) {
     
     return grid;
 };
-function KML (data) {
+var KML = function (data) {
     var bounds = $ (data).find ('LatLonBox');
     var min = new vect (parseFloat (bounds.find ('west').text ()), parseFloat (bounds.find ('south').text ()));
     var max = new vect (parseFloat (bounds.find ('east').text ()), parseFloat (bounds.find ('north').text ()));
@@ -6623,38 +6070,38 @@ window.wiggle = {
     TimeSeries: TimeSeries,
     layer: {
         Layer: Layer,
-	Grid: Grid,
-	Hillshade: Hillshade,
-	Elevation: Elevation,
+        Grid: Grid,
+        Hillshade: Hillshade,
+        Elevation: Elevation,
         Raster: Raster
     },
     io: {
-	Shapefile: Shapefile,
-	GeoJSON: GeoJSON,
-	KML: KML,
-	SparseGrid: SparseGrid,
-	AsciiGrid: AsciiGrid,
-	WMS: WMS
+        Shapefile: Shapefile,
+        GeoJSON: GeoJSON,
+        KML: KML,
+        SparseGrid: SparseGrid,
+        AsciiGrid: AsciiGrid,
+        WMS: WMS
     },
     util: {
-	fcolor: fcolor,
-	icolor: icolor,
+        fcolor: fcolor,
+        icolor: icolor,
         Box: Box,
         RangeTree: RangeTree
     },
     ready: function (func) {
-	ready_queue.push (func);
+        ready_queue.push (func);
     }
 };
 
 $ (document).ready (function () {
     $ ('script[src*="wigglemaps"]').each (function (i, script) {
-	var regex = /wigglemaps(\.min)?\.js/;
-	if ($ (script).attr('src').match (regex))
-	    BASE_DIR = $ (script).attr('src').replace (regex, '');
+        var regex = /wigglemaps(\.min)?\.js/;
+        if ($ (script).attr('src').match (regex))
+            BASE_DIR = $ (script).attr('src').replace (regex, '');
     });
     $.each (ready_queue, function (i, func) {
-	func ();
+        func ();
     });
 });
 } ());

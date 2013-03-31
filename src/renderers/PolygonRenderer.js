@@ -3,10 +3,10 @@ var INITIAL_POLYGONS = 1024;
 function PolygonRenderer (engine) {
     FeatureRenderer.call (this, engine);
 
-    if (!(engine.shaders['polygon'])) {
-        engine.shaders['polygon'] = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
+    if (!(engine.shaders.polygon)) {
+        engine.shaders.polygon = makeProgram (engine.gl, BASE_DIR + 'shaders/poly');
     }
-    var poly_shader = engine.shaders['polygon'];
+    var poly_shader = engine.shaders.polygon;
 
     var fill_buffers = new Buffers (engine, INITIAL_POLYGONS);
     fill_buffers.create ('vert', 2);

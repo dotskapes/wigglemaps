@@ -5,10 +5,10 @@ var unit = rect (0, 0, 1, 1);
 function PointRenderer (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
-    if (!(engine.shaders['point'])) {
-        engine.shaders['point'] = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
+    if (!(engine.shaders.point)) {
+        engine.shaders.point = makeProgram (engine.gl, BASE_DIR + 'shaders/point');
     }
-    var point_shader = engine.shaders['point'];
+    var point_shader = engine.shaders.point;
     
     // A value greater than or equal to the maximum radius of each point
     var max_rad = 10.0;

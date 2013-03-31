@@ -1,4 +1,4 @@
-function FeatureRenderer (engine) {
+var FeatureRenderer = function (engine) {
     var renderer = this;
 
     this.engine = engine;

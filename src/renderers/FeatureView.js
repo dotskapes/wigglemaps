@@ -1,4 +1,4 @@
-function FeatureView (geom, styleFunc) {
+var FeatureView = function (geom, styleFunc) {
     this.style_map = {};
 
     this.geom = geom;
@@ -47,7 +47,7 @@ function FeatureView (geom, styleFunc) {
 
     this.keys = function () {
         var items = {};
-        for (key in this.style_map) {
+        for (var key in this.style_map) {
             items[key] = true;
         }        
         return items;

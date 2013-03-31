@@ -19,14 +19,14 @@ var read_header = function (data) {
         length: length,
         version: version,
         shapetype: shapetype,
-        bounds: new Box (new vect (xmin, ymin), new (xmax, ymax))
-    }
+        bounds: new Box (vect (xmin, ymin), vect (xmax, ymax))
+    };
 };
 
 var load_shx = function (data) {
     var indices = [];
     var append_index = function (offset) {
-        indices.push (2 * bint32 (data, offset))
+        indices.push (2 * bint32 (data, offset));
         return offset + 8;
     };
     var offset = 100;
@@ -103,7 +103,7 @@ var load_dbf = function (data) {
     var records = [];
     var record_offset = header_size;
     while (record_offset < header_size + num_entries * record_size) {
-        var declare = str (data, record_offset, 1)
+        var declare = str (data, record_offset, 1);
         if (declare == '*') {
             // Record size in the header include the size of the delete indicator
             record_offset += record_size;
@@ -114,7 +114,7 @@ var load_dbf = function (data) {
             var record = {};
             for (var i = 0; i < headers.length; i ++) {
                 var header = headers[i];
-                var value = undefined;
+                var value;
                 if (header.type == 'C') {
                     value = str (data, record_offset, header.length).trim ();
                 }
@@ -174,7 +174,7 @@ var load_shp = function (data, dbf_data, indices, options) {
             var parts_start = offset + 52;
             var points_start = offset + 52 + 4 * num_parts;
 
-            var rings = []
+            var rings = [];
             for (var i = 0; i < num_parts; i ++) {
                 var start = lint32 (data, parts_start + i * 4);
                 var end;
