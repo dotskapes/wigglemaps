@@ -1,4 +1,4 @@
-function Vector2D (x, y) {
+var Vector2D = function (x, y) {
     this.x = x;
     this.y = y;
 
@@ -22,7 +22,7 @@ function Vector2D (x, y) {
     };
     this.normalize = function () {
         var scale = this.length ();
-        if (scale == 0)
+        if (scale === 0)
             return this;
         this.x /= scale;
         this.y /= scale;
@@ -39,7 +39,7 @@ function Vector2D (x, y) {
         return this;
     };
     this.zero = function () {
-        return ((this.x + this.y) == 0);
+        return ((this.x + this.y) === 0);
     };
     this.dot = function (v) {
         return (this.x * v.x) + (this.y * v.y);
@@ -67,7 +67,7 @@ function Vector2D (x, y) {
 
 function vect (x, y) {
     return new Vector2D (x, y);
-};
+}
 
 vect.scale = function (v, s) {
     return v.clone ().scale (s);
@@ -87,7 +87,7 @@ vect.dist = function (v1, v2) {
 
 vect.dir = function (v1, v2) {
     return v1.clone ().sub (v2).normalize ();
-}
+};
 
 vect.dot = function (v1, v2) {
     return (v1.x * v2.x) + (v1.y * v2.y);
@@ -118,7 +118,7 @@ vect.intersect2dt = function (a, b, c, d) {
         d.x * (b.y - a.y) +
         c.x * (a.y - b.y);
 
-    if (denom == 0)
+    if (denom === 0)
         return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
@@ -140,7 +140,7 @@ vect.intersect2dpos = function (a, b, c, d) {
         d.x * (b.y - a.y) +
         c.x * (a.y - b.y);
 
-    if (denom == 0)
+    if (denom === 0)
         return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
@@ -163,8 +163,8 @@ vect.rotate = function (v, omega) {
     var sin = Math.sin (omega);
     xp = cos * v.x - sin * v.y;
     yp = sin * v.x + cos * v.y;
-    var v = new vect (xp, yp);
-    return v;
+    var c = new vect (xp, yp);
+    return c;
 };
 
 vect.normalize = function (v) {
@@ -391,7 +391,7 @@ function handler(event) {
 }());
 var PI = 3.14159265;
 
-function make_url (base, vars) {
+var make_url = function (base, vars) {
     var items = [];
     for (var key in vars) {
         items.push (key + '=' + vars[key]);
@@ -399,27 +399,27 @@ function make_url (base, vars) {
     return base + '?' + items.join ('&');
 }
 
-function default_model (options, model) {
+var default_model = function (options, model) {
     for (var key in model) {
         if (!(key in options))
             options[key] = model[key];
     }
 };
 
-function force_model (options, model) {
+var force_model = function (options, model) {
     for (var key in model) {
         options[key] = model[key];
     }
 };
 
-function copy (src) {
+var copy = function (src) {
     var dst = {};
     for (var key in src)
         dst[key] = src[key];
     return dst;
 };
 
-function require (src, fields) {
+var require = function (src, fields) {
     for (var i = 0; i < fields.length; i ++) {
         var key = fields[i];
         if (!(key in src))
@@ -427,7 +427,7 @@ function require (src, fields) {
     }
 };
 
-function copy_to (dst, src) {
+var copy_to = function (dst, src) {
     for (var key in src)
         dst[key] = src[key];
 };
@@ -452,7 +452,7 @@ var copy_value = function (dst, src, key, cast) {
     }
 };
 
-function is_list (elem) {
+var is_list = function (elem) {
     if (elem == null)
         return false;
     if (elem.length == undefined)
@@ -464,23 +464,23 @@ function is_list (elem) {
     return true;
 };
 
-function isQuoted (value) {
+var isQuoted = function (value) {
     var c = value[0];
     if (c == '"' || c == "'") {
         if (value[value.length - 1] == c)
             return true;
     }
-    return false
+    return false;
 };
 
-function isRGB (value) {
+var isRGB = function (value) {
     if (value.match (/^rgb\(\d+,\d+,\d+\)$/))
         return true;
     else
         return false;
 };
 
-function isFloat (value) {
+var isFloat = function (value) {
     if (value.match (/^(\+|\-)?\d*\.\d*$/) && value.length > 1)
         return true;
     else if (value.match (/^(\+|\-)?\d*\.\d*e(\+|\-)?\d+$/) && value.length > 1)
@@ -489,7 +489,7 @@ function isFloat (value) {
         return false;
 };
 
-function isInt (value) {
+var isInt = function (value) {
     if (value.length == 1)
         return value.match (/^\d$/);
     else {
@@ -497,7 +497,7 @@ function isInt (value) {
     }
 };
 
-function str_contains (string, c) {
+var str_contains = function (string, c) {
     return string.indexOf (c) != -1;
 };
 var Color = function (r, g, b, a) {

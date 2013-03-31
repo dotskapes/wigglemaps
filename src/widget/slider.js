@@ -46,10 +46,10 @@ var Slider = Backbone.View.extend({
     className: 'slider',
     events: {
         'mousedown .bar': 'startDrag',
-        'mousedown .play': 'togglePlay',
+        'mousedown .play': 'togglePlay'
     },
     render: function() {
-        this.$el.html(jade.templates['slider'] ({
+        this.$el.html(jade.templates.slider ({
             step: this.model.get('attr')[0]
         }));
         this.$bar = this.$el.find('.bar');
@@ -67,7 +67,7 @@ var Slider = Backbone.View.extend({
         this.$el.find('.step').text(this.model.get('attr')[index]);
     },
     startDrag: function(event) {
-        var p = vect(event.pageX, event.pageY)
+        var p = vect(event.pageX, event.pageY);
         this.model.set('dragging', true);
         var offset = p.x - this.$bar.offset().left;
         this.model.set('offset', offset);
@@ -83,7 +83,7 @@ var Slider = Backbone.View.extend({
         }
     },
     moveBar: function() {
-        var left = this.model.get('pos') * (this.$bar.parent().width() - this.$bar.width())
+        var left = this.model.get('pos') * (this.$bar.parent().width() - this.$bar.width());
         this.$bar.css('left', left);
     },
     togglePlay: function() {

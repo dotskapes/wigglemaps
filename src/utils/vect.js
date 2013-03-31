@@ -1,4 +1,4 @@
-function Vector2D (x, y) {
+var Vector2D = function (x, y) {
     this.x = x;
     this.y = y;
 
@@ -22,7 +22,7 @@ function Vector2D (x, y) {
     };
     this.normalize = function () {
         var scale = this.length ();
-        if (scale == 0)
+        if (scale === 0)
             return this;
         this.x /= scale;
         this.y /= scale;
@@ -39,7 +39,7 @@ function Vector2D (x, y) {
         return this;
     };
     this.zero = function () {
-        return ((this.x + this.y) == 0);
+        return ((this.x + this.y) === 0);
     };
     this.dot = function (v) {
         return (this.x * v.x) + (this.y * v.y);
@@ -67,7 +67,7 @@ function Vector2D (x, y) {
 
 function vect (x, y) {
     return new Vector2D (x, y);
-};
+}
 
 vect.scale = function (v, s) {
     return v.clone ().scale (s);
@@ -87,7 +87,7 @@ vect.dist = function (v1, v2) {
 
 vect.dir = function (v1, v2) {
     return v1.clone ().sub (v2).normalize ();
-}
+};
 
 vect.dot = function (v1, v2) {
     return (v1.x * v2.x) + (v1.y * v2.y);
@@ -118,7 +118,7 @@ vect.intersect2dt = function (a, b, c, d) {
         d.x * (b.y - a.y) +
         c.x * (a.y - b.y);
 
-    if (denom == 0)
+    if (denom === 0)
         return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
@@ -140,7 +140,7 @@ vect.intersect2dpos = function (a, b, c, d) {
         d.x * (b.y - a.y) +
         c.x * (a.y - b.y);
 
-    if (denom == 0)
+    if (denom === 0)
         return Infinity;
     
     var num_s = a.x * (d.y - c.y) +
@@ -163,8 +163,8 @@ vect.rotate = function (v, omega) {
     var sin = Math.sin (omega);
     xp = cos * v.x - sin * v.y;
     yp = sin * v.x + cos * v.y;
-    var v = new vect (xp, yp);
-    return v;
+    var c = new vect (xp, yp);
+    return c;
 };
 
 vect.normalize = function (v) {
