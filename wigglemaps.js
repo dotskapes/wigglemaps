@@ -3668,13 +3668,14 @@ var Map = function (selector, options) {
         // Legacy layer drawing code for old-school type layers
         if ('draw' in layer) {
             this.scene.push (layer);
+            this.dirty = true;
             return;
         }
 
         this.scene.push (new LayerController (engine, layer, options));
         this.queriers[layer.id] = new Querier (this, layer, options);
 
-        // When a new layer is added, clearly, we must redraw at least oncex
+        // When a new layer is added, we should redraw at least once
         this.dirty = true;
     };
 };
