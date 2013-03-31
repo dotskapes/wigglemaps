@@ -3673,6 +3673,9 @@ var Map = function (selector, options) {
 
         this.scene.push (new LayerController (engine, layer, options));
         this.queriers[layer.id] = new Querier (this, layer, options);
+
+        // When a new layer is added, clearly, we must redraw at least oncex
+        this.dirty = true;
     };
 };
 function TimeSeries (selector, layer, options) {
