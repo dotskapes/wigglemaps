@@ -67,7 +67,7 @@ function MultiTileLayer (options) {
 
     this.draw = function (engine, dt) {
         if (!initialized)
-            initialize (engine);
+            this.initialize (engine);
         
         gl.useProgram (tile_shader);
         tile_shader.data ('screen', engine.camera.mat3);
