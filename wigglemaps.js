@@ -2998,7 +2998,7 @@ var Map = function (selector, options) {
         'width': 360,
         'center': new vect (0, 0),
         'base': 'default',
-        'tile-server': 'http://eland.ecohealthalliance.org/wigglemaps',
+        'tile-server': 'http://eland.ecohealthalliance.org',
         'preserveAspectRatio': true
     });
 
