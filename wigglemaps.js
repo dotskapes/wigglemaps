@@ -395,6 +395,7 @@ function handler(event) {
 }());
 var PI = 3.14159265;
 
+// Covert parameters into a url
 var make_url = function (base, vars) {
     var items = [];
     for (var key in vars) {
@@ -403,6 +404,7 @@ var make_url = function (base, vars) {
     return base + '?' + items.join ('&');
 };
 
+// If options is missing a key in the model, copy over a default value
 var default_model = function (options, model) {
     for (var key in model) {
         if (!(key in options))
@@ -410,12 +412,14 @@ var default_model = function (options, model) {
     }
 };
 
+// Copy everything in a model to options
 var force_model = function (options, model) {
     for (var key in model) {
         options[key] = model[key];
     }
 };
 
+// Shallow copy all the key, value pairs in an object
 var copy = function (src) {
     var dst = {};
     for (var key in src)
@@ -423,6 +427,7 @@ var copy = function (src) {
     return dst;
 };
 
+// Check that an object contains a set of keys
 var require = function (src, fields) {
     for (var i = 0; i < fields.length; i ++) {
         var key = fields[i];
@@ -431,11 +436,15 @@ var require = function (src, fields) {
     }
 };
 
+// Copy all key value, pairs from src to dst
 var copy_to = function (dst, src) {
     for (var key in src)
         dst[key] = src[key];
 };
 
+// Copy a key, value pair from src to dst if it exists.
+// Otherwise, copy a default value. Optionally, cast the value in src
+// to a different type
 var default_copy = function (dst, src, key, def, cast) {
     if (key in src) {
         if (cast)
@@ -447,6 +456,8 @@ var default_copy = function (dst, src, key, def, cast) {
         dst[key] = def;
 };
 
+// Copy a key, value pair from src to dst if it exists.
+// Optionally, cast the value in src to a different type
 var copy_value = function (dst, src, key, cast) {
     if (key in src) {
         if (cast)
@@ -456,6 +467,7 @@ var copy_value = function (dst, src, key, cast) {
     }
 };
 
+// Check if an object is an array
 var is_list = function (elem) {
     if (elem === null)
         return false;
@@ -468,6 +480,7 @@ var is_list = function (elem) {
     return true;
 };
 
+// Check if a string is surrounded by quotes
 var isQuoted = function (value) {
     var c = value[0];
     if (c == '"' || c == "'") {
@@ -477,6 +490,7 @@ var isQuoted = function (value) {
     return false;
 };
 
+// Check if a string is an rgb SVG string
 var isRGB = function (value) {
     if (value.match (/^rgb\(\d+,\d+,\d+\)$/))
         return true;
@@ -484,6 +498,7 @@ var isRGB = function (value) {
         return false;
 };
 
+// Check if a string is a float
 var isFloat = function (value) {
     if (value.match (/^(\+|\-)?\d*\.\d*$/) && value.length > 1)
         return true;
@@ -493,6 +508,7 @@ var isFloat = function (value) {
         return false;
 };
 
+// Check if a string is an int
 var isInt = function (value) {
     if (value.length == 1)
         return value.match (/^\d$/);
@@ -501,6 +517,7 @@ var isInt = function (value) {
     }
 };
 
+// Check if a string contains a substring
 var str_contains = function (string, c) {
     return string.indexOf (c) != -1;
 };
@@ -508,7 +525,7 @@ var str_contains = function (string, c) {
 // Clamp values between two extrema
 var clamp = function (val, min, max) {
     return Math.min (Math.max (val, min), max);
-}
+};
 // Color objects are used throughout the API as a fundemental type
 var Color = function (r, g, b, a) {
     // Allow for colors to be specified as both floats and ints
@@ -3165,9 +3182,16 @@ var Engine = function (selector, options) {
         background: new Color (0, 0, 0, 1)
     });
 
+    // This helps the style manager know what kind of element is getting styled
     this.type = 'Engine';
+
+    // Every top level element: engines, layers, features, etc has a unqiue id
+    // This gets used by the style manager and event manager
     this.id = new_feature_id ();
 
+    // The engine is responsible for creating an inserting the actual 3D canvas
+    // The user is responsible for allocating a div and setting the correct size
+    // before the engine is instantiated
     this.canvas = $ ('<canvas></canvas>').attr ('id', 'viewer');
     var gl = null;
 
@@ -3175,24 +3199,32 @@ var Engine = function (selector, options) {
         $ (selector).append (this.canvas);
     }
     else {
+        // If the user doesn't specify a div to use, take over the entire page
+        // as a top level application
         selector = window;
         $ ('body').append (this.canvas);
     }
+    // Take up the entire space in the allocated div
     this.canvas.attr ('width', $ (selector).width ());
     this.canvas.attr ('height', $ (selector).height ());
 
+    // Resizing the canvas requires a few special steps, so listen for the window 
+    // to resize. If the user wants a resize without a window change, then they
+    // are resposible for calling resize
     $ (window).resize (function (event) {
         engine.resize ();
     });
 
     var framebuffers = [];
-
+    // Allow layers to request a framebuffer from the engine
+    // This lets layers do their own multipass rendering without help
     this.framebuffer = function () {
         var framebuffer = gl.createFramebuffer ();
         gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
         framebuffer.width = engine.canvas.width ();
         framebuffer.height = engine.canvas.height ();
     
+        // The texture the framebuffer outputs to
         var tex = gl.createTexture ();
         gl.bindTexture (gl.TEXTURE_2D, tex);
         gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);  
@@ -3212,6 +3244,8 @@ var Engine = function (selector, options) {
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+        // A convience object for layers that can activate, deactivate, and read from
+        // The framebuffer
         var frame = {
                 framebuffer: framebuffer,
                 renderbuffer: renderbuffer,
@@ -3266,6 +3300,8 @@ var Engine = function (selector, options) {
         return frame;
     };
 
+    // When a resize event happens, change the viewport of the GL window
+    // and set the heights of the framebuffers
     this.resize = function () {
         this.canvas.attr ('width', $ (selector).width ());
         this.canvas.attr ('height', $ (selector).height ());
@@ -3278,18 +3314,25 @@ var Engine = function (selector, options) {
 
     gl = setContext (this.canvas, DEBUG);
     this.gl = gl;
+    // Set the intial viewport size
     gl.viewport (0, 0, this.canvas.width (), this.canvas.height ());
 
+    // Blending
     gl.blendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable (gl.BLEND);
 
+    // The camera controls the view matrices
     this.camera = new Camera (engine, options);
+    // The scroller controls panning and zooming. It talks to
+    // the camera API to change the matrices
     this.scroller = new Scroller (this, options);
 
+    // Set the world space width of canvas without changing the aspect ratio
     this.extents = function (width) {
         this.camera.extents (width);
     };
 
+    // Sets the center point of the canvas in world space
     this.center = function (arg0, arg1) {
         if (arg1 === undefined)
             this.camera.position (arg0);
@@ -3297,6 +3340,7 @@ var Engine = function (selector, options) {
             this.camera.position (new vect (arg0, arg1));
     };
 
+    // How far is one pixel in 0 to 1 shader space
     this.pxW = 1 / this.canvas.attr ('width');
     this.pxH = 1 / this.canvas.attr ('height');
 
@@ -3310,6 +3354,9 @@ var Engine = function (selector, options) {
 
     this.dirty = true;
 
+    // Engines (and their subcalsses) are responsable for giving the
+    // style manager default styles on request. Not specifying a default
+    // a style is an error
     this.defaultStyle = function (f_type, key) {
         var value;
         if (f_type in this.styles) {
@@ -3329,10 +3376,12 @@ var Engine = function (selector, options) {
 
     EventManager.manage (this);
 
+    // See if any features on a layer are contained in a box
     this.search = function (layer, box) {
         return this.queriers[layer.id].boxSearch (box);
     };
 
+    // Set the style of this engine
     this.style = function (object, key, value) {
         if (this.styles[object.id] === undefined)
             this.styles[object.id] = {};
@@ -3357,12 +3406,16 @@ var Engine = function (selector, options) {
         } 
     };
 
+    // There is only one Selection box for each engine. The user can
+    // activate as needed
     var sel = new SelectionBox (this);
 
+    // Specify a callback when the selection box is released through mouseup
     this.select = function (func)  {
         sel.select (func);
     };
 
+    // Turn on and off the selection box
     var selectEnabled = false;
     this.enableSelect = function () {
         this.scroller.disable ();
@@ -3375,6 +3428,7 @@ var Engine = function (selector, options) {
         selectEnabled = false;
     };
 
+    // DEBUG: Measure the framerate in a working set
     var old_time =  new Date ().getTime ();
     var fps_window = [];
 
@@ -3446,7 +3500,7 @@ var Engine = function (selector, options) {
         // If nothing has been done, don't redraw
         if (this.dirty) {
 
-            // Clear the old color buffer
+            // Clear the old color buffer and depth buffer
             gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.clearDepth (0.0);
@@ -3460,7 +3514,9 @@ var Engine = function (selector, options) {
             }
 
         }
-
+        
+        // Other layers have access to the dirty flag. They set it to true
+        // if a redraw is needed
         this.dirty = false;
 
         requestAnimationFrame (draw);
