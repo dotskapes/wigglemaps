@@ -137,7 +137,7 @@ var addVars = function (gl, shader, vert, frag) {
         }
         shader.get = function (name) {
             return uniforms[name].loc;
-        }
+        };
         shader.data = function (name, data) {
             var d = uniforms[name];
             if (!d)
@@ -251,7 +251,7 @@ var dynamicBuffer = function (gl, items, itemSize) {
         gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
         gl.bufferSubData (gl.ARRAY_BUFFER, 4 * index, float_data);
         gl.bindBuffer (gl.ARRAY_BUFFER, null);
-    }
+    };
     
     gl.bufferData (gl.ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
     gl.bindBuffer (gl.ARRAY_BUFFER, null);
@@ -270,7 +270,7 @@ var indexBuffer = function (gl, items, itemSize) {
         gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
         gl.bufferSubData (gl.ELEMENT_ARRAY_BUFFER, 2 * index, float_data);
         gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
-    }
+    };
     
     gl.bufferData (gl.ELEMENT_ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
     gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);

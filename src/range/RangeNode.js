@@ -43,7 +43,7 @@ var RangeNode = function (elem, start, end, current) {
             if (current != end)
                 this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2, 10));
             if (current != start)
-                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
+                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2, 10));
         }
     };
     

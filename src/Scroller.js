@@ -1,4 +1,4 @@
-function Scroller (engine, options) {
+var Scroller = function (engine, options) {
     var drag = false;
     var start = new vect (0, 0);
     var pos = new vect (0, 0);

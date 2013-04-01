@@ -18,111 +18,7 @@ var MultiTileLayer = function (options) {
 
     this.id = new_feature_id ();
 
-    for (var i = 0; i < options.levels; i ++) {
-        var settings = copy (options);
-        if (settings.source == 'file')
-            settings.url += '/' + options.size * Math.pow (2, (i + 1));
-        settings.min = new vect (-180, -90);
-        settings.rows = Math.pow (2, i);
-        settings.cols = settings.rows * 2;
-        settings.cellsize = 180 / settings.rows;
-        settings.z_index = 1.0 - z_base - i / 1000;
-        settings.available = available;
-
-        var layer = new TileLayer (settings);
-        layers.push (layer);
-    }
-    var z_top = 1.0 - z_base - options.levels / 1000;
-    z_base += (options.levels + 2) / 1000;
-
-    var buffers = null;
-
-    var initialized = false;
-    this.initialize = function (_engine) {
-        engine = _engine;
-        if (!tile_shader)
-            tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
-
-        gl = engine.gl;
-
-        buffers = new Buffers (engine, NUM_TILES * 6);
-        buffers.create ('vert', 3);
-        buffers.create ('tex', 2);
-        buffers.create ('lookup', 1);
-        buffers.alloc (NUM_TILES * 6);
-
-        for (var i = 0; i < 25; i ++) {
-            available.push (new Texture (engine));
-        }
-
-        for (var i = 0; i < layers.length; i ++) {
-            layers[i].initialize (engine);
-        }
-
-        layers[0].fetch_all ();
-        layers[0].noexpire (true);
-        
-        initialized = true;
-    };
-
-    this.draw = function (engine, dt) {
-        if (!initialized)
-            this.initialize (engine);
-        
-        gl.useProgram (tile_shader);
-        tile_shader.data ('screen', engine.camera.mat3);
-
-        total_drawn = 0;
-        total_calls = 0;
-        var min = Infinity;
-        var current = layers[0];
-
-        var max_layer, min_layer;
-
-        for (var i  = 0; i < layers.length; i ++) {
-            //var ratio = Math.abs (layers[i].size ().x / (levels[i].cols * levels[i].size));
-            var ratio = (options.size * layers[i].cols) / layers[i].size (engine).x;
-            if (ratio < 1)
-                ratio = 1 / ratio;
-            //ratio -= 1;
-            if (ratio < min) {
-                min = ratio;
-                current = layers[i];
-                max_layer = i;
-            }
-        }
-        for (var i = max_layer; i >= 0; i --) {
-            layers[i].fetch ();
-        }
-        //current.fetch ();
-        /*for (var i = max_layer; i >= 0; i --) {
-          min_layer = i;
-          if (layers[i].ready ())
-          break;
-          }*/
-        //layers[min_layer].draw (engine, dt);
-
-        if (current.ready ()) {
-            current.draw (engine, dt, buffers, 0, true);
-        }
-        else {    
-            engine.enableZ ();
-            //current.draw (engine, dt, z_top);
-            var count = 0;
-            for (var i = max_layer; i >= 0; i --) {
-                count = layers[i].draw (engine, dt, buffers, count, i === 0);
-                //if (layers[i].ready ())
-                //    break;
-            }
-            engine.disableZ ();
-        }
-        $.each (layers, function (i, layer) {
-            layer.cull ();
-        });
-        //console.log (total_drawn, total_calls);
-    };
-
-    function TileLayer (options) {
+    var TileLayer = function (options) {
         if (!options)
             options = {};
         if (!options.desaturate)
@@ -185,7 +81,7 @@ var MultiTileLayer = function (options) {
             var v = vect.sub (smax, smin);
             v.y = Math.abs (v.y);
             return v;
-        }
+        };
 
         var noexpire = false;
         this.noexpire = function (flag) {
@@ -379,4 +275,109 @@ var MultiTileLayer = function (options) {
             return count;
         };
     };
+
+    for (var i = 0; i < options.levels; i ++) {
+        var settings = copy (options);
+        if (settings.source == 'file')
+            settings.url += '/' + options.size * Math.pow (2, (i + 1));
+        settings.min = new vect (-180, -90);
+        settings.rows = Math.pow (2, i);
+        settings.cols = settings.rows * 2;
+        settings.cellsize = 180 / settings.rows;
+        settings.z_index = 1.0 - z_base - i / 1000;
+        settings.available = available;
+
+        var layer = new TileLayer (settings);
+        layers.push (layer);
+    }
+    var z_top = 1.0 - z_base - options.levels / 1000;
+    z_base += (options.levels + 2) / 1000;
+
+    var buffers = null;
+
+    var initialized = false;
+    this.initialize = function (_engine) {
+        engine = _engine;
+        if (!tile_shader)
+            tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+
+        gl = engine.gl;
+
+        buffers = new Buffers (engine, NUM_TILES * 6);
+        buffers.create ('vert', 3);
+        buffers.create ('tex', 2);
+        buffers.create ('lookup', 1);
+        buffers.alloc (NUM_TILES * 6);
+
+        for (var i = 0; i < 25; i ++) {
+            available.push (new Texture (engine));
+        }
+
+        for (var i = 0; i < layers.length; i ++) {
+            layers[i].initialize (engine);
+        }
+
+        layers[0].fetch_all ();
+        layers[0].noexpire (true);
+        
+        initialized = true;
+    };
+
+    this.draw = function (engine, dt) {
+        if (!initialized)
+            this.initialize (engine);
+        
+        gl.useProgram (tile_shader);
+        tile_shader.data ('screen', engine.camera.mat3);
+
+        total_drawn = 0;
+        total_calls = 0;
+        var min = Infinity;
+        var current = layers[0];
+
+        var max_layer, min_layer;
+
+        for (var i  = 0; i < layers.length; i ++) {
+            //var ratio = Math.abs (layers[i].size ().x / (levels[i].cols * levels[i].size));
+            var ratio = (options.size * layers[i].cols) / layers[i].size (engine).x;
+            if (ratio < 1)
+                ratio = 1 / ratio;
+            //ratio -= 1;
+            if (ratio < min) {
+                min = ratio;
+                current = layers[i];
+                max_layer = i;
+            }
+        }
+        for (var i = max_layer; i >= 0; i --) {
+            layers[i].fetch ();
+        }
+        //current.fetch ();
+        /*for (var i = max_layer; i >= 0; i --) {
+          min_layer = i;
+          if (layers[i].ready ())
+          break;
+          }*/
+        //layers[min_layer].draw (engine, dt);
+
+        if (current.ready ()) {
+            current.draw (engine, dt, buffers, 0, true);
+        }
+        else {    
+            engine.enableZ ();
+            //current.draw (engine, dt, z_top);
+            var count = 0;
+            for (var i = max_layer; i >= 0; i --) {
+                count = layers[i].draw (engine, dt, buffers, count, i === 0);
+                //if (layers[i].ready ())
+                //    break;
+            }
+            engine.disableZ ();
+        }
+        $.each (layers, function (i, layer) {
+            layer.cull ();
+        });
+        //console.log (total_drawn, total_calls);
+    };
+
 };

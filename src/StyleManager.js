@@ -48,7 +48,7 @@ var StyleManager = new function () {
         else {
             return engine.id;
         }
-    }
+    };
 
     var initializeStyle = function (object, engine) {
         var engine_id = lookupEngine (engine);

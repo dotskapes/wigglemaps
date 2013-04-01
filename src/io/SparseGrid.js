@@ -1,4 +1,4 @@
-function SparseGrid (data, options) {
+var SparseGrid = function (data, options) {
     var xmin = lfloat32 (data, 0);
     var ymin = lfloat32 (data, 4);
 

@@ -87,7 +87,7 @@ var Grid = function (options) {
         points.sort (sort);
         var quantiles = [-Infinity];
         for (var i = 1; i < size; i ++) {
-            var b = parseInt (inc * i, 10)
+            var b = parseInt (inc * i, 10);
             quantiles.push (points[b]);
         }
         quantiles.push (Infinity);

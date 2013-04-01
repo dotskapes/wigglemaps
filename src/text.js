@@ -25,7 +25,7 @@ var Text = function (string, options) {
                 var glyphs = data.getElementsByTagName ('glyph');
                 for (var i = 0 ; i < glyphs.length; i ++) {
                     var letter = glyphs[i].getAttribute ('unicode');
-                    fonts['OpenSans'][letter] = {
+                    fonts.OpenSans.[letter] = {
                         path: glyphs[i].getAttribute ('d'),
                         hor: parseFloat (glyphs[i].getAttribute ('horiz-adv-x'))
                     };

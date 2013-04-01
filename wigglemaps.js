@@ -562,17 +562,17 @@ var Color = function (r, g, b, a) {
 // Helper function to for specifying colors as integers
 var icolor = function (r, g, b, a) {
     return new Color (clamp (r / 255, 0, 1), clamp (g / 255, 0, 1), clamp (b / 255, 0, 1), clamp (a / 255, 0, 1));
-}
+};
 
 // Corresponding helper function for specifying colors as floats
 var fcolor = function (r, g, b, a) {
     return new Color (clamp (r, 0, 1), clamp (g, 0, 1), clamp (b, 0, 1), clamp (a, 0, 1));
-}
+};
 
 // Covert a flat floating point representation of color to an rgb string
 var as_rgb = function (array) {
     conosole.warn('Deprecated: use parseRGB instead');
-    return 'rgb(' + Math.round (array[0] * 255, 10) + ',' + Math.round (array[1] * 255, 10) + ',' + Math.round (array[2] * 255, 10) + ')'
+    return 'rgb(' + Math.round (array[0] * 255, 10) + ',' + Math.round (array[1] * 255, 10) + ',' + Math.round (array[2] * 255, 10) + ')';
 };
 
 // Convert a hex string to a color object
@@ -684,7 +684,7 @@ var str = function (data, offset, length) {
     }*/
     while (index < offset + length) {
         var c = data[index];
-        if (c.charCodeAt (0) != 0)
+        if (c.charCodeAt (0) !== 0)
             chars.push (c);
         else {
             break;
@@ -832,7 +832,7 @@ var addVars = function (gl, shader, vert, frag) {
         }
         shader.get = function (name) {
             return uniforms[name].loc;
-        }
+        };
         shader.data = function (name, data) {
             var d = uniforms[name];
             if (!d)
@@ -946,7 +946,7 @@ var dynamicBuffer = function (gl, items, itemSize) {
         gl.bindBuffer (gl.ARRAY_BUFFER, buffer);
         gl.bufferSubData (gl.ARRAY_BUFFER, 4 * index, float_data);
         gl.bindBuffer (gl.ARRAY_BUFFER, null);
-    }
+    };
     
     gl.bufferData (gl.ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
     gl.bindBuffer (gl.ARRAY_BUFFER, null);
@@ -965,7 +965,7 @@ var indexBuffer = function (gl, items, itemSize) {
         gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, buffer);
         gl.bufferSubData (gl.ELEMENT_ARRAY_BUFFER, 2 * index, float_data);
         gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
-    }
+    };
     
     gl.bufferData (gl.ELEMENT_ARRAY_BUFFER, float_data, gl.DYNAMIC_DRAW);
     gl.bindBuffer (gl.ELEMENT_ARRAY_BUFFER, null);
@@ -1091,7 +1091,7 @@ var Buffers = function (engine, initial_size) {
         }
     };
 };
-function Texture (engine, options) {
+var Texture = function (engine, options) {
     var gl = engine.gl;
     var settings = copy (options);
     default_model (settings, {
@@ -1127,7 +1127,7 @@ function Texture (engine, options) {
     };
 };
 
-function getImage (path, callback) {
+var getImage = function (path, callback) {
     var img = new Image ();
     img.crossOrigin = '';
     img.onload = function () {
@@ -1135,7 +1135,7 @@ function getImage (path, callback) {
     };
     img.src = path;
 };
-function Box (v1, v2) {
+var Box = function (v1, v2) {
     this.min = v1.clone ();
     this.max = v2.clone ();
     this.contains = function (p) {
@@ -1168,7 +1168,7 @@ function Box (v1, v2) {
 
     this.area = function () {
         return (this.max.x - this.min.x) * (this.max.y - this.min.y);
-    }
+    };
 
     this.height = function () {
         return this.max.y - this.min.y;
@@ -1211,7 +1211,7 @@ function Box (v1, v2) {
             box.contains (new vect (this.min.x, this.max.y)) &&
             box.contains (new vect (this.max.x, this.min.y)))
             return true;
-        return false
+        return false;
     };
 
     this.union = function (b) {
@@ -1266,7 +1266,7 @@ var circle = function (index, length) {
         index -= length;
     while (index < 0)
         index += length;
-    return index
+    return index;
 };
 
 var Vertex = function (current, upper, lower, index) {
@@ -1279,7 +1279,7 @@ var Vertex = function (current, upper, lower, index) {
 var xsearch = function (sweep, poly, index) {
     var upper = sweep.length - 1;
     var lower = 0;
-    var current = parseInt ((sweep.length - 1) / 2);
+    var current = parseInt ((sweep.length - 1) / 2, 10);
     if (sweep.length === 0) {
         return 0;
     }
@@ -1317,7 +1317,7 @@ var xsearch = function (sweep, poly, index) {
                 lower = current + 1;
             }
         }
-        current = parseInt ((upper + lower) / 2);
+        current = parseInt ((upper + lower) / 2, 10);
     }
 };
 
@@ -1373,7 +1373,7 @@ var add_point = function (trap, a) {
     trap.push (a.x);
     trap.push (a.y);
     //trap.push (1.0);
-}
+};
 
 var add_trap = function (trap, bottom, top) {
     if (!bottom || !top || ((top.length + bottom.length != 3) && (top.length + bottom.length != 4)))
@@ -1429,7 +1429,7 @@ var trapezoid_polygon = function (poly_in) {
     var state = [];
     var lower = new vect (-200, 0);
     var upper = new vect (200, 0);
-    var count = 0
+    var count = 0;
     var pairs = [];
     var change = 0;
     var trap = [];
@@ -1590,7 +1590,7 @@ var StyleManager = new function () {
         else {
             return engine.id;
         }
-    }
+    };
 
     var initializeStyle = function (object, engine) {
         var engine_id = lookupEngine (engine);
@@ -1957,7 +1957,7 @@ var Camera = function (engine, options) {
         return new vect (worldWidth / xlevel, (worldWidth * worldRatio * aspectRatio) / ylevel);
     };
 };
-function Scroller (engine, options) {
+var Scroller = function (engine, options) {
     var drag = false;
     var start = new vect (0, 0);
     var pos = new vect (0, 0);
@@ -2159,7 +2159,7 @@ var FeatureView = function (geom, styleFunc) {
     this.updateMany = function (styleObject) {
         for (var key in styleObject) {
             this.updateOne (key, styleObject[value]);
-        };
+        }
     };
 
     // Update the buffers for a specific property    
@@ -2260,7 +2260,7 @@ var INITIAL_POINTS = 1024;
 
 var unit = rect (0, 0, 1, 1);
 
-function PointRenderer (engine, layer) {
+var PointRenderer = function (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
     if (!(engine.shaders.point)) {
@@ -2530,12 +2530,12 @@ var LineRenderer = function (engine) {
         line_shader.data ('px_w', 2.0 / engine.canvas.width ());
         line_shader.data ('px_h', 2.0 / engine.canvas.height ());
         gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
-    }
+    };
 
 };
 var INITIAL_POLYGONS = 1024;
 
-function PolygonRenderer (engine) {
+var PolygonRenderer = function (engine) {
     FeatureRenderer.call (this, engine);
 
     if (!(engine.shaders.polygon)) {
@@ -2625,7 +2625,7 @@ function PolygonRenderer (engine) {
         gl.drawArrays (gl.TRIANGLES, 0, fill_buffers.count ());
     };
 };
-function TimeSeriesRenderer (engine, layer, options) {
+var TimeSeriesRenderer = function (engine, layer, options) {
     LineRenderer.call (this, engine, layer, options);
     
     var order = options.order;
@@ -2655,7 +2655,7 @@ function TimeSeriesRenderer (engine, layer, options) {
         return feature_geom;
     };
 };
-function multiRendererFactory (Renderers) {
+var multiRendererFactory = function (Renderers) {
     return function (engine, layer, options) {
         var renderers = [];
         
@@ -2669,7 +2669,7 @@ function multiRendererFactory (Renderers) {
             this.keys = function () {
                 var items = {};
                 $.each (views, function (i, view) {
-                    for (key in view.style_map) {
+                    for (var key in view.style_map) {
                         items[key] = true;
                     }        
                 });
@@ -2889,7 +2889,7 @@ var TimeSeriesQuerier = function (engine, layer, options) {
             var s1 = engine.camera.screen (p1);
             var s2 = engine.camera.screen (p2);
 
-            var v = vect.dir (s2, s1)
+            var v = vect.dir (s2, s1);
             var u = vect.sub (s, s1);
             var side1 = vect.dot (u, v);
             var side2 = u.length ();
@@ -3679,7 +3679,7 @@ var Map = function (selector, options) {
         this.dirty = true;
     };
 };
-function TimeSeries (selector, layer, options) {
+var TimeSeries = function (selector, layer, options) {
     var engine = this;
     if (options === undefined)
         options = {};
@@ -3823,7 +3823,7 @@ function TimeSeries (selector, layer, options) {
                     [options.domain.max, currentTick]
                 ]]];
                 grid_renderer.create (line, gridStyleFunc);
-                currentTick += options.ticks
+                currentTick += options.ticks;
             }
         }
     };
@@ -3832,7 +3832,7 @@ function TimeSeries (selector, layer, options) {
     this.scene.push (new LayerController (engine, layer, options));
     this.queriers[layer.id] = new Querier (this, layer, options);
 };
-function SelectionBox (engine) {
+var SelectionBox = function (engine) {
     var sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
@@ -3900,7 +3900,7 @@ function SelectionBox (engine) {
 
     this.disable = function () {
         enabled = false;
-    }
+    };
     
     this.draw = function (engine, dt) {
         var gl = engine.gl;
@@ -3959,7 +3959,7 @@ var RangeNode = function (elem, start, end, current) {
             if (current != end)
                 this.subquery (result, box, current + 1, end, parseInt ((end + (current + 1)) / 2, 10));
             if (current != start)
-                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2));
+                this.subquery (result, box, start, current - 1, parseInt ((start + (current - 1)) / 2, 10));
         }
     };
     
@@ -4544,7 +4544,7 @@ var Grid = function (options) {
         points.sort (sort);
         var quantiles = [-Infinity];
         for (var i = 1; i < size; i ++) {
-            var b = parseInt (inc * i, 10)
+            var b = parseInt (inc * i, 10);
             quantiles.push (points[b]);
         }
         quantiles.push (Infinity);
@@ -4831,111 +4831,7 @@ var MultiTileLayer = function (options) {
 
     this.id = new_feature_id ();
 
-    for (var i = 0; i < options.levels; i ++) {
-        var settings = copy (options);
-        if (settings.source == 'file')
-            settings.url += '/' + options.size * Math.pow (2, (i + 1));
-        settings.min = new vect (-180, -90);
-        settings.rows = Math.pow (2, i);
-        settings.cols = settings.rows * 2;
-        settings.cellsize = 180 / settings.rows;
-        settings.z_index = 1.0 - z_base - i / 1000;
-        settings.available = available;
-
-        var layer = new TileLayer (settings);
-        layers.push (layer);
-    }
-    var z_top = 1.0 - z_base - options.levels / 1000;
-    z_base += (options.levels + 2) / 1000;
-
-    var buffers = null;
-
-    var initialized = false;
-    this.initialize = function (_engine) {
-        engine = _engine;
-        if (!tile_shader)
-            tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
-
-        gl = engine.gl;
-
-        buffers = new Buffers (engine, NUM_TILES * 6);
-        buffers.create ('vert', 3);
-        buffers.create ('tex', 2);
-        buffers.create ('lookup', 1);
-        buffers.alloc (NUM_TILES * 6);
-
-        for (var i = 0; i < 25; i ++) {
-            available.push (new Texture (engine));
-        }
-
-        for (var i = 0; i < layers.length; i ++) {
-            layers[i].initialize (engine);
-        }
-
-        layers[0].fetch_all ();
-        layers[0].noexpire (true);
-        
-        initialized = true;
-    };
-
-    this.draw = function (engine, dt) {
-        if (!initialized)
-            this.initialize (engine);
-        
-        gl.useProgram (tile_shader);
-        tile_shader.data ('screen', engine.camera.mat3);
-
-        total_drawn = 0;
-        total_calls = 0;
-        var min = Infinity;
-        var current = layers[0];
-
-        var max_layer, min_layer;
-
-        for (var i  = 0; i < layers.length; i ++) {
-            //var ratio = Math.abs (layers[i].size ().x / (levels[i].cols * levels[i].size));
-            var ratio = (options.size * layers[i].cols) / layers[i].size (engine).x;
-            if (ratio < 1)
-                ratio = 1 / ratio;
-            //ratio -= 1;
-            if (ratio < min) {
-                min = ratio;
-                current = layers[i];
-                max_layer = i;
-            }
-        }
-        for (var i = max_layer; i >= 0; i --) {
-            layers[i].fetch ();
-        }
-        //current.fetch ();
-        /*for (var i = max_layer; i >= 0; i --) {
-          min_layer = i;
-          if (layers[i].ready ())
-          break;
-          }*/
-        //layers[min_layer].draw (engine, dt);
-
-        if (current.ready ()) {
-            current.draw (engine, dt, buffers, 0, true);
-        }
-        else {    
-            engine.enableZ ();
-            //current.draw (engine, dt, z_top);
-            var count = 0;
-            for (var i = max_layer; i >= 0; i --) {
-                count = layers[i].draw (engine, dt, buffers, count, i === 0);
-                //if (layers[i].ready ())
-                //    break;
-            }
-            engine.disableZ ();
-        }
-        $.each (layers, function (i, layer) {
-            layer.cull ();
-        });
-        //console.log (total_drawn, total_calls);
-    };
-
-    function TileLayer (options) {
+    var TileLayer = function (options) {
         if (!options)
             options = {};
         if (!options.desaturate)
@@ -4998,7 +4894,7 @@ var MultiTileLayer = function (options) {
             var v = vect.sub (smax, smin);
             v.y = Math.abs (v.y);
             return v;
-        }
+        };
 
         var noexpire = false;
         this.noexpire = function (flag) {
@@ -5192,6 +5088,111 @@ var MultiTileLayer = function (options) {
             return count;
         };
     };
+
+    for (var i = 0; i < options.levels; i ++) {
+        var settings = copy (options);
+        if (settings.source == 'file')
+            settings.url += '/' + options.size * Math.pow (2, (i + 1));
+        settings.min = new vect (-180, -90);
+        settings.rows = Math.pow (2, i);
+        settings.cols = settings.rows * 2;
+        settings.cellsize = 180 / settings.rows;
+        settings.z_index = 1.0 - z_base - i / 1000;
+        settings.available = available;
+
+        var layer = new TileLayer (settings);
+        layers.push (layer);
+    }
+    var z_top = 1.0 - z_base - options.levels / 1000;
+    z_base += (options.levels + 2) / 1000;
+
+    var buffers = null;
+
+    var initialized = false;
+    this.initialize = function (_engine) {
+        engine = _engine;
+        if (!tile_shader)
+            tile_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/tile');
+
+        gl = engine.gl;
+
+        buffers = new Buffers (engine, NUM_TILES * 6);
+        buffers.create ('vert', 3);
+        buffers.create ('tex', 2);
+        buffers.create ('lookup', 1);
+        buffers.alloc (NUM_TILES * 6);
+
+        for (var i = 0; i < 25; i ++) {
+            available.push (new Texture (engine));
+        }
+
+        for (var i = 0; i < layers.length; i ++) {
+            layers[i].initialize (engine);
+        }
+
+        layers[0].fetch_all ();
+        layers[0].noexpire (true);
+        
+        initialized = true;
+    };
+
+    this.draw = function (engine, dt) {
+        if (!initialized)
+            this.initialize (engine);
+        
+        gl.useProgram (tile_shader);
+        tile_shader.data ('screen', engine.camera.mat3);
+
+        total_drawn = 0;
+        total_calls = 0;
+        var min = Infinity;
+        var current = layers[0];
+
+        var max_layer, min_layer;
+
+        for (var i  = 0; i < layers.length; i ++) {
+            //var ratio = Math.abs (layers[i].size ().x / (levels[i].cols * levels[i].size));
+            var ratio = (options.size * layers[i].cols) / layers[i].size (engine).x;
+            if (ratio < 1)
+                ratio = 1 / ratio;
+            //ratio -= 1;
+            if (ratio < min) {
+                min = ratio;
+                current = layers[i];
+                max_layer = i;
+            }
+        }
+        for (var i = max_layer; i >= 0; i --) {
+            layers[i].fetch ();
+        }
+        //current.fetch ();
+        /*for (var i = max_layer; i >= 0; i --) {
+          min_layer = i;
+          if (layers[i].ready ())
+          break;
+          }*/
+        //layers[min_layer].draw (engine, dt);
+
+        if (current.ready ()) {
+            current.draw (engine, dt, buffers, 0, true);
+        }
+        else {    
+            engine.enableZ ();
+            //current.draw (engine, dt, z_top);
+            var count = 0;
+            for (var i = max_layer; i >= 0; i --) {
+                count = layers[i].draw (engine, dt, buffers, count, i === 0);
+                //if (layers[i].ready ())
+                //    break;
+            }
+            engine.disableZ ();
+        }
+        $.each (layers, function (i, layer) {
+            layer.cull ();
+        });
+        //console.log (total_drawn, total_calls);
+    };
+
 };
 var WMS = function (options) {
     var settings = copy (options);
@@ -5537,7 +5538,7 @@ var AsciiGrid = function (data, options) {
     }
     return grid;
 };
-function SparseGrid (data, options) {
+var SparseGrid = function (data, options) {
     var xmin = lfloat32 (data, 0);
     var ymin = lfloat32 (data, 4);
 

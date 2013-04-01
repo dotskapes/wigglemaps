@@ -157,6 +157,6 @@ var LineRenderer = function (engine) {
         line_shader.data ('px_w', 2.0 / engine.canvas.width ());
         line_shader.data ('px_h', 2.0 / engine.canvas.height ());
         gl.drawArrays (gl.TRIANGLES, 0, stroke_buffers.count ()); 
-    }
+    };
 
 };

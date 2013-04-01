@@ -2,7 +2,7 @@ var INITIAL_POINTS = 1024;
 
 var unit = rect (0, 0, 1, 1);
 
-function PointRenderer (engine, layer) {
+var PointRenderer = function (engine, layer) {
     FeatureRenderer.call (this, engine, layer);
 
     if (!(engine.shaders.point)) {

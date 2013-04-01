@@ -34,7 +34,7 @@ var circle = function (index, length) {
         index -= length;
     while (index < 0)
         index += length;
-    return index
+    return index;
 };
 
 var Vertex = function (current, upper, lower, index) {
@@ -47,7 +47,7 @@ var Vertex = function (current, upper, lower, index) {
 var xsearch = function (sweep, poly, index) {
     var upper = sweep.length - 1;
     var lower = 0;
-    var current = parseInt ((sweep.length - 1) / 2);
+    var current = parseInt ((sweep.length - 1) / 2, 10);
     if (sweep.length === 0) {
         return 0;
     }
@@ -85,7 +85,7 @@ var xsearch = function (sweep, poly, index) {
                 lower = current + 1;
             }
         }
-        current = parseInt ((upper + lower) / 2);
+        current = parseInt ((upper + lower) / 2, 10);
     }
 };
 
@@ -141,7 +141,7 @@ var add_point = function (trap, a) {
     trap.push (a.x);
     trap.push (a.y);
     //trap.push (1.0);
-}
+};
 
 var add_trap = function (trap, bottom, top) {
     if (!bottom || !top || ((top.length + bottom.length != 3) && (top.length + bottom.length != 4)))
@@ -197,7 +197,7 @@ var trapezoid_polygon = function (poly_in) {
     var state = [];
     var lower = new vect (-200, 0);
     var upper = new vect (200, 0);
-    var count = 0
+    var count = 0;
     var pairs = [];
     var change = 0;
     var trap = [];

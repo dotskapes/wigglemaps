@@ -1,4 +1,4 @@
-function TimeSeriesRenderer (engine, layer, options) {
+var TimeSeriesRenderer = function (engine, layer, options) {
     LineRenderer.call (this, engine, layer, options);
     
     var order = options.order;

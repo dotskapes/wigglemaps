@@ -1,4 +1,4 @@
-function TimeSeries (selector, layer, options) {
+var TimeSeries = function (selector, layer, options) {
     var engine = this;
     if (options === undefined)
         options = {};
@@ -142,7 +142,7 @@ function TimeSeries (selector, layer, options) {
                     [options.domain.max, currentTick]
                 ]]];
                 grid_renderer.create (line, gridStyleFunc);
-                currentTick += options.ticks
+                currentTick += options.ticks;
             }
         }
     };

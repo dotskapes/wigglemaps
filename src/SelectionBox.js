@@ -1,4 +1,4 @@
-function SelectionBox (engine) {
+var SelectionBox = function (engine) {
     var sel_box_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/selbox');
     var enabled = false;
     var dragging = false;
@@ -66,7 +66,7 @@ function SelectionBox (engine) {
 
     this.disable = function () {
         enabled = false;
-    }
+    };
     
     this.draw = function (engine, dt) {
         var gl = engine.gl;

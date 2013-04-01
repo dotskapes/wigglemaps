@@ -1,4 +1,4 @@
-function multiRendererFactory (Renderers) {
+var multiRendererFactory = function (Renderers) {
     return function (engine, layer, options) {
         var renderers = [];
         
@@ -12,7 +12,7 @@ function multiRendererFactory (Renderers) {
             this.keys = function () {
                 var items = {};
                 $.each (views, function (i, view) {
-                    for (key in view.style_map) {
+                    for (var key in view.style_map) {
                         items[key] = true;
                     }        
                 });

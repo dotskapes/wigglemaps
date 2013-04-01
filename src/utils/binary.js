@@ -81,7 +81,7 @@ var str = function (data, offset, length) {
     }*/
     while (index < offset + length) {
         var c = data[index];
-        if (c.charCodeAt (0) != 0)
+        if (c.charCodeAt (0) !== 0)
             chars.push (c);
         else {
             break;

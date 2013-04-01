@@ -48,7 +48,7 @@ var TimeSeriesQuerier = function (engine, layer, options) {
             var s1 = engine.camera.screen (p1);
             var s2 = engine.camera.screen (p2);
 
-            var v = vect.dir (s2, s1)
+            var v = vect.dir (s2, s1);
             var u = vect.sub (s, s1);
             var side1 = vect.dot (u, v);
             var side2 = u.length ();

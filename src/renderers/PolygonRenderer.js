@@ -1,6 +1,6 @@
 var INITIAL_POLYGONS = 1024;
 
-function PolygonRenderer (engine) {
+var PolygonRenderer = function (engine) {
     FeatureRenderer.call (this, engine);
 
     if (!(engine.shaders.polygon)) {

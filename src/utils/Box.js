@@ -1,4 +1,4 @@
-function Box (v1, v2) {
+var Box = function (v1, v2) {
     this.min = v1.clone ();
     this.max = v2.clone ();
     this.contains = function (p) {
@@ -31,7 +31,7 @@ function Box (v1, v2) {
 
     this.area = function () {
         return (this.max.x - this.min.x) * (this.max.y - this.min.y);
-    }
+    };
 
     this.height = function () {
         return this.max.y - this.min.y;
@@ -74,7 +74,7 @@ function Box (v1, v2) {
             box.contains (new vect (this.min.x, this.max.y)) &&
             box.contains (new vect (this.max.x, this.min.y)))
             return true;
-        return false
+        return false;
     };
 
     this.union = function (b) {

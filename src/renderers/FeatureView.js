@@ -8,7 +8,7 @@ var FeatureView = function (geom, styleFunc) {
     this.updateMany = function (styleObject) {
         for (var key in styleObject) {
             this.updateOne (key, styleObject[value]);
-        };
+        }
     };
 
     // Update the buffers for a specific property    

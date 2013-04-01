@@ -34,17 +34,17 @@ var Color = function (r, g, b, a) {
 // Helper function to for specifying colors as integers
 var icolor = function (r, g, b, a) {
     return new Color (clamp (r / 255, 0, 1), clamp (g / 255, 0, 1), clamp (b / 255, 0, 1), clamp (a / 255, 0, 1));
-}
+};
 
 // Corresponding helper function for specifying colors as floats
 var fcolor = function (r, g, b, a) {
     return new Color (clamp (r, 0, 1), clamp (g, 0, 1), clamp (b, 0, 1), clamp (a, 0, 1));
-}
+};
 
 // Covert a flat floating point representation of color to an rgb string
 var as_rgb = function (array) {
     conosole.warn('Deprecated: use parseRGB instead');
-    return 'rgb(' + Math.round (array[0] * 255, 10) + ',' + Math.round (array[1] * 255, 10) + ',' + Math.round (array[2] * 255, 10) + ')'
+    return 'rgb(' + Math.round (array[0] * 255, 10) + ',' + Math.round (array[1] * 255, 10) + ',' + Math.round (array[2] * 255, 10) + ')';
 };
 
 // Convert a hex string to a color object

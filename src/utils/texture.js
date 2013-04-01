@@ -1,4 +1,4 @@
-function Texture (engine, options) {
+var Texture = function (engine, options) {
     var gl = engine.gl;
     var settings = copy (options);
     default_model (settings, {
@@ -34,7 +34,7 @@ function Texture (engine, options) {
     };
 };
 
-function getImage (path, callback) {
+var getImage = function (path, callback) {
     var img = new Image ();
     img.crossOrigin = '';
     img.onload = function () {
