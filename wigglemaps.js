@@ -3208,6 +3208,14 @@ var Engine = function (selector, options) {
     this.canvas.attr ('width', $ (selector).width ());
     this.canvas.attr ('height', $ (selector).height ());
 
+    this.width = function() {
+	return this.canvas.width();
+    };
+
+    this.height = function() {
+	return this.canvas.height();
+    };
+
     // Resizing the canvas requires a few special steps, so listen for the window 
     // to resize. If the user wants a resize without a window change, then they
     // are resposible for calling resize
