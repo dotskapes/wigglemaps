@@ -1,0 +1,65 @@
+html, body {
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+div#title {
+    font-size: 24px;
+    padding: 25px;
+    text-align: right;
+}
+
+div#map-box {
+    margin-left: 350px;
+    margin-right: 25px;
+    padding: 25px;
+    border: solid 1px #eee;
+}
+
+div#map {
+    height: 100%;
+}
+
+div#examples {
+    width: 300px;
+    float: left;
+    height: 100%;
+    overflow-y: scroll;
+    margin-left: 25px;
+}
+
+div.example {
+    font-size: 16px;
+    text-align: center;
+    padding: 20px;
+    cursor: pointer;
+}
+
+div.example:hover {
+    text-decoration: underline;
+}
+
+.selected {
+    background-color: #eee;
+}
+
+div#caption {
+    margin: 25px;
+    margin-left: 325px;
+}
+
+div#caption .name {
+    font-weight:bold;
+    font-family: Helvetica;
+    font-size: 24px;
+}
+
+div#caption .text {
+    margin-top: 10px;
+    text-indent: 25px
+}

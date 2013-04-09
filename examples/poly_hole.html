@@ -3,8 +3,8 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Polygon with Hole</title>
-    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../wigglemaps.min.js"></script>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     wiggle.ready (function () {
@@ -13,8 +13,9 @@
 
 	var map = new wiggle.Map ();
 	map.center (x0, y0);
+        map.extents (50);
 	
-	var poly = new wiggle.layer.PolygonLayer ();
+	var poly = new wiggle.layer.Layer ();
 
 	var outer = [];
 	var inner = [];
@@ -35,20 +36,14 @@
 	    inner.push ([x0 + x * 5, y0 + y * 5]);
 	}
 
-	var okay = false;
-	while (!okay) {
-	    try {
-		poly.append ({
-		    geom: [[
-			outer,
-			inner
-		    ]]
-		});
-		okay = true;
-	    }
-	    catch (e) {
-	    }
-	}
+        
+	poly.append ({
+	    geom: [[
+		outer,
+		inner
+	    ]],
+            type: 'Polygon'
+	});
 	
 	map.append (poly);
     });

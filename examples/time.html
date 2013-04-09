@@ -3,9 +3,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Time Slider</title>
-    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../wigglemaps.min.js"></script>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../lib/underscore.min.js"></script>
+    <script type="text/javascript" src="../lib/backbone.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
+    <script type="text/javascript" src="../node_modules/jade/runtime.js"></script>
+    <script type="text/javascript" src="../wigglemaps.widget.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="../css/slider.css" />
     <script type="text/javascript">
     wiggle.ready (function () {
 	var map = new wiggle.Map ();
@@ -52,8 +57,14 @@
 		}
 		set_color (0);
 
-		var slider = new wiggle.widget.Slider (new vect (20, 20), new vect (500, 15), attr.length);
-		$ ('#slider').append (slider.dom);
+		//var slider = new wiggle.widget.Slider (new vect (20, 20), new vect (500, 15), attr.length);
+                var slider = new wiggle.widget.Slider ({
+                    //pos: new vect (20, 20), 
+                    //size: new vect (500, 15),
+                    attr: attr
+                });
+		//$ ('#slider').append (slider.dom);
+                $ ('#slider').append (slider.$el);
 		slider.change (set_color);
 
 		/*var bottom = new vect ($ (document).width () - 70 - colors.length * 50, $ (document).height () - 70);
@@ -68,6 +79,6 @@
 
   </head>
   <body>
-    <div id="slider" style="position: absolute;"></div>
+    <div id="slider" style="position: absolute; top: 20px; left: 20px"></div>
   </body>
 </html>

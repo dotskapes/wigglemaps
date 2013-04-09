@@ -3,8 +3,27 @@
   <head>
     <title>WiggleMaps Demos</title>
     <style>
+    body {
+        margin: 20px;
+    }
     h1 {
-	font-family: Helvetica;
+	font-family: "Helvetica Neue", Helvetica;
+    }
+
+    .desc {
+        font-family: "Helvetica Neue", Helvetica;
+        text-align: justify;
+    }
+
+    a {
+        font-weight: bold;
+        font-family: Arial;
+        text-decoration: none;
+        color: rgb(5,112,176); 
+    }
+    
+    a:hover {
+        text-decoration: underline;
     }
 
     div {
@@ -13,7 +32,17 @@
     </style>
   </head>
   <body>
-    <h1>WiggleMaps Demos</h1>
+    <h1>WiggleMaps</h1>
+    <div class="desc">
+      WiggleMaps is a Javascript API for building dynamic and interactive maps in the web browser. By leveraging WebGL, WiggleMaps extends geographical visualizations beyond current web mapping approaches. Unlike WMS solutions, layers can be fully styled at runtime to allow rich, interactive visualizations. Through portable Shapefile and GeoJSON readers, WiggleMaps brings multiple geographic data types to the web, allowing developers flexibility when deploying geodata in their applications.
+    </div>
+    <div class="desc">
+      Wigglemaps was developed with support from the Unviersity of Wisconsin and the EcoHealth Alliance and is licensed under the Apache License, Version 2.0.
+    </div>
+    <div class="desc">
+      <i><b>The following examples require WebGL to run.</b></i>
+    </div>
+    <div style="margin-left: 20px">
     <div>
       <a href="base.html">Base Layers</a> - A basic map showing how base layers can be toggled
     </div>
@@ -24,7 +53,7 @@
       <a href="raster.html">Raster Map</a> - Support for maps in raster formats
     </div>
     <div>
-      <a href="linestring.html">Lines</a> - A map showing a large number of lines being drawn from a big text file <b>(Warning long loading times)</b>. The API can handle these large text files, but loading from a binary format is reccomended for bigger datasets.
+      <a href="linestring.html">Lines</a> - A map showing a large number of lines being drawn from a big text file (<b>Warning long loading times.</b> The API can handle these large text files, but loading from a binary format is reccomended for bigger datasets.)
     </div>
     <div>
       <a href="random.html">Dynamic Points</a> - 50,000 positioned randomly and drawn dynamically. This is meant to demonstrate the scalability of the mapping API
@@ -33,17 +62,17 @@
       <a href="poly_hole.html">Polygons with Holes</a> - The trinagulation algorithm can handle any non-self-intersecting polygons, including ones with holes
     </div>
     <div>
-      <a href="grid.html">Gridded Data</a> - High resolution data. This map shows world population density (Source: <a href="http://sedac.ciesin.columbia.edu/data/collection/gpw-v3">CIESIN</a>)
+      <a href="grid.html">Gridded Data</a> - High resolution data. This map shows world population density (Source: <a href="http://sedac.ciesin.columbia.edu/data/collection/gpw-v3">CIESIN</a>) (<b>Warning: long loading times</b>)
     </div>
     <div>
       <a href="binary.html">Shapefiles</a> - A layer loaded from a shapefile. This demonstrates the APIs ability to load from binary formats, which are much smaller than their text based counterparts.
     </div>
-    <div>
-      <a href="wms.html">WMS Layers</a> - An example of loading a WMS layer from an OWS server (Source: <a href="http://www.naturalearthdata.com/">Natural Earth</a>)
-    </div>
-    <div>
+    <!--<div>
+    <a href="wms.html">WMS Layers</a> - An example of loading a WMS layer from an OWS server (Source: <a href="http://www.naturalearthdata.com/">Natural Earth</a>)
+    </div>-->
+    <!--<div>
       <a href="choropleth.html">Choropleth</a> - In this example, a collection of points are aggregated dynamically across a polygon layer to create a choropleth map. A drop down is provided to toggle between which attribute determines the color of the map
-    </div>
+    </div>-->
     <div>
       <a href="filter.html">Filter By Attribute</a> - Layer Selectors allows for the dynamic selection of subsets of data and the changing of their styles as needed.
     </div>
@@ -56,11 +85,18 @@
     <div>
       <a href="time.html">Time Slider</a> - A time slider
     </div>
-    <div>
+    <!--<div>
       <a href="elevation.html">Elevation Map</a> - Single banded eleveation data mapped to a color ramp dynamically
-    </div>
+    </div>-->
     <div>
       <a href="hillshade.html">Hillshading</a> - Hillshade computed at runtime on the GPU
+    </div>
+    <div>
+      <a href="graph.html">Time Series</a> - An interactive time series view of data with constrained bounds (Source: <a href="http://www.google.org/flutrends/">Google Flu Trends</a>)
+    </div>
+    <div>
+      <a href="split.html">Multiple Maps/Graphs</a> - A demonstration of multiple canvases on the same page (Source: <a href="http://www.google.org/flutrends/">Google Flu Trends</a>)
+    </div>
     </div>
   </body>
 </html>

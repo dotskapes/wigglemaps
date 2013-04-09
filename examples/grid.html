@@ -3,18 +3,16 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Gridded Map</title>
-    <script type="text/javascript" src="../js/utils/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../wigglemaps.min.js"></script>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     wiggle.ready (function () {
 	var map = new wiggle.Map (null, {
-	    //base: null,
 	    desaturate: 1.0,
 	    darken: .25,
 	    hue: .1,
 	    hue_color: wiggle.util.fcolor (0, 0, 1, 1),
-	    //background: new Color (150, 150, 150, 255)
 	    background: wiggle.util.icolor (10, 10, 10, 255),
 	    center: new vect (0, 0),
 	    extents: 360,
