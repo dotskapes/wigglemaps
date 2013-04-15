@@ -137,4 +137,14 @@ var Map = function (selector, options) {
         // When a new layer is added, we should redraw at least once
         this.dirty = true;
     };
+
+    this.remove = function (layer) {
+        for (var i = 0; i < this.scene.length; i ++) {
+            if (this.scene[i] == layer) {
+                this.scene.splice(i, 1);
+                break;
+            }
+        }
+        delete this.queriers[layer.id];
+    };
 };
