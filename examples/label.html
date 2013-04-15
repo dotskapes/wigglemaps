@@ -3,20 +3,57 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Base Layer</title>
-    <script type="text/javascript" src="../js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="../js/jquery.hotkeys.js"></script>
-    <script type="text/javascript" src="../js/jquery.mousewheel.js"></script>
+    <script type="text/javascript" src="../lib/jquery.min.js"></script>
 
-    <script type="text/javascript" src="../webgl_maps.js"></script>
-    <script type="text/javascript" src="../js/text.js"></script>
+    <script type="text/javascript" src="../wigglemaps.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
     $ (document).ready (function () {
-	var map = new Map ();
-	map.center (-55, -10);
+	var map = new wiggle.Map ();
+        /*$.ajax({
+            url: 'data/cities.json',
+            success: function(cities) {
+                $.each(cities, function(i, city) {
+                    map.label(city.name, {
+                        pos: vect(city.lon, city.lat),
+                        mode: 'lonlat',
+                        priority: city.pop
+                    });
+                });
+            }
+        });*/
 
-	var label = new Text ('Brazil');
-	map.append (label);
+        var chi = map.label('Chicago', {
+            pos: vect(-87.65, 41.85),
+            mode: 'lonlat',
+            priority: 3
+        });
+
+        var mke = map.label('Milwaukee', {
+            pos: vect(-87.91, 43.04),
+            mode: 'lonlat',
+            priority: 1
+        });
+
+        var nyc = map.label('New York City', {
+            pos: vect(-74.01, 40.71),
+            mode: 'lonlat',
+            priority: 5
+        });
+
+        var la = map.label('Los Angeles', {
+            pos: vect(-118.24, 34.05),
+            mode: 'lonlat',
+            priority: 4
+        });
+
+        var aus = map.label('Austin', {
+            pos: vect(-97.74, 30.27),
+            mode: 'lonlat',
+            priority: 2
+        });
+
+
     });
 </script>
 

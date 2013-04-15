@@ -50,6 +50,7 @@ module.exports = function(grunt) {
                 'src/renderers/PolygonRenderer.js',
                 'src/renderers/TimeRenderer.js',
                 'src/renderers/MultiRenderer.js',
+                'src/renderers/TextRenderer.js',
 
                 'src/query/Querier.js',
                 'src/query/PointQuerier.js',
@@ -57,7 +58,8 @@ module.exports = function(grunt) {
                 'src/query/TimeSeriesQuerier.js',
                 'src/query/LayerSelector.js',
 
-                'src/LayerController.js',
+                'src/controllers/LayerController.js',
+                'src/controllers/TextController.js',
 
                 'src/Engine.js',
                 'src/Map.js',

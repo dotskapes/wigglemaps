@@ -39,6 +39,7 @@ var Engine = function (selector, options) {
     });
 
     var framebuffers = [];
+    var framebuffer_stack = [];
     // Allow layers to request a framebuffer from the engine
     // This lets layers do their own multipass rendering without help
     this.framebuffer = function () {
@@ -100,7 +101,7 @@ var Engine = function (selector, options) {
                             gl.disable (gl.BLEND);
 
                     gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
-                    gl.viewport (0, 0, engine.canvas.width (), enigne.canvas.height ());
+                    gl.viewport (0, 0, engine.canvas.width (), engine.canvas.height ());
 
                     if (options.clear) {
 
@@ -317,6 +318,11 @@ var Engine = function (selector, options) {
 
     };
 
+    var labels = new TextController(this, options)
+    this.label = function(string, options) {
+        labels.append(string, options);
+    };
+
     this.draw = function () {
         this.update ();
 
@@ -331,6 +337,8 @@ var Engine = function (selector, options) {
             $.each (this.scene, function (i, layer) {
                 layer.draw (engine);
             });
+
+            labels.draw(engine);
 
             if (selectEnabled) {
                 sel.draw (this);

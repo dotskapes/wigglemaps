@@ -13,12 +13,14 @@ var FeatureRenderer = function (engine) {
         }
     };
 
+    // Abstract method that should be replaced with a the correct constructor
     this.View = function () {
         throw "Attempt to call abstract function";
     };
 
+    // Create a new view (in wigglemaps land, a slice of buffers)
+    // Uses only a representation of geometry and style function
     this.create = function (geom, style) {
-        //var view = new this.View (this.geomFunc (feature), styleFuncFactory (feature));
         var view = new this.View (geom, style);
         this.views.push (view);
         view.updateAll ();
@@ -28,18 +30,4 @@ var FeatureRenderer = function (engine) {
     this.draw = function () {
         throw "Attempt to call abstract function";
     };
-
-    /*this.geomFunc = function (feature) {
-        return feature.geom;
-    };
-
-    var styleFuncFactory = function (feature) {
-        return function (key) {
-            return renderer.styleFunc (feature, key);
-        };
-    };
-    
-    this.styleFunc = function (feature, key) {
-        return StyleManager.derivedStyle (feature, layer, engine, key);
-    };*/
 };
