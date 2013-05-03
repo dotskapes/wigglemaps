@@ -10,20 +10,30 @@
     <script type="text/javascript">
     $ (document).ready (function () {
 	var map = new wiggle.Map ();
-        /*$.ajax({
+        $.ajax({
             url: 'data/cities.json',
+            dataType: 'json',
             success: function(cities) {
+                cities.sort(function (a, b) {
+                    return b.pop - a.pop;
+                });
+                var count = 0
                 $.each(cities, function(i, city) {
+                    if (count > 300)
+                        return false;
+                    try{
                     map.label(city.name, {
                         pos: vect(city.lon, city.lat),
                         mode: 'lonlat',
                         priority: city.pop
                     });
+                    count ++;
+                    } catch(e) {}
                 });
             }
-        });*/
+        });
 
-        var chi = map.label('Chicago', {
+        /*var chi = map.label('Chicago', {
             pos: vect(-87.65, 41.85),
             mode: 'lonlat',
             priority: 3
@@ -51,7 +61,7 @@
             pos: vect(-97.74, 30.27),
             mode: 'lonlat',
             priority: 2
-        });
+        });*/
 
 
     });
