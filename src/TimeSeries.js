@@ -101,6 +101,27 @@ var TimeSeries = function (selector, layer, options) {
         '*': TimeSeriesQuerier
     };
 
+    this.highlightTicks = function (indexList, color) {
+        var renderer = new LineRenderer (engine);
+
+        var lineStyleFunc = function (key) {
+            return {
+                'stroke': color,
+                'stroke-width': .75,
+                'stroke-opacity': 1.0
+            }[key];
+        };
+
+        $.each (indexList, function (i, index) {
+            var line = [[[
+                [index, options.range.min],
+                [index, options.range.max]
+            ]]];
+            renderer.create (line, lineStyleFunc);
+        });
+        engine.scene.push (renderer);
+    };
+
     var grid_style = {
         'stroke': new Color (.25, .25, .25, 1.0),
         'stroke-width': .75,
