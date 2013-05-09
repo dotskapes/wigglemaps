@@ -15,16 +15,16 @@ var TextController = function(engine, settings) {
     };
 
     this.draw = function(engine, dt) {
-        var drawn = [];
+        //var drawn = [];
         $.each(renderers, function(i, renderer) {
-            var rbox = renderer.bbox();
+            /*var rbox = renderer.bbox();
             for (var i = 0; i < drawn.length; i ++) {
                 if (drawn[i].bbox().intersects(rbox)) {
                     return false;
                 }
-            }
+            }*/
             renderer.draw(engine, dt);
-            drawn.push(renderer);
+            //drawn.push(renderer);
         });
     };
 };

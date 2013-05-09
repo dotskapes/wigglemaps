@@ -143,6 +143,11 @@ var TimeSeries = function (selector, layer, options) {
                 ]]];
                 grid_renderer.create (line, gridStyleFunc);
                 currentTick += options.ticks;
+
+                engine.label(currentTick.toString().replace('9', 'X'), {
+                    pos: vect(0, currentTick),
+                    height: 6,
+                });
             }
         }
     };

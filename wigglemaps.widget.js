@@ -251,6 +251,12 @@ var Slider = Backbone.View.extend({
             callback(index);
         });
     },
+    release: function(callback) {
+        this.model.on('release', function() {
+            var index = this.get('index');
+            callback(index);
+        });
+    },
     changeLabel: function() {
         var index = this.model.get('index');
         this.$el.find('.step').text(this.model.get('attr')[index]);
@@ -264,6 +270,7 @@ var Slider = Backbone.View.extend({
     stopDrag: function() {
         this.model.set('dragging', false);
         var units = this.model.get('attr').length - 1;
+        this.model.fire('release');
     },
     doDrag: function(p) {
         if(this.model.get('dragging')) {

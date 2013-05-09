@@ -8,9 +8,9 @@
     <script type="text/javascript" src="../wigglemaps.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/screen.css" />
     <script type="text/javascript">
-    $ (document).ready (function () {
-	var map = new wiggle.Map ();
-        $.ajax({
+      $ (document).ready (function () {
+	  var map = new wiggle.Map ();
+        /*$.ajax({
             url: 'data/cities.json',
             dataType: 'json',
             success: function(cities) {
@@ -31,7 +31,13 @@
                     } catch(e) {}
                 });
             }
-        });
+        });*/
+          for (var i = 0; i < 300; i ++) {
+              map.label('2013-10-10', {
+                  pos: vect(Math.random() * 360 - 180, Math.random() * 180 - 90),
+                  mode: 'lonlat,'
+              });
+          }
 
         /*var chi = map.label('Chicago', {
             pos: vect(-87.65, 41.85),

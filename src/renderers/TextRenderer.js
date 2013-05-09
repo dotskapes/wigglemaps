@@ -1,3 +1,5 @@
+var WORLD_MODE = 0;
+var SCREEN_MODE = 1;
 
 var fonts = {};
 var TextRenderer = function (engine, string, options) {
@@ -5,8 +7,10 @@ var TextRenderer = function (engine, string, options) {
         options = {};
     if (!options.style)
         options.style = {};
+
     default_model (options, {
-        mode: 'lonlat',
+        xmode: WORLD_MODE,
+        ymode: WORLD_MODE,
         pos: vect(0, 0),
         height: 8,
         padding: vect(5, 3)
@@ -208,7 +212,8 @@ var TextRenderer = function (engine, string, options) {
         var text_shader = engine.text_shader;
         gl.useProgram (text_shader);    
         
-        text_shader.data ('screen', engine.camera.mat3);
+        text_shader.data ('world', engine.camera.worldToPx);
+        text_shader.data ('screen', engine.camera.pxToScreen);
         text_shader.data ('pos', buffers.get ('pos'));
         text_shader.data ('tex_in', buffers.get ('tex'));
         text_shader.data ('mode_in', buffers.get ('mode'));
@@ -220,6 +225,9 @@ var TextRenderer = function (engine, string, options) {
         text_shader.data ('height', options.height);
         text_shader.data ('aspect', engine.canvas.height () / engine.canvas.width ());
         text_shader.data ('one_px', 2.0 / engine.canvas.height ());     
+
+        text_shader.data ('xmode', options.xmode);     
+        text_shader.data ('ymode', options.ymode);
 
         gl.drawArrays (gl.TRIANGLES, 0, buffers.count ()); 
 
