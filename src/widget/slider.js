@@ -81,7 +81,7 @@ var Slider = Backbone.View.extend({
     stopDrag: function() {
         this.model.set('dragging', false);
         var units = this.model.get('attr').length - 1;
-        this.model.fire('release');
+        this.model.trigger('release');
     },
     doDrag: function(p) {
         if(this.model.get('dragging')) {
