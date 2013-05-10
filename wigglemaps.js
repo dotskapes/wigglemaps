@@ -3949,7 +3949,7 @@ var Map = function (selector, options) {
     // event and style registrations) and a set of queriers (that
     // handle searching rendered geometry)
     this.append = function (layer) {
-        this.insert(layer, this.scene.length - 1);
+        this.insert(layer, this.scene.length);
     };
 
     this.insert = function(layer, index) {
