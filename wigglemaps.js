@@ -3971,7 +3971,6 @@ var Map = function (selector, options) {
         for (var i = 0; i < this.scene.length; i ++) {
             if (this.scene[i] == layer) {
                 var removed = this.scene.splice(i, 1)[0];
-                delete removed;
                 break;
             }
         }
