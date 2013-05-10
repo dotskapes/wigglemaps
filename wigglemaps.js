@@ -4779,10 +4779,9 @@ var Layer = function (options) {
         EventManager.addEventHandler (this, 'mouseout', func);
     };
 };
-var grid_shader = null;
-
 var Grid = function (options) {
     var engine;
+    var grid_shader;
     if (!options)
         options = {};
     if (!options.style)
@@ -4905,9 +4904,14 @@ var Grid = function (options) {
         engine = _engine;
         var gl = engine.gl;
 
-        if (!grid_shader) {
+        if (!engine.shaders['grid']) {
             grid_shader = makeProgram (engine.gl, BASE_DIR + 'shaders/grid');
+            engine.shaders['grid'] = grid_shader;
         }
+        else {
+            grid_shader = engine.shaders['grid'];
+        }
+
         buffers = new Buffers (engine, 6);
         buffers.create ('vert', 2);
         buffers.create ('screen', 2);
