@@ -3970,11 +3970,13 @@ var Map = function (selector, options) {
     this.remove = function (layer) {
         for (var i = 0; i < this.scene.length; i ++) {
             if (this.scene[i] == layer) {
-                this.scene.splice(i, 1);
+                var removed = this.scene.splice(i, 1);
+                delete removed;
                 break;
             }
         }
-        delete this.queriers[layer.id];
+        if (layer.id in this.queriers) 
+            delete this.queriers[layer.id];
     };
 };
 var TimeSeries = function (selector, layer, options) {
@@ -4798,7 +4800,8 @@ var Grid = function (options) {
 
     var tex_data = new Uint8Array (cols * rows * 4);
 
-    var buffers, tex;
+    var buffers;
+    var tex;
 
     var min = new vect (lower.x, lower.y);
     var max = new vect (upper.x, upper.y);
