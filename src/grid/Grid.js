@@ -17,7 +17,8 @@ var Grid = function (options) {
 
     var tex_data = new Uint8Array (cols * rows * 4);
 
-    var buffers, tex;
+    var buffers;
+    var tex;
 
     var min = new vect (lower.x, lower.y);
     var max = new vect (upper.x, upper.y);
