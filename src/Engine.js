@@ -333,6 +333,9 @@ var Engine = function (selector, options) {
             gl.clearColor(options.background.r, options.background.g, options.background.b, options.background.a);
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.clearDepth (0.0);
+
+            if (this.base)
+                this.base.draw(engine);
             
             $.each (this.scene, function (i, layer) {
                 layer.draw (engine);

@@ -106,8 +106,9 @@ var Map = function (selector, options) {
         }
         if (base) {
             base.initialize (engine);
-            engine.scene.push (base);
+            //engine.scene.push (base);
         };
+        engine.base = base;
     };
 
     setBase ();
@@ -124,14 +125,18 @@ var Map = function (selector, options) {
     // event and style registrations) and a set of queriers (that
     // handle searching rendered geometry)
     this.append = function (layer) {
+        this.insert(layer, this.scene.length - 1);
+    };
+
+    this.insert = function(layer, index) {
         // Legacy layer drawing code for old-school type layers
         if ('draw' in layer) {
-            this.scene.push (layer);
+            this.scene.splice (index, 0, layer);
             this.dirty = true;
             return;
         }
 
-        this.scene.push (new LayerController (engine, layer, options));
+        this.scene.splice (index, 0, new LayerController (engine, layer, options));
         this.queriers[layer.id] = new Querier (this, layer, options);
 
         // When a new layer is added, we should redraw at least once
