@@ -3959,23 +3959,25 @@ var Map = function (selector, options) {
             this.dirty = true;
             return;
         }
+        else {
+            var controller = new LayerController (engine, layer, options);
+            this.scene.splice (index, 0, controller);
+            this.queriers[layer.id] = new Querier (this, layer, options);
 
-        this.scene.splice (index, 0, new LayerController (engine, layer, options));
-        this.queriers[layer.id] = new Querier (this, layer, options);
-
-        // When a new layer is added, we should redraw at least once
-        this.dirty = true;
+            // When a new layer is added, we should redraw at least once
+            this.dirty = true;
+        }
     };
 
     this.remove = function (layer) {
         for (var i = 0; i < this.scene.length; i ++) {
             if (this.scene[i] == layer) {
                 var removed = this.scene.splice(i, 1)[0];
-                break;
+                if (layer.id in this.queriers) 
+                    delete this.queriers[layer.id];
+                return;
             }
         }
-        if (layer.id in this.queriers) 
-            delete this.queriers[layer.id];
     };
 };
 var TimeSeries = function (selector, layer, options) {
