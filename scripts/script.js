@@ -1,7 +1,3 @@
-(function() {
-  $(function() {
-    $('pre').addClass('prettyprint');
-    return prettyPrint();
-  });
-
-}).call(this);
+$ ->
+  $('pre').addClass('prettyprint')
+  prettyPrint()
