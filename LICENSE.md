@@ -1,0 +1,1 @@
+Unless stated otherwise, all content is licensed under the Creative Commons Attribution License and code licensed under the [Apache2 Licence](http://www.apache.org/licenses/LICENSE-2.0.html), © dotSkapes Virtual Lab
