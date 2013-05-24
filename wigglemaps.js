@@ -3613,6 +3613,14 @@ var Engine = function (selector, options) {
             this.camera.position (new vect (arg0, arg1));
     };
 
+    this.width = function() {
+        return this.canvas.attr ('width');
+    };
+
+    this.height = function() {
+        return this.canvas.attr ('height');
+    };
+
     // How far is one pixel in 0 to 1 shader space
     this.pxW = 1 / this.canvas.attr ('width');
     this.pxH = 1 / this.canvas.attr ('height');
