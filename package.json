@@ -28,8 +28,11 @@
     "maps",
     "dotskapes",
     "health",
+    "visualization",
+    "geovisualization",
     "ecology"
   ],
   "author": "Preston and Krejci (dotSkapes Virtual Lab)",
+  "url": "dotskapes.org",
   "license": "Apache License, Version 2.0"
 }
