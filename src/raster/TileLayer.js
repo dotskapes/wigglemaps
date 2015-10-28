@@ -40,7 +40,7 @@ var MultiTileLayer = function (options) {
           engine = _engine;
           gl = engine.gl;
           };*/
-        
+
         var url = options.url;
         var min = options.min;
         var rows = options.rows;
@@ -97,11 +97,11 @@ var MultiTileLayer = function (options) {
                         delete tile_ids[key];
 
                         delete tiles[tile.i][tile.j];
-                        
+
                         options.available.push (tile.tex);
                         tile.tex = null;
                         tile.ready = false;
-                        
+
                         delete current[key];
                     }
                 }
@@ -154,13 +154,13 @@ var MultiTileLayer = function (options) {
                         service: 'wms',
                         version: '1.1.0',
                         request: 'GetMap',
-                        layers: options.layer,
+                        layers: 'nasa:bluemarble',
                         bbox: [tiles[i][j].min.x, tiles[i][j].min.y, tiles[i][j].max.x, tiles[i][j].max.y].join (','),
                         width: options.size,
                         height: options.size,
                         srs: 'EPSG:4326',
                         format: 'image/png',
-                        transparent: 'true'
+                        transparent: 'true',
                     });
                 }
                 /*tiles[i][j].tex = getTexture (path, (function (tile) {
@@ -180,7 +180,7 @@ var MultiTileLayer = function (options) {
                         }
                     };
                 }) (tiles[i][j]));
-                
+
             }
         };
 
@@ -241,21 +241,21 @@ var MultiTileLayer = function (options) {
                 tile_shader.data ('darken', options.darken);
                 tile_shader.data ('hue', options.hue);
                 tile_shader.data ('hue_color', options.hue_color.array);
-                
+
                 gl.drawArrays (gl.TRIANGLES, 0, count * 6);
             };
 
             var bounds = get_bounds ();
-            
+
             var time = new Date().getTime ();
             for (var i = Math.max (0, bounds.min_col); i < Math.min (cols, bounds.max_col); i ++) {
                 for (var j = Math.max (0, bounds.min_row); j < Math.min (rows, bounds.max_row); j ++) {
                     if (tiles[i][j] && tiles[i][j].ready && tiles[i][j].tex) {
-                        
+
                         buffers.write ('vert', tiles[i][j].vert, count * 6, 6);
                         buffers.write ('tex', rectv (new vect (0, 0), new vect (1, 1)), count * 6, 6);
                         buffers.repeat ('lookup', [count / NUM_TILES + 1 / (NUM_TILES * 2)], count * 6, 6);
-                        current[tiles[i][j].id] = time; 
+                        current[tiles[i][j].id] = time;
 
                         tile_shader.data ('sampler' + count, tiles[i][j].tex);
                         if (tiles[i][j].tex === null)
@@ -319,14 +319,14 @@ var MultiTileLayer = function (options) {
 
         layers[0].fetch_all ();
         layers[0].noexpire (true);
-        
+
         initialized = true;
     };
 
     this.draw = function (engine, dt) {
         if (!initialized)
             this.initialize (engine);
-        
+
         gl.useProgram (tile_shader);
         tile_shader.data ('screen', engine.camera.mat3);
 
@@ -363,7 +363,7 @@ var MultiTileLayer = function (options) {
         if (current.ready ()) {
             current.draw (engine, dt, buffers, 0, true);
         }
-        else {    
+        else {
             engine.enableZ ();
             //current.draw (engine, dt, z_top);
             var count = 0;
