@@ -15,11 +15,11 @@ var Map = function (selector, options) {
         'width': 360,
         'center': new vect (0, 0),
         'base': 'default',
-        'tile-server': 'http://eland.ecohealthalliance.org',
+        'tile-server': 'http://demo.boundlessgeo.com/geoserver/ows',
         'preserveAspectRatio': true
     });
 
-    Engine.call (this, selector, options); 
+    Engine.call (this, selector, options);
 
     // The renderers map between types and classes
     this.Renderers = {
@@ -61,7 +61,7 @@ var Map = function (selector, options) {
             'fill-opacity': .5,
             'stroke': new Color (.02, .44, .69, 1.0),
             'stroke-opacity': 1.0,
-            'stroke-width': 1.0            
+            'stroke-width': 1.0
         }
     };
     var base = null;
@@ -74,8 +74,8 @@ var Map = function (selector, options) {
         if (options.base == 'default' || options.base == 'nasa') {
             settings = copy (options);
             copy_to (settings, {
-                source: 'file',
-                url: options['tile-server'] + '/tiles/nasa_topo_bathy',
+                source: 'wms',
+                url: options['tile-server'],
                 levels: 8,
                 size: 256
             });
@@ -149,7 +149,7 @@ var Map = function (selector, options) {
         for (var i = 0; i < this.scene.length; i ++) {
             if (this.scene[i] == layer) {
                 var removed = this.scene.splice(i, 1)[0];
-                if (layer.id in this.queriers) 
+                if (layer.id in this.queriers)
                     delete this.queriers[layer.id];
                 return;
             }

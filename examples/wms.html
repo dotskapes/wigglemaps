@@ -10,12 +10,12 @@
     $ (document).ready (function () {
 	var map = new wiggle.Map ();
 	map.center (-55, -10);
-	
+
 	wms = wiggle.io.WMS ({
-	    url: 'http://eland.ecohealthalliance.org:8080/geoserver-dev/ows',
-	    layer: 'sf:ne_10m_admin_1_states_provinces_shp',
+      url: 'http://example.com'
+      layer: 'sf:ne_10m_admin_1_states_provinces_shp',
 	});
-	
+
 	map.append (wms);
     });
 </script>
