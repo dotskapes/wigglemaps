@@ -10,19 +10,19 @@ See LICENSE file for details.
 
 Historical Note:
 
-WiggleMaps was developed for the dotSkapes Virtual Lab (dVL) with 
+WiggleMaps was developed for the dotSkapes Virtual Lab (dVL) with
 support from the Gottesman Fund, Skoll Foundation, UW-Madison Global Health
-Institute and EcoHealth Alliance. The dVL was co-founded by Nico Preston 
-and Zack Krejci in 2010. 
+Institute, EHA, Epidemico, and Kitware. The dVL was co-founded by Nico Preston 
+and Zack Krejci in 2010.
 
-The Wiggle Maps idea is partially derived from the other components of the dVL 
-including SaVaGeLib, map viewing client, dotLab and dotDash. The name 
+The Wiggle Maps idea is partially derived from the other components of the dVL
+including SaVaGeLib, map viewing client, dotLab and dotDash. The name
 WiggleMaps is derived from WebGL ("WiGgLe") and an initial focus on spatial
 representations of data ("Maps").
 
 Previous versions of Wiggle Maps (<0.5) were licensed under MIT.
 
-Starting with version 0.5, Wiggle Maps is distributed under the 
+Starting with version 0.5, Wiggle Maps is distributed under the
 Apache 2.0 License.
 
 -----------------------------------------------------------------------
